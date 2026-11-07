@@ -11,8 +11,12 @@ retrieval. Brief: `CLAUDE.md`. Decisions: `DECISIONS.md`. Versions: `VERSIONS.md
 .\kb.ps1 models  # first run only: LLM (~5 GB), embedder and Docling models at pinned revisions
 .\kb.ps1 seed    # rebuild the synthetic world under data/
 .\kb.ps1 migrate # apply registry migrations to db `kb` and sync governance roles from users.yaml
-.\kb.ps1 api     # gateway on http://127.0.0.1:8000 (OpenAPI at /docs); dev auth: X-KB-User header
-.\kb.ps1 test    # ruff + mypy + pytest (unit, security, integration)
+.\kb.ps1 onboard # onboard the synthetic sources (maker -> checker) and wait for the daemon's first loads
+.\kb.ps1 api     # gateway on http://127.0.0.1:8000 (OpenAPI at /docs); login: POST /api/v1/auth/login
+                 #   local passwords for the synthetic users: .infra/secrets/local_users.txt
+.\kb.ps1 test    # ruff + mypy + pytest (unit, security, integration, retrieval-level leak suite)
+.\kb.ps1 leak    # end-to-end leak matrix with real LLM answers (slow)
+.\kb.ps1 golden  # golden-set evaluation -> docs/eval/golden-latest.json
 .\kb.ps1 down
 ```
 
@@ -65,9 +69,14 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | Dagster jobs, sensors, schedules, run limits | tested | `src/kb/ingest/definitions.py`; daemon runs in `kb.ps1 up` |
 | Upload path (streamed receive, gates, private index, publish re-stamp, delete) | tested | all 7 upload scenarios |
 | UploadSource port adapter | stubbed (folded into the gateway + engine) | uploads do not need a delta feed |
-| Reranker, LLM | stubbed (Phase 3) | |
+| Reranker (bge-reranker-base), LLM (httpx, OpenAI-compatible) | tested | `adapters/local/` |
+| Hybrid retrieval (Haystack: BM25 + kNN pre-filtered -> RRF -> rerank) | tested | `src/kb/retrieval/` |
+| Cited answers + injection defences | tested | `src/kb/agent/answer.py`, real-LLM probes |
+| Gateway: JWT login, `/ask`, query audit | tested | `src/kb/gateway/`; migration 005 |
+| ACL leak suite (17 users x every canary) | tested | retrieval level in `make test`; real answers in `make leak` |
+| Golden set baseline | recorded | `docs/eval/baseline-phase3.json` |
 | SqlEngine / PolicyEngine | stubbed (Phase 4) | |
 | GraphStore | stubbed (Phase 5) | |
 | Tracer | stubbed (Phase 7) | Phoenix server runs |
 | All CML adapters | stubbed (Phase 7) | |
-| Gateway Q&A, retrieval, agent, UI, evaluation | not started | Phases 3 to 7 |
+| Structured data, ontology, UI, RAGAS/dashboards | not started | Phases 4 to 7 |

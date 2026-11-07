@@ -4,7 +4,7 @@ Policy: exact pins only. Python resolution is frozen with `exclude-newer = 2026-
 `pyproject.toml` (nothing newer than two weeks before Phase 0), and `uv.lock` pins all 182
 packages including transitive ones. Change a pin only with a `DECISIONS.md` entry.
 
-Last verified: 2026-11-07 (Phase 2).
+Last verified: 2026-11-07 (Phase 3).
 
 ## Runtime and tooling
 
@@ -31,7 +31,7 @@ Last verified: 2026-11-07 (Phase 2).
 | Embedder (local) | `BAAI/bge-small-en-v1.5` (384-d) | HF commit `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a` (checked at load) | `kb.ps1 models`, offline at runtime |
 | Parsing (local) | Docling layout (heron), TableFormer, RapidOCR PP-OCRv6 small (torch) | versions pinned by docling 2.142.1's downloader | `kb.ps1 models` -> `.infra/models/docling` |
 | PII NER | spaCy `en_core_web_lg` 3.8.0 | pip wheel, URL in `uv.lock` | installed with the env |
-| Reranker (local) | `BAAI/bge-reranker-base` | HF revision to be pinned in Phase 3 | not downloaded yet |
+| Reranker (local) | `BAAI/bge-reranker-base` | HF commit `2cfc18c9415c912f9d8155881c133215df768a70` (checked at load) | `kb.ps1 models`, offline at runtime |
 | Embedder (CML) | `BAAI/bge-m3` (1024-d) | pinned at CML deployment | n/a locally |
 | Reranker (CML) | `BAAI/bge-reranker-v2-m3` | pinned at CML deployment | n/a locally |
 
@@ -50,6 +50,8 @@ Last verified: 2026-11-07 (Phase 2).
 | uvicorn | 0.54.0 | main |
 | psycopg-pool | 3.3.3 | main |
 | python-multipart | 0.0.32 | main |
+| haystack-ai | 2.31.0 (pulls openai 3.37.0, never imported by our code) | main |
+| pyjwt | 2.15.1 | main |
 | dagster, dagster-webserver | 1.13.26 | main |
 | docling | 2.142.1 (docling-core 2.104.0, docling-ibm-models 4.0.4, rapidocr 3.10.0) | main |
 | presidio-analyzer, presidio-anonymizer | 2.2.364 | main |
@@ -73,6 +75,6 @@ Transitive packages: see `uv.lock` (182 packages).
 
 ## Planned, not yet installed (pinned when their phase starts)
 
-Haystack, elasticsearch-haystack, sqlglot, graphifyy, rdflib,
+sqlglot, graphifyy, rdflib,
 pyoxigraph, pySHACL, RAGAS, FIBO release, React, pdf.js.
-Known at Phase 0: `haystack-ai` on PyPI is 3.x; see DECISIONS D-006.
+elasticsearch-haystack: not used (D-028).
