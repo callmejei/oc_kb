@@ -80,7 +80,14 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | Text-to-SQL, router (documents / data / both), combined cited answers | tested | real-LLM tests in `tests/integration/qa/test_structured.py` |
 | Figure support check on citations | tested | Phase 3 golden citation 0.957 -> 1.0 |
 | Structured golden baseline | recorded | `docs/eval/baseline-phase4-structured.json` |
-| GraphStore | stubbed (Phase 5) | |
+| GraphStore (pyoxigraph, named graph per BU, atomic swap, scoped queries) | tested | `adapters/local/graph_store.py` |
+| graphify per BU (isolated env, sanitized env, loopback-only network guard, kill-tree) | tested | `src/kb/graph/graphify_runner.py`; local `qwen3-graphify` only |
+| FIBO mapping (rules auto-accept; embedding always reviewed), SHACL, review queue + checker API | tested | `src/kb/graph/`, migration 006, `shapes/` |
+| FIBO coverage of extracted entities | **below target** | 87/230 auto-mapped (0.38) vs skill's 80%; 143 in the checker queue (D-043). Test fails until checkers act |
+| Chunk `concept_ids`, graph expansion scoped to readable BUs | tested | expansion never crosses BUs for all 17 users; leak suite with expansion on: 0 leaks |
+| Expansion golden | recorded | `docs/eval/expansion-phase5.json`: answer_correct 0.875 -> 1.0 (e7), no regressions |
+| `table_map` (concept -> mart columns, permitted tables only) | tested | `config/table_map.yaml` |
 | Tracer | stubbed (Phase 7) | Phoenix server runs |
 | All CML adapters | stubbed (Phase 7) | |
-| Ontology, UI, RAGAS/dashboards | not started | Phases 5 to 7 |
+| UI, RAGAS/dashboards | not started | Phases 6 to 7 |
+| Graph build cost | note | ~25-30 min per BU on qwen3:8b; 23 parts hit the output cap across 4 BUs (partial results kept), 6 given up after retries |

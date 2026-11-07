@@ -244,3 +244,58 @@ A `not_granted` refusal is never fed back to the model (no coaching towards tabl
 ## D-037 Known limit: masked-value questions get "not covered" (open, Phase 6 UX)
 Asking for names/emails as a masked user returns "not covered" rather than "these values are masked for
 you". Safe (nothing leaks); a clearer message is a UI/answer-template improvement for Phase 6.
+
+## D-038 FIBO lives in `.infra/ontology/fibo`, not `data/ontology/fibo` (accepted, 2026-11-07)
+The skill says `data/ontology/fibo/<version>/`. FIBO is pinned infrastructure (release master_2026Q3,
+sha256 46385076…0694), downloaded once like the other binaries, and must survive `data/` resets. Only the
+modules FND, BE, FBC, LOAN, SEC are indexed (1,881 classes). FIBO 2026Q3 moved Organization, Party,
+Document and similar to OMG Commons (`cmns-*`), which we do not load; local concepts hang off the closest
+FIBO class that exists (D-043).
+
+## D-039 graphify runs isolated, on a local model, behind a network guard (accepted, 2026-11-07)
+`graphifyy[ollama,office]==0.9.95` lives in its own uv env (`infra/local/graphify`), never in the app env.
+It is invoked as a subprocess with `kb.envsafe` (no credential variables), `--backend ollama`, a loopback-only
+`OLLAMA_BASE_URL` (non-loopback refused before launch), and a `sitecustomize` guard that blocks and logs any
+non-loopback socket; a non-empty guard log fails the build. A timeout kills the whole process tree
+(`graphify.exe` is a launcher; killing it alone orphaned the python worker and kept Ollama busy).
+
+## D-040 graphify LLM settings: pinned context and output, Qwen3 sampling, small parts (accepted, 2026-11-07)
+Measured on retail: graphify sizes `num_ctx` per request (~20k), which reloaded qwen3:8b on every call,
+spilled 2/37 layers off the 8 GB GPU (22 tok/s), and its 16,384-token output cap let repetition loops run
+into Ollama's 10-min wall (first build timed out after 1 h). Greedy decoding (temperature 0) made qwen3
+loop on long JSON ("... and Documentation and Documentation ..."), as Qwen documents. Settings now:
+`qwen3-graphify` (thinking off; top_p 0.8, top_k 20, presence_penalty 1.5), temperature 0.7 with seed 42,
+`num_ctx` 12288, output cap 3072, each document exported as ~2,000-char parts (heading/paragraph
+boundaries, tables never cut) with token budget 400 so each part is one LLM call. Retail: 28 parts,
+7 hit the cap (partial result kept), 2 gave no JSON after 3 tries (re-extracted next run), 29 min.
+Labels from repetition loops are dropped by `degenerate()` and counted in the report.
+
+## D-041 Every graphify node is an entity (bug fix, 2026-11-07)
+`file_type` in graphify's schema is the node's source category (code|document|paper|image|rationale|
+concept), not "this node is the file". The first normaliser treated `file_type == document` as the
+document itself and dropped 58 of 70 retail nodes (coverage 0.08). All nodes are now entities.
+
+## D-042 Embedding matches are never auto-accepted (accepted, user decision 2026-11-07)
+At 0.85, embedding matches auto-accepted wrong concepts ("Records" -> PublicRecord 0.86). Accepted concepts
+steer expansion, so only rule matches (exact label 1.0, synonym 0.95, head term 0.88) auto-accept;
+every embedding match goes to the checker queue with its best candidate and cosine.
+
+## D-043 Curated bank-governance vocabulary in `config/ontology.yaml` (accepted, user decision 2026-11-07)
+Retail after D-041/D-042: 22/56 concept entities auto-mapped (39%) vs the skill's >= 80%. Many entities
+have no FIBO class (committees, procedures, roles, escalation, thresholds). The user chose: curate generic
+bank vocabulary as reviewed synonyms or `kb:` local concepts, report the real coverage, and leave the
+rest to checkers (Claude makes no checker decisions). Added: GovernanceCommittee, OperatingProcedure,
+ProductDisclosureDocument, ControlRole, Escalation, ApprovalThreshold, ControlBreach, SystemOfRecord;
+synonyms for Regulation, Duty, CreditRiskAssessment; more PolicyException labels. Terms are generic (no
+entity-specific labels: "Tier A".."Tier D" stay in review). Retail: 30/60 auto-mapped (0.50), 30 queued.
+All four BUs (run 20261107-205706 + retail re-normalise): 87/230 auto-mapped (0.38); 143 queued.
+The `>= 80%` DoD item stays failing in `test_mapping_coverage_at_least_80_percent` until checkers act.
+
+## D-044 Reranker scores expansion hits against the question + spotted concept labels (accepted)
+Expansion found the right chunk for "What does a wire transfer cost?" (concept TelegraphicTransferFee,
+BM25 18.6, rank 1 in the concept branch), but bge-reranker-base scored it 0.003 against the user's
+wording, below `min_rerank_score` 0.05, so it was dropped; scored against the question plus the label
+"telegraphic transfer fee" it gets 0.51. The rerank query now appends the preferred labels of concepts
+spotted in the question. Only ontology labels of concepts in the question are added (no related
+concepts, no BU graph content), so nothing outside the caller's scope reaches the query; candidates are
+still the pre-filtered ones. Unit test: `tests/unit/test_expansion_rerank.py`.

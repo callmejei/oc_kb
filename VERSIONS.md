@@ -28,6 +28,7 @@ Last verified: 2026-11-07 (Phase 4).
 | Port | Model | Pin | Status |
 |---|---|---|---|
 | LLM (local) | `qwen3:8b` (Q4_K_M, 5.23 GB) | Ollama digest `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41` | pulled, verified by integration test |
+| graphify extractor (local) | `qwen3-graphify` = `qwen3:8b` weights + `infra/local/ollama/qwen3-graphify.Modelfile` (thinking off, top_p 0.8, top_k 20, presence_penalty 1.5, seed 42) | same blobs as `qwen3:8b`; Modelfile in git | `kb.ps1 models` creates it (D-040) |
 | Embedder (local) | `BAAI/bge-small-en-v1.5` (384-d) | HF commit `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a` (checked at load) | `kb.ps1 models`, offline at runtime |
 | Parsing (local) | Docling layout (heron), TableFormer, RapidOCR PP-OCRv6 small (torch) | versions pinned by docling 2.142.1's downloader | `kb.ps1 models` -> `.infra/models/docling` |
 | PII NER | spaCy `en_core_web_lg` 3.8.0 | pip wheel, URL in `uv.lock` | installed with the env |
@@ -71,11 +72,23 @@ Last verified: 2026-11-07 (Phase 4).
 | reportlab | 5.1.0 | synthetic |
 | pillow | 13.0.0 | synthetic |
 | arize-phoenix | 20.26.0 | isolated env `infra/local/phoenix` (D-019) |
+| rdflib | 7.6.0 | main |
+| pyoxigraph | 0.5.13 | main |
+| pyshacl | 0.40.1 | main |
+| psutil | 7.2.2 | dev |
+| graphifyy[ollama,office] | 0.9.95 | isolated env `infra/local/graphify`, uv-locked, exclude-newer 2026-10-24 (D-039) |
+
+## Ontology (Phase 5)
+
+| Item | Pin |
+|---|---|
+| FIBO | release `master_2026Q3`, archive sha256 `46385076935d28e65c3e3a4b68b78416948e5ca1afbd0dfe312c3fe8a0010694`, in `.infra/ontology/fibo` (D-038); modules FND, BE, FBC, LOAN, SEC (1,881 classes) |
+| Mapping thresholds (`config/ontology.yaml`) | auto_accept 0.85 (rule matches only, D-042); exact label 1.0, synonym 0.95, head term 0.88, partial term 0.75, embed_min 0.55 |
+| graphify run settings (`config/local.yaml` `graph:`) | token_budget 400, part_chars 2000, num_ctx 12288, max_output_tokens 3072, api_timeout_s 300, timeout_s 14400, temperature 0.7, seed 42 (D-040) |
 
 Transitive packages: see `uv.lock` (182 packages).
 
 ## Planned, not yet installed (pinned when their phase starts)
 
-graphifyy, rdflib,
-pyoxigraph, pySHACL, RAGAS, FIBO release, React, pdf.js.
+RAGAS, React, pdf.js.
 elasticsearch-haystack: not used (D-028).
