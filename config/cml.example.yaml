@@ -15,6 +15,9 @@ network:
 
 services: {}
 
+gateway:
+  auth: sso   # SSO via the CML ingress; dev_header is refused outside env=local
+
 ports:
   document_source:   {adapter: cml.SharePointGraphSource, tenant_id: "${GRAPH_TENANT_ID}", client_id: "${GRAPH_CLIENT_ID}", client_secret: "${GRAPH_CLIENT_SECRET}"}
   upload_source:     {adapter: local.UploadSource, root: hdfs:///data/kb/raw/uploads}

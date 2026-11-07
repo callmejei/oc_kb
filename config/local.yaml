@@ -26,6 +26,14 @@ services:
   phoenix:
     url: http://127.0.0.1:6006
 
+gateway:
+  host: 127.0.0.1
+  port: 8000
+  # Phase 1 dev auth: X-KB-User header, accepted only from these client addresses.
+  # Replaced by real authentication in Phase 3 (DECISIONS D-013).
+  auth: dev_header
+  trusted_clients: [127.0.0.1, "::1"]
+
 ports:
   document_source:   {adapter: local.LocalFolderSource, root: data/sharepoint}
   upload_source:     {adapter: local.UploadSource, root: data/raw/uploads}

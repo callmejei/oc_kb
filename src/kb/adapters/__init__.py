@@ -16,7 +16,6 @@ from kb.ports import (
     GraphStore,
     IdentityProvider,
     MalwareScanner,
-    Registry,
     Reranker,
     SqlEngine,
     Tracer,
@@ -26,6 +25,7 @@ from kb.ports import (
 _IMPLEMENTED: dict[str, str] = {
     "local.YamlIdentityProvider": "kb.adapters.local.identity:YamlIdentityProvider",
     "local.FsspecRawStore": "kb.adapters.local.raw_store:FsspecRawStore",
+    "local.PostgresRegistry": "kb.adapters.local.registry:PostgresRegistry",
 }
 
 # stubs: name -> (protocol, phase that implements it)
@@ -33,7 +33,6 @@ _STUBS: dict[str, tuple[type, int]] = {
     "local.LocalFolderSource": (DocumentSource, 2),
     "local.UploadSource": (DocumentSource, 2),
     "local.AllowListScanner": (MalwareScanner, 2),
-    "local.PostgresRegistry": (Registry, 1),
     "local.ElasticsearchChunkIndex": (ChunkIndex, 2),
     "local.SentenceTransformerEmbedder": (Embedder, 2),
     "local.CrossEncoderReranker": (Reranker, 3),
