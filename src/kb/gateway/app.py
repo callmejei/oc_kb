@@ -70,8 +70,10 @@ def create_app(
 def default_qa(settings: Settings, st: GatewayState) -> Any:
     from kb.agent.service import AskService
     from kb.retrieval.pipeline import HybridRetriever
+    from kb.sql.text_to_sql import TextToSql
 
+    llm = build(settings, "llm")
     retriever = HybridRetriever(
         st.chunk_index, build(settings, "embedder"), build(settings, "reranker"), settings.retrieval
     )
-    return AskService(retriever, build(settings, "llm"), st.registry, settings.retrieval)
+    return AskService(retriever, llm, st.registry, settings.retrieval, TextToSql(build(settings, "sql_engine"), llm))

@@ -13,7 +13,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-_NUM = re.compile(r"(?<![\w.])-?\d[\d,]*(?:\.\d+)?%?")
+_NUM = re.compile(r"(?<![\w.\-])\d[\d,]*(?:\.\d+)?%?")  # no sign: "R-00001" is an id, not -1
 _SEG = re.compile(r"(?<=[.;:!?])\s+|\n+|\s\|\s")
 _WORD = re.compile(r"[a-z][a-z\-]+")
 STOP = frozenset(
@@ -108,10 +108,16 @@ def best_support(sentence: str, cited: list[str], sources: dict[str, str], quest
     want = terms(sentence)
     scores: dict[str, float] = {}
     for ref, text in sources.items():
+        segs = _SEG.split(text)
         best = -1.0
-        for seg in _SEG.split(text):
+        for seg in segs:  # preferred: one segment (row / sentence) holds every figure
             if figs <= figures(seg):
                 best = max(best, len(want & terms(seg)) / max(1, len(want)))
+        if best < 0:  # lists: each figure held by its own segment of this source, scored lower
+            holders = [[seg for seg in segs if f in figures(seg)] for f in figs]
+            if all(holders):
+                cover = [max(len(want & terms(s)) for s in h) / max(1, len(want)) for h in holders]
+                best = 0.5 * sum(cover) / len(cover)
         if best >= 0:
             scores[ref] = best
     if not scores:

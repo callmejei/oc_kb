@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import statistics
 import sys
 import time
@@ -100,12 +101,94 @@ def evaluate(settings: Settings, k: int = 5, log: Any = print) -> dict[str, Any]
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="kb.evaluation.golden")
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--suite", choices=["documents", "structured"], default="documents")
     a = ap.parse_args(argv)
-    report = evaluate(load_settings(strict=True))
+    settings = load_settings(strict=True)
+    if a.suite == "structured":
+        report = evaluate_structured(settings)
+        a.out.parent.mkdir(parents=True, exist_ok=True)
+        a.out.write_text(json.dumps(report, indent=1, default=str) + chr(10), encoding="utf-8")
+        print(json.dumps(report["overall"], indent=1))
+        return 0
+    report = evaluate(settings)
     a.out.parent.mkdir(parents=True, exist_ok=True)
     a.out.write_text(json.dumps(report, indent=1) + "\n", encoding="utf-8")
     print(json.dumps({"overall": report["overall"], "by_bu": report["by_bu"]}, indent=1))
     return 0
+
+
+# ================================================================================================= structured
+STRUCTURED = REPO_ROOT / "tests" / "eval" / "golden" / "structured.yaml"
+_NUMS = re.compile(r"\d[\d,]*(?:\.\d+)?")
+
+
+def _nums(text: str) -> list[float]:
+    return [float(n.replace(",", "")) for n in _NUMS.findall(text)]
+
+
+def figure_found(expected: float, text: str, rel: float = 0.005) -> bool:
+    return any(abs(v - expected) <= max(0.01, abs(expected) * rel) for v in _nums(text))
+
+
+def evaluate_structured(settings: Settings, log: Any = print) -> dict[str, Any]:
+    import duckdb
+
+    from kb.agent.service import AskService
+    from kb.sql.text_to_sql import TextToSql
+
+    idx = build(settings, "chunk_index")
+    llm = build(settings, "llm")
+    svc = AskService(
+        HybridRetriever(idx, build(settings, "embedder"), build(settings, "reranker"), settings.retrieval),
+        llm,
+        build(settings, "registry"),  # lazy: compute() never writes the audit
+        settings.retrieval,
+        TextToSql(build(settings, "sql_engine"), llm),
+    )
+    idp = YamlIdentityProvider("config/users.yaml")
+    con = duckdb.connect(str(settings.path("data_dir") / "marts" / "marts.duckdb"), read_only=True)
+    rows = []
+    for item in yaml.safe_load(STRUCTURED.read_text(encoding="utf-8")):
+        expected = float(con.execute(item["truth_sql"]).fetchone()[0])  # type: ignore[index]
+        t0 = time.monotonic()
+        c = svc.compute(idp.resolve(item["user"]), item["q"])
+        ms = int((time.monotonic() - t0) * 1000)
+        kinds = {x.kind for x in c.answer.citations}
+        row = {
+            "id": item["id"],
+            "question": item["q"],
+            "expected": expected,
+            "route_expected": item["route"],
+            "route": c.route,
+            "route_correct": c.route == item["route"],
+            "data_correct": figure_found(expected, c.answer.text),
+            "doc_correct": item.get("doc_fact", "") in c.answer.text if item.get("doc_fact") else None,
+            "citations_ok": kinds == ({"document", "data"} if item["route"] == "both" else {"data"}),
+            "blocked_reason": c.answer.blocked_reason,
+            "latency_ms": ms,
+            "answer": c.answer.text,
+            "sql": [a.get("sql") for a in c.sql.attempts] if c.sql else [],
+        }
+        rows.append(row)
+        log(
+            f"{item['id']:<4} route={c.route:<9} ok_route={row['route_correct']!s:<5} data={row['data_correct']!s:<5} "
+            f"doc={row['doc_correct']!s:<5} cites={row['citations_ok']!s:<5} {ms:>6} ms {c.answer.text[:80]!r}"
+        )
+    con.close()
+    n = len(rows)
+    both = [r for r in rows if r["route_expected"] == "both"]
+    return {
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "overall": {
+            "n": n,
+            "route_correct": round(sum(r["route_correct"] for r in rows) / n, 3),
+            "data_correct": round(sum(r["data_correct"] for r in rows) / n, 3),
+            "doc_correct_on_combined": round(sum(bool(r["doc_correct"]) for r in both) / max(1, len(both)), 3),
+            "citations_ok": round(sum(r["citations_ok"] for r in rows) / n, 3),
+            "median_latency_ms": int(statistics.median(r["latency_ms"] for r in rows)),
+        },
+        "questions": rows,
+    }
 
 
 if __name__ == "__main__":

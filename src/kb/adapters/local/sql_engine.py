@@ -89,8 +89,13 @@ class DuckDbPolicySqlEngine:
         return "\n".join(lines)
 
     def execute(self, sql: str, identity: Identity, *, row_limit: int) -> SqlResult:
+        result, decision = self.execute_with_decision(sql, identity, row_limit=row_limit)
+        self.last_decision = decision  # convenience for single-threaded callers (tests); do not rely on it
+        return result
+
+    def execute_with_decision(self, sql: str, identity: Identity, *, row_limit: int) -> tuple[SqlResult, Decision]:
+        """Thread-safe: the policy decision travels with its own result."""
         rewritten, decision = self.policy.prepare(sql, identity, row_limit)
-        self.last_decision = decision
         con = self._con.cursor()  # shares the hardened instance and its locked settings
         timer = threading.Timer(float(self.policy.cfg.get("timeout_s", 10)), con.interrupt)
         timer.start()
@@ -106,13 +111,7 @@ class DuckDbPolicySqlEngine:
             timer.cancel()
             con.close()
         truncated = len(rows) > decision.limit
-        return (
-            SqlResult(columns=columns, rows=rows[: decision.limit], executed_sql=rewritten, tables=decision.tables)
-            if not truncated
-            else SqlResult(
-                columns=columns,
-                rows=rows[: decision.limit],
-                executed_sql=rewritten + "  -- truncated",
-                tables=decision.tables,
-            )
-        )
+        executed = rewritten + ("  -- truncated" if truncated else "")
+        return SqlResult(
+            columns=columns, rows=rows[: decision.limit], executed_sql=executed, tables=decision.tables
+        ), decision
