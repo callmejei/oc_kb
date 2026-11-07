@@ -62,7 +62,7 @@ def test_citations_map_to_document_section_page_version():
 def test_invented_citations_are_stripped():
     a = answer("ltv?", [sc(1)], FakeLLM("70% [1]. Also see [7] and [42]."))
     assert "[7]" not in a.text and "[42]" not in a.text and "[1]" in a.text
-    assert a.invalid_citations == [7, 42] and [c.n for c in a.citations] == [1]
+    assert a.invalid_citations == ["7", "42"] and [c.n for c in a.citations] == [1]
 
 
 def test_paraphrased_markers_are_canonicalised():
@@ -117,3 +117,65 @@ def test_question_cannot_inject_blocks_either():
 def test_context_budget_limits_blocks():
     msgs = build_messages("q", [sc(i, "y" * 4000) for i in range(1, 6)], 9000)
     assert msgs[1].content.count("<source ref=") == 2
+
+
+# ---------------------------------------------------------------------------------------- figure support
+def _row(n, text, title):  # type: ignore[no-untyped-def]
+    s = sc(n, text)
+    s.chunk.metadata["title"] = title  # type: ignore[index]
+    return s
+
+
+def test_wrong_row_citation_is_remapped_to_the_supporting_source():
+    """Baseline r2: 40% is right, but the cited doc holds 40% in a different row (D-032)."""
+    group = _row(
+        1,
+        "Owner-occupied residential, LTV - third or more facilities = 40%. "
+        "Investment residential, LTV - third or more facilities = 35%.",
+        "Group",
+    )
+    retail = _row(
+        2,
+        "Owner-occupied residential, LTV - third or more facilities = 45%. "
+        "Investment residential, LTV - third or more facilities = 40%.",
+        "Retail",
+    )
+    a = answer(
+        "LTV third facility investment residential?",
+        [group, retail],
+        FakeLLM("The LTV limit for a third facility on an investment residential property is 40% [1]."),
+    )
+    assert [c.title for c in a.citations] == ["Retail"] and a.remapped_citations[0]["to"] == "2"
+
+
+def test_figure_in_no_source_is_refused():
+    a = answer("fee?", [sc(1, "The late payment fee is 75.00.")], FakeLLM("The late payment fee is 80.00 [1]."))
+    assert a.text == REFUSED and a.blocked_reason == "unsupported_figure"
+
+
+def test_correct_citation_is_kept_and_question_figures_need_no_source():
+    a = answer(
+        "Is 2027 the year?",
+        [sc(1, "The late payment fee is 75.00 per occurrence.")],
+        FakeLLM("For 2027, the late payment fee is 75.00 [1]."),
+    )
+    assert a.text.endswith("[1].") and not a.remapped_citations and a.citations[0].n == 1
+
+
+def test_data_sources_are_cited_as_tables_with_sql():
+    from kb.agent.answer import DataSource
+
+    d = DataSource(
+        sql="SELECT count(*) AS n FROM mart_credit.loan WHERE status = 'ARREARS_90'",
+        executed_sql="SELECT * FROM (...) AS q LIMIT 201",
+        tables=["mart_credit.loan"],
+        columns=["n"],
+        rows=[(23,)],
+    )
+    a = answer(
+        "How many loans are 90 days in arrears?", [], FakeLLM("There are 23 loans 90 days in arrears [T1]."), data=[d]
+    )
+    (c,) = a.citations
+    assert (c.kind, c.n, c.tables, c.row_count) == ("data", "T1", ["mart_credit.loan"], 1) and "ARREARS_90" in c.sql
+    bad = answer("How many?", [], FakeLLM("There are 24 loans [T1]."), data=[d])
+    assert bad.blocked_reason == "unsupported_figure"

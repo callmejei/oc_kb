@@ -54,7 +54,7 @@ class AskService:
             "retrieved_chunk_ids": ret.retrieved_ids,
             "context_chunk_ids": ans.context_ids,
             "cited_chunk_ids": [c.chunk_id for c in ans.citations],
-            "cited_doc_versions": sorted({c.version_id for c in ans.citations}),
+            "cited_doc_versions": sorted({c.version_id for c in ans.citations if c.version_id}),
             "invalid_citations": ans.invalid_citations,
             "context_redactions": ans.redactions,
             "blocked_reason": ans.blocked_reason,
