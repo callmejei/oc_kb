@@ -79,3 +79,11 @@ def test_non_allowlisted_host_is_rejected(tmp_path):
 def test_missing_port_is_rejected(tmp_path):
     with pytest.raises(ConfigError, match="ports missing"):
         load_settings("v", config_dir=_variant(tmp_path, lambda raw: raw["ports"].pop("tracer")))
+
+
+def test_dev_header_auth_is_refused_outside_local(tmp_path):
+    raw = yaml.safe_load((CONFIG_DIR / "cml.example.yaml").read_text())
+    raw["gateway"] = {"auth": "dev_header"}
+    (tmp_path / "c.yaml").write_text(yaml.safe_dump(raw))
+    with pytest.raises(ConfigError, match="local-only"):
+        load_settings("c", config_dir=tmp_path)
