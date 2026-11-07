@@ -1,0 +1,36 @@
+<#
+  Windows equivalent of the Makefile (same target names). Usage: .\kb.ps1 up | down | status | seed | test | ...
+  Logic lives in infra/local/kbinfra.py and synthetic/; this file only dispatches.
+#>
+param([Parameter(Position = 0)][string]$Target = "help")
+$ErrorActionPreference = "Stop"
+Set-Location -Path $PSScriptRoot
+$env:PYTHONIOENCODING = "utf-8"
+
+function Invoke-Step([string]$Exe, [string[]]$CmdArgs) {
+    & $Exe @CmdArgs
+    if ($LASTEXITCODE -ne 0) { throw "$Exe $($CmdArgs -join ' ') failed with exit code $LASTEXITCODE" }
+}
+function Sync { Invoke-Step uv @("sync", "--all-groups", "--locked") }
+function Infra([string]$Action) { Invoke-Step uv @("run", "python", "infra/local/kbinfra.py", $Action) }
+
+switch ($Target) {
+    "sync"        { Sync }
+    "fetch"       { Sync; Infra "fetch" }
+    "up"          { Sync; Infra "up" }
+    "down"        { Infra "down" }
+    "status"      { Infra "status" }
+    "models"      { Infra "models" }
+    "seed"        { Invoke-Step uv @("run", "python", "-m", "synthetic", "seed") }
+    "lint"        { Invoke-Step uv @("run", "ruff", "check", "."); Invoke-Step uv @("run", "ruff", "format", "--check", ".") }
+    "typecheck"   { Invoke-Step uv @("run", "mypy") }
+    "unit"        { Invoke-Step uv @("run", "pytest", "-m", "not integration") }
+    "integration" { Invoke-Step uv @("run", "pytest", "-m", "integration") }
+    "test"        {
+        Invoke-Step uv @("run", "ruff", "check", ".")
+        Invoke-Step uv @("run", "ruff", "format", "--check", ".")
+        Invoke-Step uv @("run", "mypy")
+        Invoke-Step uv @("run", "pytest")
+    }
+    default       { Write-Output "targets: sync fetch up down status models seed test lint typecheck unit integration" }
+}
