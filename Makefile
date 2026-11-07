@@ -2,10 +2,10 @@
 UV ?= uv
 PY := $(UV) run python
 
-.PHONY: help sync fetch up down status models seed test lint typecheck unit integration
+.PHONY: help sync fetch up down status models seed migrate api test lint typecheck unit integration
 
 help:
-	@echo "targets: sync fetch up down status models seed test lint typecheck unit integration"
+	@echo "targets: sync fetch up down status models seed migrate api test lint typecheck unit integration"
 
 sync:
 	$(UV) sync --all-groups --locked
@@ -27,6 +27,13 @@ models:
 
 seed:
 	$(PY) -m synthetic seed
+
+migrate:
+	$(PY) -m kb.registry.migrate
+	$(PY) -m kb.registry.rolesync
+
+api:
+	$(UV) run uvicorn kb.gateway.app:create_app --factory --host 127.0.0.1 --port 8000
 
 lint:
 	$(UV) run ruff check .

@@ -10,6 +10,8 @@ retrieval. Brief: `CLAUDE.md`. Decisions: `DECISIONS.md`. Versions: `VERSIONS.md
 .\kb.ps1 up      # fetch + verify binaries (first run only), start PostgreSQL, Elasticsearch, Ollama, Phoenix
 .\kb.ps1 models  # pull the pinned LLM (first run only, ~5 GB)
 .\kb.ps1 seed    # rebuild the synthetic world under data/
+.\kb.ps1 migrate # apply registry migrations to db `kb` and sync governance roles from users.yaml
+.\kb.ps1 api     # gateway on http://127.0.0.1:8000 (OpenAPI at /docs); dev auth: X-KB-User header
 .\kb.ps1 test    # ruff + mypy + pytest (unit, security, integration)
 .\kb.ps1 down
 ```
@@ -53,12 +55,14 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | RawStore (fsspec, streaming) | tested | `adapters/local/raw_store.py` |
 | Local infra scripts + health checks | tested | `infra/local/kbinfra.py`, integration tests |
 | Synthetic corpus, scenarios, marts | tested | `synthetic/` |
-| Registry schema (reference) | smoke-tested on scratch DB | full tests in Phase 1 |
-| Registry adapter | stubbed (Phase 1) | |
+| Registry schema: migrations 000-003, runner, role sync | tested | `src/kb/registry/`; four-eyes proven in the DB |
+| Registry adapter (PostgreSQL) | tested | `adapters/local/registry.py` |
+| Governance API (maker, checker, publish/unpublish) | tested | `src/kb/gateway/`; dev-header auth until Phase 3 |
+| Upload endpoint, ES re-stamp on publish | not started | Phase 2 |
 | DocumentSource local/upload, scanner, ChunkIndex, Embedder | stubbed (Phase 2) | |
 | Reranker, LLM | stubbed (Phase 3) | |
 | SqlEngine / PolicyEngine | stubbed (Phase 4) | |
 | GraphStore | stubbed (Phase 5) | |
 | Tracer | stubbed (Phase 7) | Phoenix server runs |
 | All CML adapters | stubbed (Phase 7) | |
-| Gateway, retrieval, agent, UI, evaluation | not started | Phases 3 to 7 |
+| Gateway Q&A, retrieval, agent, UI, evaluation | not started | Phases 3 to 7 |

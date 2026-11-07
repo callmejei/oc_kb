@@ -1,10 +1,10 @@
 # Pinned versions
 
 Policy: exact pins only. Python resolution is frozen with `exclude-newer = 2026-10-24` in
-`pyproject.toml` (nothing newer than two weeks before Phase 0), and `uv.lock` pins all 181
+`pyproject.toml` (nothing newer than two weeks before Phase 0), and `uv.lock` pins all 182
 packages including transitive ones. Change a pin only with a `DECISIONS.md` entry.
 
-Last verified: 2026-11-07 (Phase 0).
+Last verified: 2026-11-07 (Phase 1).
 
 ## Runtime and tooling
 
@@ -44,6 +44,9 @@ Last verified: 2026-11-07 (Phase 0).
 | psycopg[binary] | 3.3.6 | main |
 | fsspec | 2026.9.0 | main |
 | duckdb | 2.0.0 | main |
+| fastapi | 0.162.0 | main |
+| uvicorn | 0.54.0 | main |
+| psycopg-pool | 3.3.3 | main |
 | pytest | 9.1.1 | dev |
 | ruff | 0.17.2 | dev |
 | mypy | 2.4.0 | dev |
@@ -56,11 +59,11 @@ Last verified: 2026-11-07 (Phase 0).
 | pillow | 13.0.0 | synthetic |
 | arize-phoenix | 20.26.0 | phoenix |
 
-Transitive packages: see `uv.lock` (181 packages).
+Transitive packages: see `uv.lock` (182 packages).
 
 ## Planned, not yet installed (pinned when their phase starts)
 
 Dagster, Docling (+ HybridChunker, OCR weights), Presidio, Haystack, elasticsearch-haystack,
-sentence-transformers / torch (CUDA build), sqlglot, FastAPI / uvicorn, graphifyy, rdflib,
+sentence-transformers / torch (CUDA build), sqlglot, graphifyy, rdflib,
 pyoxigraph, pySHACL, RAGAS, FIBO release, React, pdf.js.
 Known at Phase 0: `haystack-ai` on PyPI is 3.x; see DECISIONS D-006.

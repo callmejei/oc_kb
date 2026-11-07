@@ -22,6 +22,8 @@ switch ($Target) {
     "status"      { Infra "status" }
     "models"      { Infra "models" }
     "seed"        { Invoke-Step uv @("run", "python", "-m", "synthetic", "seed") }
+    "migrate"     { Invoke-Step uv @("run", "python", "-m", "kb.registry.migrate"); Invoke-Step uv @("run", "python", "-m", "kb.registry.rolesync") }
+    "api"         { Invoke-Step uv @("run", "uvicorn", "kb.gateway.app:create_app", "--factory", "--host", "127.0.0.1", "--port", "8000") }
     "lint"        { Invoke-Step uv @("run", "ruff", "check", "."); Invoke-Step uv @("run", "ruff", "format", "--check", ".") }
     "typecheck"   { Invoke-Step uv @("run", "mypy") }
     "unit"        { Invoke-Step uv @("run", "pytest", "-m", "not integration") }
@@ -32,5 +34,5 @@ switch ($Target) {
         Invoke-Step uv @("run", "mypy")
         Invoke-Step uv @("run", "pytest")
     }
-    default       { Write-Output "targets: sync fetch up down status models seed test lint typecheck unit integration" }
+    default       { Write-Output "targets: sync fetch up down status models seed migrate api test lint typecheck unit integration" }
 }
