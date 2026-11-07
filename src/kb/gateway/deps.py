@@ -29,6 +29,7 @@ class GatewayState:
     trusted_clients: frozenset[str]
     raw_store: RawStore
     chunk_index: ChunkIndex
+    processed_store: RawStore
     issuer: TokenIssuer | None = None
     passwords: LocalPasswordStore | None = None
     qa_factory: Callable[[], Any] | None = None

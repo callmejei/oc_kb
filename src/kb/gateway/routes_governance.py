@@ -254,6 +254,44 @@ def request_hold_release(hold_id: str, body: Comment, ident: Ident, st: St) -> A
         return {"request_id": repo.request_hold_release(conn, hold_id, body.comment)}
 
 
+# ---------------------------------------------------------------------------- answer feedback (flags)
+@router.get("/feedback")
+def list_feedback(ident: Ident, st: St, status_filter: Literal["OPEN", "RESOLVED"] = "OPEN") -> Any:
+    """Flags on answers that cited this BU's documents. Each BU sees only its own part of a flag (the
+    versions of its documents); the question text is never shown (it is auditor-only)."""
+    bus = sorted(set(roles(st, ident, "MAKER")) | set(roles(st, ident, "CHECKER")))
+    if not bus:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "you are not a MAKER or CHECKER for any BU")
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        return conn.execute(
+            """SELECT t.feedback_id, t.bu, t.status, t.resolved_by, t.resolved_at, t.resolution,
+                      f.user_id, f.problem, f.reason, f.created_at,
+                      (SELECT json_agg(json_build_object('version_id', v.version_id, 'doc_id', v.doc_id,
+                              'version_no', v.version_no, 'title', d.title, 'is_current', v.is_current)
+                              ORDER BY v.version_id)
+                         FROM kb.document_version v JOIN kb.document d USING (doc_id)
+                        WHERE v.version_id = ANY(t.version_ids)) AS versions
+               FROM kb.feedback_target t JOIN kb.answer_feedback f USING (feedback_id)
+               WHERE t.bu = ANY(%s) AND t.status = %s ORDER BY f.created_at DESC""",
+            (bus, status_filter),
+        ).fetchall()
+
+
+class Resolution(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    bu: str
+    resolution: str = Field(min_length=1, max_length=2000)
+
+
+@router.post("/feedback/{feedback_id}/resolve")
+def resolve_feedback(feedback_id: str, body: Resolution, ident: Ident, st: St) -> Any:
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        conn.execute("SELECT kb.resolve_feedback(%s, %s, %s)", (feedback_id, body.bu, body.resolution))
+        return conn.execute(
+            "SELECT * FROM kb.feedback_target WHERE feedback_id = %s AND bu = %s", (feedback_id, body.bu)
+        ).fetchone()
+
+
 # ---------------------------------------------------------------------------- ontology review queue
 @router.get("/concept-reviews")
 def concept_reviews(ident: Ident, st: St, status_filter: str = "PENDING") -> Any:

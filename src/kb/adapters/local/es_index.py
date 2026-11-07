@@ -270,6 +270,26 @@ class ElasticsearchChunkIndex:
     def knn(self, vector: Sequence[float], flt: AccessFilter, k: int) -> list[ScoredChunk]:
         return self._hits(knn_body(vector, flt, k), "knn")
 
+    # ---------------------------------------------------------------- document inspector (ACL-filtered)
+    def visible_versions(self, doc_id: str, flt: AccessFilter) -> set[str]:
+        """Versions of a document with at least one chunk the filter lets through."""
+        r = self.es.search(
+            index=self.alias,
+            size=0,
+            query={"bool": {"filter": [{"term": {"doc_id": doc_id}}, *render_filter(flt)]}},
+            aggs={"v": {"terms": {"field": "version_id", "size": 500}}},
+        )
+        return {b["key"] for b in r["aggregations"]["v"]["buckets"]}
+
+    def version_chunks(self, version_id: str, flt: AccessFilter, size: int = 2000) -> list[ScoredChunk]:
+        body = {
+            "size": size,
+            "query": {"bool": {"filter": [{"term": {"version_id": version_id}}, *render_filter(flt)]}},
+            "sort": [{"chunk_no": "asc"}],
+            "_source": {"excludes": ["embedding"]},
+        }
+        return self._hits(body, "inspect")
+
     # ---------------------------------------------------------------- inspection (pipeline/tests)
     def count(self, query: dict[str, Any] | None = None) -> int:
         return int(self.es.count(index=self.alias, query=query or {"match_all": {}})["count"])

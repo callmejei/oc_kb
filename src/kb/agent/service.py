@@ -77,14 +77,15 @@ class AskService:
         self.retriever, self.llm, self.registry, self.cfg, self.t2s = retriever, llm, registry, cfg, text_to_sql
         self.scope_fn = scope_fn  # identity -> BUs whose graphs may be read for expansion (None: no expansion)
 
-    def ask(self, identity: Identity, question: str) -> AskResult:
-        c = self.compute(identity, question)
+    def ask(self, identity: Identity, question: str, spaces: list[str] | None = None) -> AskResult:
+        c = self.compute(identity, question, spaces)
         return self._audit(identity, question, c)
 
-    def compute(self, identity: Identity, question: str) -> Computed:
-        """Everything except the audit write (used by ask() and by offline evaluation)."""
+    def compute(self, identity: Identity, question: str, spaces: list[str] | None = None) -> Computed:
+        """Everything except the audit write (used by ask() and by offline evaluation).
+        spaces: BUs the user picked; narrows documents and graph expansion (never widens)."""
         t0 = time.monotonic()
-        flt = build_access_filter(identity)
+        flt = build_access_filter(identity, spaces)
         tables = self.t2s.engine.policy.granted_tables(identity) if self.t2s else []
         route, route_method, data_question = router.route(question, self.llm, tables)
         notes: list[str] = []
@@ -104,6 +105,8 @@ class AskService:
         expansion: dict[str, Any] = {}
         if route in ("documents", "both") or not data:  # data failed -> fall back to documents
             scope = self.scope_fn(identity) if self.scope_fn else None
+            if scope is not None and spaces:
+                scope = [b for b in scope if b in spaces]
             ret = self.retriever.retrieve(question, flt, scope=scope)
             context, retrieved_ids = ret.context, ret.retrieved_ids
             if ret.expansion is not None:

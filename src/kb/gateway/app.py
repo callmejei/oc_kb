@@ -12,13 +12,14 @@ from typing import Any
 
 from fastapi import FastAPI
 
-from kb.adapters import build
+from kb.adapters import adapter_class, build
 from kb.adapters.local.identity import YamlIdentityProvider
 from kb.adapters.local.registry import PostgresRegistry
 from kb.config import REPO_ROOT, Settings, load_settings
 from kb.gateway.auth import LocalPasswordStore, TokenIssuer
 from kb.gateway.deps import GatewayState
 from kb.gateway.routes_ask import router as ask_router
+from kb.gateway.routes_documents import router as documents_router
 from kb.gateway.routes_governance import router as governance_router
 from kb.gateway.routes_uploads import router as uploads_router
 
@@ -31,6 +32,8 @@ def create_app(
     raw_store: Any = None,
     chunk_index: Any = None,
     qa_factory: Any = None,
+    processed_store: Any = None,
+    ui_dist: Path | None = None,
 ) -> FastAPI:
     settings = settings or load_settings(strict=True)
     gw = settings.gateway
@@ -41,6 +44,7 @@ def create_app(
         trusted_clients=trusted_clients or frozenset(gw.get("trusted_clients", [])),
         raw_store=raw_store or build(settings, "raw_store"),
         chunk_index=chunk_index or build(settings, "chunk_index"),
+        processed_store=processed_store or processed_port(settings),
     )
     secret = str(gw.get("jwt_secret", ""))
     if gw.get("auth") == "local_jwt" and secret and "${" not in secret:
@@ -59,12 +63,57 @@ def create_app(
     app.include_router(governance_router, prefix="/api/v1/governance", tags=["governance"])
     app.include_router(uploads_router, prefix="/api/v1/uploads", tags=["uploads"])
     app.include_router(ask_router, prefix="/api/v1", tags=["ask"])
+    app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
 
     @app.get("/healthz")
     def healthz() -> dict[str, bool]:
         return {"registry": st.registry.ping()}
 
+    mount_ui(app, ui_dist or REPO_ROOT / "ui" / "dist")
     return app
+
+
+CSP = (
+    "default-src 'self'; script-src 'self'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; "
+    "img-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'self'; object-src 'none'; "
+    "frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+)
+
+
+def mount_ui(app: FastAPI, dist: Path) -> None:
+    """Serve the built React app on the gateway's own port (one door; a CML Application exposes one port).
+    Unknown non-API paths return index.html (client-side routes). Every response gets a strict CSP."""
+    from fastapi import Request
+    from fastapi.responses import FileResponse
+    from fastapi.staticfiles import StaticFiles
+
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next: Any) -> Any:
+        resp = await call_next(request)
+        resp.headers.setdefault("Content-Security-Policy", CSP)
+        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+        resp.headers.setdefault("X-Frame-Options", "DENY")
+        resp.headers.setdefault("Referrer-Policy", "no-referrer")
+        return resp
+
+    index = dist / "index.html"
+    if not index.exists():
+        return  # API-only (tests, or the UI not built): `kb.ps1 ui` builds it
+    app.mount("/assets", StaticFiles(directory=dist / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str) -> Any:
+        if path.startswith("api/"):
+            from fastapi import HTTPException
+
+            raise HTTPException(404, "not found")
+        return FileResponse(index, headers={"Cache-Control": "no-cache"})
+
+
+def processed_port(settings: Settings) -> Any:
+    """Parse outputs (Docling JSON) for the inspector: the raw_store adapter on the processed URL."""
+    pc = settings.ports["raw_store"]
+    return adapter_class(pc.adapter)(**(pc.options | {"url": settings.processing["processed_url"]}))
 
 
 def default_qa(settings: Settings, st: GatewayState) -> Any:
