@@ -3,21 +3,22 @@
 #
 # Group naming:  GRP_KB_<BU>_<READ|MAKER|CHECKER>   document access + governance roles
 #                GRP_DATA_<AREA>_<BU>              mart access (see policies.yaml)
-# A MAKER/CHECKER group also grants READ on its BU (they must see what they govern).
+# A MAKER/CHECKER group is a nested member of its BU's READ group (AD-style `member_of`): they must
+# see what they govern. The IdentityProvider expands nesting transitively, as an LDAP lookup would.
 
 groups:
   GRP_KB_RETAIL_READ:       {bu: retail,    kind: read}
-  GRP_KB_RETAIL_MAKER:      {bu: retail,    kind: maker}
-  GRP_KB_RETAIL_CHECKER:    {bu: retail,    kind: checker}
+  GRP_KB_RETAIL_MAKER:      {bu: retail,    kind: maker, member_of: [GRP_KB_RETAIL_READ]}
+  GRP_KB_RETAIL_CHECKER:    {bu: retail,    kind: checker, member_of: [GRP_KB_RETAIL_READ]}
   GRP_KB_CORPORATE_READ:    {bu: corporate, kind: read}
-  GRP_KB_CORPORATE_MAKER:   {bu: corporate, kind: maker}
-  GRP_KB_CORPORATE_CHECKER: {bu: corporate, kind: checker}
+  GRP_KB_CORPORATE_MAKER:   {bu: corporate, kind: maker, member_of: [GRP_KB_CORPORATE_READ]}
+  GRP_KB_CORPORATE_CHECKER: {bu: corporate, kind: checker, member_of: [GRP_KB_CORPORATE_READ]}
   GRP_KB_WEALTH_READ:       {bu: wealth,    kind: read}
-  GRP_KB_WEALTH_MAKER:      {bu: wealth,    kind: maker}
-  GRP_KB_WEALTH_CHECKER:    {bu: wealth,    kind: checker}
+  GRP_KB_WEALTH_MAKER:      {bu: wealth,    kind: maker, member_of: [GRP_KB_WEALTH_READ]}
+  GRP_KB_WEALTH_CHECKER:    {bu: wealth,    kind: checker, member_of: [GRP_KB_WEALTH_READ]}
   GRP_KB_SHARED_READ:       {bu: shared,    kind: read}
-  GRP_KB_SHARED_MAKER:      {bu: shared,    kind: maker}
-  GRP_KB_SHARED_CHECKER:    {bu: shared,    kind: checker}
+  GRP_KB_SHARED_MAKER:      {bu: shared,    kind: maker, member_of: [GRP_KB_SHARED_READ]}
+  GRP_KB_SHARED_CHECKER:    {bu: shared,    kind: checker, member_of: [GRP_KB_SHARED_READ]}
   GRP_DATA_CREDIT_RETAIL:    {bu: retail,    kind: data}
   GRP_DATA_CREDIT_CORPORATE: {bu: corporate, kind: data}
   GRP_DATA_CUST_RETAIL:      {bu: retail,    kind: data}

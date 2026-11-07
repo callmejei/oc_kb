@@ -32,8 +32,24 @@ class YamlIdentityProvider:
             if u["id"] in self._users:
                 raise ValueError(f"duplicate user id {u['id']}")
             self._users[u["id"]] = Identity(
-                user_id=u["id"], display_name=u["name"], bu=u["bu"], groups=frozenset(u["groups"])
+                user_id=u["id"], display_name=u["name"], bu=u["bu"], groups=self._expand(u["groups"])
             )
+
+    def _expand(self, direct: list[str]) -> frozenset[str]:
+        """Transitive nested-group membership (AD `member_of`), cycle-safe."""
+        seen: set[str] = set()
+        todo = list(direct)
+        while todo:
+            g = todo.pop()
+            if g in seen:
+                continue
+            seen.add(g)
+            parents: list[str] = list(self.groups[g].get("member_of", []))
+            unknown = set(parents) - set(self.groups)
+            if unknown:
+                raise ValueError(f"group {g} is member_of unknown groups {sorted(unknown)}")
+            todo.extend(parents)
+        return frozenset(seen)
 
     def resolve(self, user_id: str) -> Identity:
         try:

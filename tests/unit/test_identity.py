@@ -50,3 +50,10 @@ def test_unique_ids_and_unknown_user(idp):
     assert not [i for i, n in Counter(ids).items() if n > 1]
     with pytest.raises(UnknownUserError):
         idp.resolve("intruder")
+
+
+def test_nested_groups_give_governors_read_on_their_bu(idp):
+    checker = idp.resolve("ret.checker")
+    assert "GRP_KB_RETAIL_READ" in checker.groups and "GRP_KB_RETAIL_CHECKER" in checker.groups
+    assert "GRP_KB_CORPORATE_READ" not in checker.groups
+    assert idp.resolve("ret.user1").groups >= {"GRP_KB_RETAIL_READ"}

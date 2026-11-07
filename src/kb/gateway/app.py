@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 
@@ -16,6 +17,7 @@ from kb.adapters.local.registry import PostgresRegistry
 from kb.config import Settings, load_settings
 from kb.gateway.deps import GatewayState
 from kb.gateway.routes_governance import router as governance_router
+from kb.gateway.routes_uploads import router as uploads_router
 
 
 def create_app(
@@ -23,6 +25,8 @@ def create_app(
     registry: PostgresRegistry | None = None,
     idp: YamlIdentityProvider | None = None,
     trusted_clients: frozenset[str] | None = None,
+    raw_store: Any = None,
+    chunk_index: Any = None,
 ) -> FastAPI:
     settings = settings or load_settings(strict=True)
     gw = settings.gateway
@@ -31,6 +35,8 @@ def create_app(
         idp=idp or build(settings, "identity_provider"),
         auth_mode=str(gw.get("auth", "")),
         trusted_clients=trusted_clients or frozenset(gw.get("trusted_clients", [])),
+        raw_store=raw_store or build(settings, "raw_store"),
+        chunk_index=chunk_index or build(settings, "chunk_index"),
     )
 
     @asynccontextmanager
@@ -41,6 +47,7 @@ def create_app(
     app = FastAPI(title="KB gateway", version="0.1.0", lifespan=lifespan)
     app.state.kb = st
     app.include_router(governance_router, prefix="/api/v1/governance", tags=["governance"])
+    app.include_router(uploads_router, prefix="/api/v1/uploads", tags=["uploads"])
 
     @app.get("/healthz")
     def healthz() -> dict[str, bool]:

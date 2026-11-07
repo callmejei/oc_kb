@@ -59,6 +59,7 @@ CHECKER = {"retail": "ret.checker", "corporate": "corp.checker", "wealth": "wlth
 
 
 def register(api: Api, bu: str = "retail", source_type: str = "SHAREPOINT", **rev: Any) -> dict[str, Any]:
+    sp_over = {k: rev.pop(k) for k in list(rev) if k.startswith("sp_")}  # source fields, not revision fields
     body: dict[str, Any] = {
         "source_id": uid(bu[:3]),
         "bu": bu,
@@ -67,7 +68,7 @@ def register(api: Api, bu: str = "retail", source_type: str = "SHAREPOINT", **re
         "revision": revision_body(bu, **rev),
     }
     if source_type == "SHAREPOINT":
-        body |= {"sp_site_id": "site-1", "sp_drive_id": "drive-1", "sp_folder_path": "/KB"}
+        body |= {"sp_site_id": "site-1", "sp_drive_id": "drive-1", "sp_folder_path": "/KB"} | sp_over
     r = api.call("POST", "/sources", MAKER[bu], body)
     assert r.status_code == 201, r.text
     return r.json()

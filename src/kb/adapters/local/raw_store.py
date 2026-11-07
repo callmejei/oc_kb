@@ -44,11 +44,16 @@ class FsspecRawStore:
         self.fs.makedirs(posixpath.dirname(dest), exist_ok=True)
         h = hashlib.sha256()
         size = 0
-        with self.fs.open(tmp, "wb") as out:
-            while block := stream.read(CHUNK):
-                h.update(block)
-                size += len(block)
-                out.write(block)
+        try:
+            with self.fs.open(tmp, "wb") as out:
+                while block := stream.read(CHUNK):
+                    h.update(block)
+                    size += len(block)
+                    out.write(block)
+        except BaseException:
+            if self.fs.exists(tmp):  # aborted (e.g. size limit hit mid-stream): leave nothing behind
+                self.fs.rm(tmp)
+            raise
         self.fs.mv(tmp, dest)
         return StoredObject(uri=self._uri(dest), sha256=h.hexdigest(), size_bytes=size)
 

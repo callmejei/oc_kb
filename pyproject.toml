@@ -23,6 +23,7 @@ dependencies = [
   "sentence-transformers==6.2.0",
   "elasticsearch==8.19.3",
   "en-core-web-lg",
+  "python-multipart==0.0.32",
 ]
 
 [dependency-groups]

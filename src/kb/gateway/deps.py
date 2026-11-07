@@ -13,6 +13,7 @@ from psycopg import errors as pg
 
 from kb.adapters.local.identity import UnknownUserError, YamlIdentityProvider
 from kb.adapters.local.registry import PostgresRegistry
+from kb.ports import ChunkIndex, RawStore
 from kb.ports.types import Identity
 from kb.registry.repository import ConflictError, NotFoundError
 
@@ -25,6 +26,8 @@ class GatewayState:
     idp: YamlIdentityProvider
     auth_mode: str
     trusted_clients: frozenset[str]
+    raw_store: RawStore
+    chunk_index: ChunkIndex
 
 
 def state(request: Request) -> GatewayState:
