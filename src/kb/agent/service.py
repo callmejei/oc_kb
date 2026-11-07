@@ -56,6 +56,8 @@ class AskService:
             "cited_chunk_ids": [c.chunk_id for c in ans.citations],
             "cited_doc_versions": sorted({c.version_id for c in ans.citations}),
             "invalid_citations": ans.invalid_citations,
+            "context_redactions": ans.redactions,
+            "blocked_reason": ans.blocked_reason,
             "llm_called": ans.llm_called,
             "grounded": ans.grounded,
             "question_sha256": hashlib.sha256(question.encode()).hexdigest(),

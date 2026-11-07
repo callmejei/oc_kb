@@ -103,3 +103,15 @@ def insert_upload(pipe_conn: psycopg.Connection[Any], source_id: str, uploader: 
         (f"{doc_id}:v1", doc_id, "a" * 64, f"file:///raw/{doc_id}", uploader, ip),
     )
     return doc_id
+
+
+class RecordingLLM:
+    """Deterministic stand-in: records what the model would have seen; cites the first source."""
+
+    def __init__(self, reply: str = "Per the documents [1].") -> None:
+        self.reply = reply
+        self.calls: list[Any] = []
+
+    def chat(self, messages, *, temperature=0.0, max_tokens=None):  # type: ignore[no-untyped-def]
+        self.calls.append(messages)
+        return self.reply

@@ -77,5 +77,8 @@ strict = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["integration: needs local infra running (make up)"]
-addopts = "-ra"
+markers = [
+  "integration: needs local infra running (make up)",
+  "leak_llm: end-to-end leak matrix with real LLM answers (make leak); excluded by default",
+]
+addopts = "-ra -m 'not leak_llm'"

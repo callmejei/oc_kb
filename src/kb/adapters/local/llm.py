@@ -1,6 +1,6 @@
 """OpenAICompatibleLLM: chat completions over httpx against the configured endpoint only.
 
-Deliberately not the OpenAI SDK: the SDK falls back to api.openai.com when no base URL is given, which
+Deliberately not the OpenAI SDK: the SDK falls back to the vendor's hosted endpoint when no base URL is given, which
 is exactly the silent hosted path CLAUDE.md rule 2 forbids. This client has no default endpoint; the
 base_url comes from config, which validation restricts to allowed (loopback / bank) hosts.
 """

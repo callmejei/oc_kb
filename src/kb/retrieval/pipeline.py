@@ -101,10 +101,23 @@ class RetrievalResult:
 
 
 class HybridRetriever:
+    def candidates(self, query: str, access_filter: AccessFilter, k: int | None = None) -> list[ScoredChunk]:
+        """Everything the two pre-filtered retrievers return (no fusion / rerank). The LLM context is
+        always a subset of this, so leak checks over it are strictly stronger and much cheaper."""
+        k = k or max(self.bm25.top_k, self.knn.top_k)
+        hits = [
+            *self.index.bm25(query, access_filter, k),
+            *self.index.knn(self.embedder.embed_query(query), access_filter, k),
+        ]
+        return list({h.chunk.chunk_id: h for h in hits}.values())
+
     def __init__(self, index: ChunkIndex, embedder: Embedder, reranker: Reranker, cfg: dict[str, Any]) -> None:
+        self.index, self.embedder = index, embedder
         p = Pipeline()
-        p.add_component("bm25", AclBm25Retriever(index, int(cfg.get("bm25_k", 20))))
-        p.add_component("knn", AclKnnRetriever(index, embedder, int(cfg.get("knn_k", 20))))
+        self.bm25 = AclBm25Retriever(index, int(cfg.get("bm25_k", 20)))
+        self.knn = AclKnnRetriever(index, embedder, int(cfg.get("knn_k", 20)))
+        p.add_component("bm25", self.bm25)
+        p.add_component("knn", self.knn)
         p.add_component("fuse", DocumentJoiner(join_mode="reciprocal_rank_fusion", top_k=int(cfg.get("fused_k", 20))))
         p.add_component(
             "rerank", ChunkReranker(reranker, int(cfg.get("rerank_k", 6)), float(cfg.get("min_rerank_score", -4.0)))

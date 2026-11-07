@@ -2,10 +2,10 @@
 UV ?= uv
 PY := $(UV) run python
 
-.PHONY: help sync fetch up down status models seed migrate onboard api test lint typecheck unit integration
+.PHONY: help sync fetch up down status models seed migrate onboard api leak golden test lint typecheck unit integration
 
 help:
-	@echo "targets: sync fetch up down status models seed migrate onboard api test lint typecheck unit integration"
+	@echo "targets: sync fetch up down status models seed migrate onboard api leak golden test lint typecheck unit integration"
 
 sync:
 	$(UV) sync --all-groups --locked
@@ -37,6 +37,12 @@ onboard:
 
 api:
 	$(UV) run uvicorn kb.gateway.app:create_app --factory --host 127.0.0.1 --port 8000
+
+leak:
+	$(UV) run pytest -m leak_llm tests/integration/qa/test_leak_llm.py
+
+golden:
+	$(PY) -m kb.evaluation.golden --out docs/eval/golden-latest.json
 
 lint:
 	$(UV) run ruff check .

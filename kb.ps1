@@ -25,6 +25,8 @@ switch ($Target) {
     "migrate"     { Invoke-Step uv @("run", "python", "-m", "kb.registry.migrate"); Invoke-Step uv @("run", "python", "-m", "kb.registry.rolesync") }
     "onboard"     { Invoke-Step uv @("run", "python", "-m", "kb.ingest.bootstrap", "--wait") }
     "api"         { Invoke-Step uv @("run", "uvicorn", "kb.gateway.app:create_app", "--factory", "--host", "127.0.0.1", "--port", "8000") }
+    "leak"        { Invoke-Step uv @("run", "pytest", "-m", "leak_llm", "tests/integration/qa/test_leak_llm.py") }
+    "golden"      { Invoke-Step uv @("run", "python", "-m", "kb.evaluation.golden", "--out", "docs/eval/golden-latest.json") }
     "lint"        { Invoke-Step uv @("run", "ruff", "check", "."); Invoke-Step uv @("run", "ruff", "format", "--check", ".") }
     "typecheck"   { Invoke-Step uv @("run", "mypy") }
     "unit"        { Invoke-Step uv @("run", "pytest", "-m", "not integration") }
@@ -35,5 +37,5 @@ switch ($Target) {
         Invoke-Step uv @("run", "mypy")
         Invoke-Step uv @("run", "pytest")
     }
-    default       { Write-Output "targets: sync fetch up down status models seed migrate onboard api test lint typecheck unit integration" }
+    default       { Write-Output "targets: sync fetch up down status models seed migrate onboard api leak golden test lint typecheck unit integration" }
 }
