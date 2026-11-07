@@ -209,3 +209,38 @@ for having valid citations, not for each citation supporting each claim. Options
 check (figures in a sentence must appear in its cited chunk, else re-map or flag), or RAGAS faithfulness in
 Phase 7. Recommendation: add the numeric support check early in Phase 4, where SQL answers make figures
 even more central.
+
+## D-033 Phase 4 answers (accepted, 2026-11-07, user approved)
+1. Policies are enforced by rewriting each validated query: every mart table becomes a subquery that applies
+   the caller's row filter (OR over their groups; deny by default) and replaces masked columns with masked
+   values, so predicates/joins/aggregates only see masked values (Ranger-view semantics).
+2. Users see the generated SQL in the `[Tn]` citation; the policy-rewritten SQL that ran is in the audit.
+3. SQL functions are allowlisted (anything else, incl. table functions, file readers, getenv, system
+   functions, is refused). Defence in depth: the DuckDB instance is read-only with external access,
+   extension autoload and community extensions off, configuration locked, memory/threads capped, and a
+   query timeout (connection interrupt).
+4. Figure support: re-map to the best supporting source, else refuse (blocked_reason unsupported_figure).
+5. A user without table grants is never routed to data (no LLM routing call either); a keyword heuristic
+   only adds a neutral note, which never names tables.
+
+## D-034 DuckDB hardening is per database instance (accepted, 2026-11-07)
+DuckDB shares one database instance per file per process, and `lock_configuration` locks that instance.
+The engine therefore hardens once and verifies the settings on every later engine (refusing to run if the
+instance is not hardened); queries use cursors on the hardened connection. Policy decisions travel with
+their result (`execute_with_decision`) so concurrent requests cannot swap audit details.
+
+## D-035 Figure support is segment-level, with a list fallback (accepted, 2026-11-07)
+Number presence alone passes the r2 case (the wrong document also holds "40%", in another row), so support
+is judged on the segment holding the figure and its overlap with the sentence's terms. A sentence listing
+several result rows may be supported figure-by-figure across rows of the same source (scored lower).
+Numbers carry no sign, so ids like `R-00001` are not read as -1. Effect: Phase 3 golden citation
+correctness 0.957 -> 1.0 with answer correctness unchanged (docs/eval/golden-phase4-support.json).
+
+## D-036 Router hands text-to-SQL only the data part of a combined question (accepted, 2026-11-07)
+Found in Phase 4: given the whole combined question, the model invented a `loan.ltv_pct` column to cover the
+policy half. The router now returns `data_question` (standalone, data part only); text-to-SQL receives that.
+A `not_granted` refusal is never fed back to the model (no coaching towards tables the user may not see).
+
+## D-037 Known limit: masked-value questions get "not covered" (open, Phase 6 UX)
+Asking for names/emails as a masked user returns "not covered" rather than "these values are masked for
+you". Safe (nothing leaks); a clearer message is a UI/answer-template improvement for Phase 6.

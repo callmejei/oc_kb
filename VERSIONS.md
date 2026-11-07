@@ -4,7 +4,7 @@ Policy: exact pins only. Python resolution is frozen with `exclude-newer = 2026-
 `pyproject.toml` (nothing newer than two weeks before Phase 0), and `uv.lock` pins all 182
 packages including transitive ones. Change a pin only with a `DECISIONS.md` entry.
 
-Last verified: 2026-11-07 (Phase 3).
+Last verified: 2026-11-07 (Phase 4).
 
 ## Runtime and tooling
 
@@ -52,6 +52,7 @@ Last verified: 2026-11-07 (Phase 3).
 | python-multipart | 0.0.32 | main |
 | haystack-ai | 2.31.0 (pulls openai 3.37.0, never imported by our code) | main |
 | pyjwt | 2.15.1 | main |
+| sqlglot | 30.24.0 | main |
 | dagster, dagster-webserver | 1.13.26 | main |
 | docling | 2.142.1 (docling-core 2.104.0, docling-ibm-models 4.0.4, rapidocr 3.10.0) | main |
 | presidio-analyzer, presidio-anonymizer | 2.2.364 | main |
@@ -75,6 +76,6 @@ Transitive packages: see `uv.lock` (182 packages).
 
 ## Planned, not yet installed (pinned when their phase starts)
 
-sqlglot, graphifyy, rdflib,
+graphifyy, rdflib,
 pyoxigraph, pySHACL, RAGAS, FIBO release, React, pdf.js.
 elasticsearch-haystack: not used (D-028).

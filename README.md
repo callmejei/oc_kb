@@ -17,6 +17,7 @@ retrieval. Brief: `CLAUDE.md`. Decisions: `DECISIONS.md`. Versions: `VERSIONS.md
 .\kb.ps1 test    # ruff + mypy + pytest (unit, security, integration, retrieval-level leak suite)
 .\kb.ps1 leak    # end-to-end leak matrix with real LLM answers (slow)
 .\kb.ps1 golden  # golden-set evaluation -> docs/eval/golden-latest.json
+                 #   structured suite: uv run python -m kb.evaluation.golden --suite structured --out <file>
 .\kb.ps1 down
 ```
 
@@ -75,8 +76,11 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | Gateway: JWT login, `/ask`, query audit | tested | `src/kb/gateway/`; migration 005 |
 | ACL leak suite (17 users x every canary) | tested | retrieval level in `make test`; real answers in `make leak` |
 | Golden set baseline | recorded | `docs/eval/baseline-phase3.json` |
-| SqlEngine / PolicyEngine | stubbed (Phase 4) | |
+| SqlEngine (DuckDB) + PolicyEngine (grants, row filters, masks by rewrite) | tested | `src/kb/sql/`, `adapters/local/sql_engine.py` |
+| Text-to-SQL, router (documents / data / both), combined cited answers | tested | real-LLM tests in `tests/integration/qa/test_structured.py` |
+| Figure support check on citations | tested | Phase 3 golden citation 0.957 -> 1.0 |
+| Structured golden baseline | recorded | `docs/eval/baseline-phase4-structured.json` |
 | GraphStore | stubbed (Phase 5) | |
 | Tracer | stubbed (Phase 7) | Phoenix server runs |
 | All CML adapters | stubbed (Phase 7) | |
-| Structured data, ontology, UI, RAGAS/dashboards | not started | Phases 4 to 7 |
+| Ontology, UI, RAGAS/dashboards | not started | Phases 5 to 7 |
