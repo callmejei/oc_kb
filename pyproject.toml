@@ -26,6 +26,7 @@ dependencies = [
   "python-multipart==0.0.32",
   "haystack-ai==2.31.0",
   "pyjwt==2.15.1",
+  "sqlglot==30.24.0",
 ]
 
 [dependency-groups]

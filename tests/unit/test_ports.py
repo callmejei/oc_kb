@@ -27,9 +27,9 @@ def test_local_adapter_builds_and_satisfies_protocol(settings, port):
 
 
 def test_stubs_fail_loudly_with_their_phase():
-    stub = adapter_class("local.DuckDbPolicySqlEngine")(path="x", policies="y")
-    with pytest.raises(NotImplementedYetError, match="Phase 4"):
-        stub.permitted_schema(None)
+    stub = adapter_class("local.OxigraphGraphStore")(path="x")
+    with pytest.raises(NotImplementedYetError, match="Phase 5"):
+        stub.query("SELECT * WHERE {?s ?p ?o}", [])
 
 
 def test_unknown_adapter_raises():

@@ -24,6 +24,7 @@ _IMPLEMENTED: dict[str, str] = {
     "local.YamlIdentityProvider": "kb.adapters.local.identity:YamlIdentityProvider",
     "local.FsspecRawStore": "kb.adapters.local.raw_store:FsspecRawStore",
     "local.PostgresRegistry": "kb.adapters.local.registry:PostgresRegistry",
+    "local.DuckDbPolicySqlEngine": "kb.adapters.local.sql_engine:DuckDbPolicySqlEngine",
     "local.OpenAICompatibleLLM": "kb.adapters.local.llm:OpenAICompatibleLLM",
     "local.CrossEncoderReranker": "kb.adapters.local.reranker:CrossEncoderReranker",
     "local.SentenceTransformerEmbedder": "kb.adapters.local.embedder:SentenceTransformerEmbedder",
@@ -35,7 +36,6 @@ _IMPLEMENTED: dict[str, str] = {
 # stubs: name -> (protocol, phase that implements it)
 _STUBS: dict[str, tuple[type, int]] = {
     "local.UploadSource": (DocumentSourceFactory, 2),
-    "local.DuckDbPolicySqlEngine": (SqlEngine, 4),
     "local.OxigraphGraphStore": (GraphStore, 5),
     "local.PhoenixTracer": (Tracer, 7),
     "cml.SharePointGraphSource": (DocumentSourceFactory, 7),
