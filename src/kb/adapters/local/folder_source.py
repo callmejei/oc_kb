@@ -34,6 +34,10 @@ class InvalidTokenError(ValueError):
     pass
 
 
+class SourceNotFoundError(LookupError):
+    """The site/drive does not exist (Graph: 404). Never treated as an empty library."""
+
+
 def _parse_token(token: str) -> int:
     if not token.startswith(TOKEN_PREFIX) or not token[len(TOKEN_PREFIX) :].isdigit():
         raise InvalidTokenError(f"not a delta token: {token!r}")
@@ -49,6 +53,8 @@ class BoundFolderSource:
 
     # ---------------------------------------------------------------- ledger
     def _ledger(self) -> dict[str, Any]:
+        if not (self.root / self.site).is_dir():
+            raise SourceNotFoundError(f"site {self.site!r} not found under {self.root}")
         data: dict[str, Any] = json.loads((self.root / LEDGER).read_text(encoding="utf-8"))
         return data
 

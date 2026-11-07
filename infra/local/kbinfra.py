@@ -497,12 +497,54 @@ def phoenix_down(settings: Any, env: dict[str, str]) -> None:
     log("phoenix stopped")
 
 
+# ---- Dagster (daemon + webserver) ------------------------------------------------------------
+DAGSTER_HOME = DATA / "dagster"
+DAGSTER_YAML = REPO_ROOT / "infra" / "local" / "dagster" / "dagster.yaml"
+DAGSTER_MODULE = "kb.ingest.definitions"
+
+
+def _venv_exe(name: str) -> str:
+    return str(REPO_ROOT / ".venv" / ("Scripts" if IS_WIN else "bin") / f"{name}{EXE}")
+
+
+def dagster_health(settings: Any, env: dict[str, str]) -> tuple[bool, Any]:
+    ok, body = http_ok(str(settings.services["dagster"]["url"]) + "/server_info")
+    daemon = (RUN / "dagster-daemon.pid").exists()
+    return bool(ok and daemon), (body.get("dagster_webserver_version") if isinstance(body, dict) else body)
+
+
+def dagster_up(settings: Any, env: dict[str, str]) -> None:
+    if dagster_health(settings, env)[0]:
+        log("dagster already running")
+        return
+    DAGSTER_HOME.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(DAGSTER_YAML, DAGSTER_HOME / "dagster.yaml")
+    port = str(settings.services["dagster"]["url"]).rsplit(":", 1)[1]
+    denv = {"DAGSTER_HOME": str(DAGSTER_HOME), "PYTHONIOENCODING": "utf-8", "DAGSTER_DISABLE_TELEMETRY": "1"}
+    spawn("dagster-daemon", [_venv_exe("dagster-daemon"), "run", "-m", DAGSTER_MODULE], denv, cwd=REPO_ROOT)
+    spawn(
+        "dagster-webserver",
+        [_venv_exe("dagster-webserver"), "-m", DAGSTER_MODULE, "-h", "127.0.0.1", "-p", port],
+        denv,
+        cwd=REPO_ROOT,
+    )
+    wait_for("dagster", lambda: dagster_health(settings, env)[0], 180)
+    log("dagster healthy")
+
+
+def dagster_down(settings: Any, env: dict[str, str]) -> None:
+    kill_tree("dagster-webserver")
+    kill_tree("dagster-daemon")
+    log("dagster stopped")
+
+
 # ---- CLI -------------------------------------------------------------------------------------
 SERVICES: dict[str, tuple[Callable[..., None], Callable[..., None], Callable[..., tuple[bool, Any]]]] = {
     "postgres": (pg_up, pg_down, pg_health),
     "elasticsearch": (es_up, es_down, es_health),
     "ollama": (ollama_up, ollama_down, ollama_health),
     "phoenix": (phoenix_up, phoenix_down, phoenix_health),
+    "dagster": (dagster_up, dagster_down, dagster_health),
 }
 
 

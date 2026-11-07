@@ -25,6 +25,8 @@ services:
     url: http://127.0.0.1:11435
   phoenix:
     url: http://127.0.0.1:6006
+  dagster:
+    url: http://127.0.0.1:3070
 
 gateway:
   host: 127.0.0.1

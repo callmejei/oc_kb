@@ -1,0 +1,24 @@
+# Dagster instance config for the local prototype (copied to $DAGSTER_HOME by kbinfra).
+# Run-queue limits (CLAUDE.md Phase 2): one run per source (tag kb/source), a global cap on runs.
+# tests/integration/pipeline/test_dagster.py loads this file and asserts the limits are in force.
+concurrency:
+  runs:
+    max_concurrent_runs: 4
+    tag_concurrency_limits:
+      - key: kb/source
+        value:
+          applyLimitPerUniqueValue: true
+        limit: 1
+
+# rule 2 spirit: no outbound usage telemetry
+telemetry:
+  enabled: false
+
+retention:
+  schedule:
+    purge_after_days: 30
+  sensor:
+    purge_after_days:
+      skipped: 3
+      failure: 30
+      success: 7

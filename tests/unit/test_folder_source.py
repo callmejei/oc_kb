@@ -6,7 +6,7 @@ import shutil
 
 import pytest
 
-from kb.adapters.local.folder_source import InvalidTokenError, LocalFolderSource
+from kb.adapters.local.folder_source import InvalidTokenError, LocalFolderSource, SourceNotFoundError
 from kb.ports.types import ChangeKind
 from synthetic import scenarios
 from synthetic.world import CATALOGUE
@@ -101,3 +101,11 @@ def test_open_streams_the_file(sp):
     item = next(iter(src.list_all()))
     with src.open(item) as f:
         assert len(f.read()) == item.size_bytes
+
+
+def test_unknown_site_is_an_error_not_an_empty_library(sp):
+    src = LocalFolderSource(sp).bind("site-that-does-not-exist", "d", "/KB")
+    with pytest.raises(SourceNotFoundError):
+        list(src.delta(None))
+    with pytest.raises(SourceNotFoundError):
+        list(src.list_all())
