@@ -35,6 +35,7 @@ gateway:
   trusted_clients: [127.0.0.1, "::1"]
 
 processing:
+  registry_dsn: "postgresql://kb_pipe:${KB_PG_PIPELINE_PASSWORD}@127.0.0.1:5433/kb"   # pipeline role, never kb_api
   docling_artifacts: .infra/models/docling
   ocr_backend: torch            # RapidOCR on PyTorch, CPU; models from docling_artifacts (offline)
   chunk_max_tokens: 400         # HybridChunker budget, bge-small tokenizer (max 512)
@@ -44,13 +45,7 @@ processing:
     min_score: 0.6
     max_entities: 5
     entities: [EMAIL_ADDRESS, PHONE_NUMBER, CREDIT_CARD, IBAN_CODE, US_SSN, UK_NHS, PERSON]
-  retention_days:               # retention class -> days kept after a version stops being current
-    R0D: 0
-    R1Y: 365
-    R2Y: 730
-    R7Y: 2555
-    R10Y: 3650
-    PERM: null                  # never purged
+  # retention classes live in the registry (kb.retention_class, migration 004)
   max_concurrent_ingestion_runs: 4
 
 ports:
