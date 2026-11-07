@@ -204,3 +204,51 @@ def publish(doc_id: str, body: Comment, ident: Ident, st: St) -> Any:
 def unpublish(doc_id: str, body: RequiredReason, ident: Ident, st: St) -> Any:
     with st.registry.transaction(ident.user_id) as conn, db_errors():
         return {"request_id": repo.unpublish(conn, doc_id, body.reason)}
+
+
+# ---------------------------------------------------------------------------- exceptions
+@router.get("/exceptions")
+def list_exceptions(ident: Ident, st: St, status_filter: str | None = "OPEN") -> Any:
+    bus = sorted(set(roles(st, ident, "MAKER")) | set(roles(st, ident, "CHECKER")))
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        return repo.list_exceptions(conn, bus, status_filter)
+
+
+@router.post("/exceptions/{exception_id}/release", status_code=status.HTTP_201_CREATED)
+def request_release(exception_id: str, body: Comment, ident: Ident, st: St) -> Any:
+    """Maker asks for a released reprocess (PII threshold override / parse retry); a checker decides."""
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        return {"request_id": repo.request_release(conn, exception_id, body.comment)}
+
+
+@router.post("/exceptions/{exception_id}/exclude")
+def exclude_exception(exception_id: str, body: RequiredReason, ident: Ident, st: St) -> Any:
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        repo.exclude_exception(conn, exception_id, body.reason)
+        return repo.get_exception(conn, exception_id)
+
+
+# ---------------------------------------------------------------------------- legal holds
+class HoldCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    doc_id: str | None = None
+    source_id: str | None = None
+    reason: str = Field(min_length=1, max_length=2000)
+
+
+@router.post("/legal-holds", status_code=status.HTTP_201_CREATED)
+def place_hold(body: HoldCreate, ident: Ident, st: St) -> Any:
+    """Placing a hold only restricts (blocks purge): single actor, any MAKER/CHECKER of the BU."""
+    if (body.doc_id is None) == (body.source_id is None):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "give exactly one of doc_id, source_id")
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        bu = repo.hold_bu(conn, body.doc_id, body.source_id)
+        _require(sorted(set(roles(st, ident, "MAKER")) | set(roles(st, ident, "CHECKER"))), bu, "MAKER or CHECKER")
+        return {"hold_id": repo.place_legal_hold(conn, body.doc_id, body.source_id, body.reason)}
+
+
+@router.post("/legal-holds/{hold_id}/release", status_code=status.HTTP_201_CREATED)
+def request_hold_release(hold_id: str, body: Comment, ident: Ident, st: St) -> Any:
+    """Releasing a hold re-enables purge: four eyes (maker requests, checker decides)."""
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        return {"request_id": repo.request_hold_release(conn, hold_id, body.comment)}

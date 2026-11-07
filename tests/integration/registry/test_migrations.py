@@ -20,7 +20,9 @@ def test_001_is_the_reference_schema_without_transaction_wrapper():
 def test_all_migrations_applied_in_order(regdb, as_admin):
     with as_admin() as c:
         rows = c.execute("SELECT version FROM kb_meta.schema_migration ORDER BY version").fetchall()
-    assert [r["version"] for r in rows] == [m.version for m in migrate.discover()] == ["000", "001", "002", "003"]
+    assert (
+        [r["version"] for r in rows] == [m.version for m in migrate.discover()] == ["000", "001", "002", "003", "004"]
+    )
 
 
 def test_rerun_is_a_noop(regdb):

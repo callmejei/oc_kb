@@ -184,7 +184,12 @@ def request_detail(conn: Conn, request_id: str) -> dict[str, Any]:
     if req["revision_id"]:
         proposed = get_revision(conn, str(req["revision_id"]))
         current = get_revision(conn, str(src["current_revision_id"])) if src["current_revision_id"] else None
-        out |= {"proposed": proposed, "current": current, "diff": revision_diff(current, proposed)}
+        out |= {
+            "proposed": proposed,
+            "current": current,
+            "diff": revision_diff(current, proposed),
+            "dry_run": latest_dry_run(conn, str(req["revision_id"])),
+        }
     if req["doc_id"]:
         out["document"] = conn.execute(
             "SELECT doc_id, current_path, title, origin, uploaded_by, visibility, status FROM kb.document "
@@ -218,3 +223,82 @@ class NotFoundError(LookupError):
 
 class ConflictError(RuntimeError):
     pass
+
+
+# ---------------------------------------------------------------------------- exceptions / legal holds
+def list_exceptions(conn: Conn, bus: list[str], status: str | None = "OPEN") -> list[dict[str, Any]]:
+    return conn.execute(
+        """SELECT e.*, s.bu, kb.releasable_reason(e.reason) AS releasable,
+                  (SELECT request_id FROM kb.approval_request a WHERE a.exception_id = e.exception_id
+                     AND a.status = 'PENDING') AS pending_request_id
+           FROM kb.exception_item e JOIN kb.kb_source s USING (source_id)
+           WHERE s.bu = ANY(%s) AND (%s::text IS NULL OR e.status = %s)
+           ORDER BY e.created_at""",
+        (bus, status, status),
+    ).fetchall()
+
+
+def get_exception(conn: Conn, exception_id: str) -> dict[str, Any]:
+    row = conn.execute(
+        "SELECT e.*, s.bu FROM kb.exception_item e JOIN kb.kb_source s USING (source_id) WHERE exception_id = %s",
+        (exception_id,),
+    ).fetchone()
+    if row is None:
+        raise NotFoundError(f"unknown exception {exception_id}")
+    return row
+
+
+def request_release(conn: Conn, exception_id: str, comment: str | None) -> str:
+    e = get_exception(conn, exception_id)
+    row = conn.execute(
+        "SELECT kb.submit_request('RELEASE_EXCEPTION', %s, NULL, %s, NULL, %s) AS id",
+        (e["source_id"], exception_id, comment),
+    ).fetchone()
+    assert row is not None
+    return str(row["id"])
+
+
+def exclude_exception(conn: Conn, exception_id: str, reason: str) -> None:
+    get_exception(conn, exception_id)
+    conn.execute("SELECT kb.exclude_exception(%s, %s)", (exception_id, reason))
+
+
+def place_legal_hold(conn: Conn, doc_id: str | None, source_id: str | None, reason: str) -> str:
+    row = conn.execute("SELECT kb.place_legal_hold(%s, %s, %s) AS id", (doc_id, source_id, reason)).fetchone()
+    assert row is not None
+    return str(row["id"])
+
+
+def hold_bu(conn: Conn, doc_id: str | None, source_id: str | None) -> str:
+    if doc_id:
+        row = conn.execute(
+            "SELECT s.bu FROM kb.document d JOIN kb.kb_source s USING (source_id) WHERE d.doc_id = %s", (doc_id,)
+        ).fetchone()
+    else:
+        row = conn.execute("SELECT bu FROM kb.kb_source WHERE source_id = %s", (source_id,)).fetchone()
+    if row is None:
+        raise NotFoundError("unknown document or source")
+    return str(row["bu"])
+
+
+def request_hold_release(conn: Conn, hold_id: str, comment: str | None) -> str:
+    h = conn.execute(
+        """SELECT h.*, coalesce(h.source_id, d.source_id) AS src FROM kb.legal_hold h
+           LEFT JOIN kb.document d ON d.doc_id = h.doc_id WHERE hold_id = %s""",
+        (hold_id,),
+    ).fetchone()
+    if h is None:
+        raise NotFoundError(f"unknown legal hold {hold_id}")
+    row = conn.execute(
+        "SELECT kb.submit_request('RELEASE_LEGAL_HOLD', %s, NULL, NULL, %s, %s) AS id", (h["src"], hold_id, comment)
+    ).fetchone()
+    assert row is not None
+    return str(row["id"])
+
+
+def latest_dry_run(conn: Conn, revision_id: str) -> dict[str, Any] | None:
+    return conn.execute(
+        """SELECT run_id, status, stats, finished_at FROM kb.ingestion_run
+           WHERE revision_id = %s AND run_kind = 'DRY_RUN' ORDER BY created_at DESC LIMIT 1""",
+        (revision_id,),
+    ).fetchone()
