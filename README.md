@@ -7,8 +7,8 @@ retrieval. Brief: `CLAUDE.md`. Decisions: `DECISIONS.md`. Versions: `VERSIONS.md
 ## Quick start (Windows laptop)
 
 ```powershell
-.\kb.ps1 up      # fetch + verify binaries (first run only), start PostgreSQL, Elasticsearch, Ollama, Phoenix
-.\kb.ps1 models  # pull the pinned LLM (first run only, ~5 GB)
+.\kb.ps1 up      # fetch + verify binaries (first run only); start PostgreSQL, Elasticsearch, Ollama, Phoenix, Dagster
+.\kb.ps1 models  # first run only: LLM (~5 GB), embedder and Docling models at pinned revisions
 .\kb.ps1 seed    # rebuild the synthetic world under data/
 .\kb.ps1 migrate # apply registry migrations to db `kb` and sync governance roles from users.yaml
 .\kb.ps1 api     # gateway on http://127.0.0.1:8000 (OpenAPI at /docs); dev auth: X-KB-User header
@@ -24,6 +24,7 @@ On Linux/CML use the same targets with `make`. Local endpoints (loopback only):
 | Elasticsearch 8.19.23 | http://127.0.0.1:9250 | `elastic` / `KB_ES_PASSWORD` in `.env.local` |
 | Ollama 0.40.8 | http://127.0.0.1:11435 | none (loopback) |
 | Phoenix 20.26.0 | http://127.0.0.1:6006 | none (loopback) |
+| Dagster 1.13.26 | http://127.0.0.1:3070 | none (loopback); sensors/schedules on by default |
 
 `.env.local` is generated on the first `up` and is gitignored.
 
@@ -58,8 +59,12 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | Registry schema: migrations 000-003, runner, role sync | tested | `src/kb/registry/`; four-eyes proven in the DB |
 | Registry adapter (PostgreSQL) | tested | `adapters/local/registry.py` |
 | Governance API (maker, checker, publish/unpublish) | tested | `src/kb/gateway/`; dev-header auth until Phase 3 |
-| Upload endpoint, ES re-stamp on publish | not started | Phase 2 |
-| DocumentSource local/upload, scanner, ChunkIndex, Embedder | stubbed (Phase 2) | |
+| LocalFolderSource (Graph delta), AllowListScanner, ES ChunkIndex, Embedder | tested | `adapters/local/` |
+| Parse (Docling + OCR), chunk (HybridChunker), PII gate (Presidio) | tested | `src/kb/processing/`, offline |
+| Ingestion engine: dry run, first load, delta, reconcile, versioning, delete, purge, reprocess, index sync | tested | `src/kb/ingest/engine.py`; scripted lifecycle test |
+| Dagster jobs, sensors, schedules, run limits | tested | `src/kb/ingest/definitions.py`; daemon runs in `kb.ps1 up` |
+| Upload path (streamed receive, gates, private index, publish re-stamp, delete) | tested | all 7 upload scenarios |
+| UploadSource port adapter | stubbed (folded into the gateway + engine) | uploads do not need a delta feed |
 | Reranker, LLM | stubbed (Phase 3) | |
 | SqlEngine / PolicyEngine | stubbed (Phase 4) | |
 | GraphStore | stubbed (Phase 5) | |

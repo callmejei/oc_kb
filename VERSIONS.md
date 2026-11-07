@@ -4,7 +4,7 @@ Policy: exact pins only. Python resolution is frozen with `exclude-newer = 2026-
 `pyproject.toml` (nothing newer than two weeks before Phase 0), and `uv.lock` pins all 182
 packages including transitive ones. Change a pin only with a `DECISIONS.md` entry.
 
-Last verified: 2026-11-07 (Phase 1).
+Last verified: 2026-11-07 (Phase 2).
 
 ## Runtime and tooling
 
@@ -28,7 +28,9 @@ Last verified: 2026-11-07 (Phase 1).
 | Port | Model | Pin | Status |
 |---|---|---|---|
 | LLM (local) | `qwen3:8b` (Q4_K_M, 5.23 GB) | Ollama digest `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41` | pulled, verified by integration test |
-| Embedder (local) | `BAAI/bge-small-en-v1.5` (384-d) | HF revision to be pinned in Phase 2 | not downloaded yet |
+| Embedder (local) | `BAAI/bge-small-en-v1.5` (384-d) | HF commit `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a` (checked at load) | `kb.ps1 models`, offline at runtime |
+| Parsing (local) | Docling layout (heron), TableFormer, RapidOCR PP-OCRv6 small (torch) | versions pinned by docling 2.142.1's downloader | `kb.ps1 models` -> `.infra/models/docling` |
+| PII NER | spaCy `en_core_web_lg` 3.8.0 | pip wheel, URL in `uv.lock` | installed with the env |
 | Reranker (local) | `BAAI/bge-reranker-base` | HF revision to be pinned in Phase 3 | not downloaded yet |
 | Embedder (CML) | `BAAI/bge-m3` (1024-d) | pinned at CML deployment | n/a locally |
 | Reranker (CML) | `BAAI/bge-reranker-v2-m3` | pinned at CML deployment | n/a locally |
@@ -47,6 +49,14 @@ Last verified: 2026-11-07 (Phase 1).
 | fastapi | 0.162.0 | main |
 | uvicorn | 0.54.0 | main |
 | psycopg-pool | 3.3.3 | main |
+| python-multipart | 0.0.32 | main |
+| dagster, dagster-webserver | 1.13.26 | main |
+| docling | 2.142.1 (docling-core 2.104.0, docling-ibm-models 4.0.4, rapidocr 3.10.0) | main |
+| presidio-analyzer, presidio-anonymizer | 2.2.364 | main |
+| spacy | 3.8.16 | main |
+| en-core-web-lg | 3.8.0 (wheel URL pinned in uv.lock) | main |
+| sentence-transformers | 6.2.0 (transformers 5.20.2, torch 2.14.1 CPU) | main |
+| elasticsearch (client) | 8.19.3 (9.x is incompatible with the 8.19 server) | main |
 | pytest | 9.1.1 | dev |
 | ruff | 0.17.2 | dev |
 | mypy | 2.4.0 | dev |
@@ -57,13 +67,12 @@ Last verified: 2026-11-07 (Phase 1).
 | openpyxl | 3.1.5 | synthetic |
 | reportlab | 5.1.0 | synthetic |
 | pillow | 13.0.0 | synthetic |
-| arize-phoenix | 20.26.0 | phoenix |
+| arize-phoenix | 20.26.0 | isolated env `infra/local/phoenix` (D-019) |
 
 Transitive packages: see `uv.lock` (182 packages).
 
 ## Planned, not yet installed (pinned when their phase starts)
 
-Dagster, Docling (+ HybridChunker, OCR weights), Presidio, Haystack, elasticsearch-haystack,
-sentence-transformers / torch (CUDA build), sqlglot, graphifyy, rdflib,
+Haystack, elasticsearch-haystack, sqlglot, graphifyy, rdflib,
 pyoxigraph, pySHACL, RAGAS, FIBO release, React, pdf.js.
 Known at Phase 0: `haystack-ai` on PyPI is 3.x; see DECISIONS D-006.

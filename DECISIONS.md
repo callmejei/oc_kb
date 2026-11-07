@@ -122,3 +122,49 @@ the app environment will export traces with a light OTel client (Phase 7).
 user enters a key in the UI. Locally it is loopback-only and started with a sanitized environment.
 For CML: deploy with egress blocked to the internet (only the bank's endpoints), or disable the
 playground; to be confirmed in `docs/cml-deployment.md` (Phase 7).
+
+## D-020 Nested AD groups in the local IdentityProvider (accepted, 2026-11-07)
+Found in Phase 2: `users.yaml` said MAKER/CHECKER groups imply READ on their BU, but nothing
+implemented it, so a checker could not see a document published to their own BU. Modelled as AD
+nested groups (`member_of`), expanded transitively by `YamlIdentityProvider` exactly as an LDAP
+lookup with nested membership would. The CML LDAP adapter must do the same (tokenGroups / in-chain).
+
+## D-021 Phase 2 answers to the plan's open questions (accepted, 2026-11-07, user approved)
+1. CPU PyTorch (PyPI default on Windows); the 8 GB GPU stays with Ollama.
+2. Retention clock starts when a version stops being current (superseded, deleted, out of scope),
+   per version (`document_version.not_current_since`, `retention_until`).
+3. Only PII_THRESHOLD (reprocess with the PII gate overridden for that version) and PARSE_FAILURE
+   (retry) can be released; enforced by a trigger on request creation. Everything else: exclude.
+4. Upload permission (caller's groups intersect the space ACL) is checked by the gateway against the
+   live IdentityProvider; the DB records the uploader and enforces every other rule.
+5. Duplicates: own upload -> 409; SharePoint or PUBLISHED upload in the same BU -> LINKED (not indexed
+   twice); someone else's private upload is never matched (no existence leak).
+
+## D-022 Retention classes are governed reference data in the registry (accepted, 2026-11-07)
+`kb.retention_class` (migration 004) replaces a config mapping; `source_revision.retention_class` is a
+foreign key to it. `R0D` (0 days) exists for synthetic tests only; remove it before any real use.
+
+## D-023 Index field names follow Haystack's Elasticsearch store (accepted, 2026-11-07)
+`content`, `embedding`, flat metadata; strict mapping. Keeps D-006 (Haystack 2.x vs 3.x) open without
+re-indexing. Dense vectors use plain HNSW (no int8 quantization): exact scores on a small corpus.
+
+## D-024 Docling: DOCX has no pages (accepted, 2026-11-07)
+Docling does not paginate Word files, so DOCX chunks carry a section path but no page; citations for
+DOCX use document + section + version. PDF/PPTX/XLSX chunks carry page (slide / sheet) and boxes.
+
+## D-025 Dagster run limits and telemetry (accepted, 2026-11-07)
+`concurrency.runs` in `infra/local/dagster/dagster.yaml`: 4 concurrent runs, 1 per `kb/source` tag;
+a test loads the file into a Dagster instance and asserts both. Dagster telemetry disabled. The
+registry independently refuses a second in-flight run per source (unique index from 001).
+
+## D-026 Local LocalFolderSource treats an unknown site as an error (accepted, 2026-11-07)
+Found when the live daemon "first-loaded" the Phase 1 smoke-test source `retail-policies` (site id
+`site-retail`, which does not exist in the synthetic tenant) as an empty library. Now a
+`SourceNotFoundError` (Graph would return 404). That source stays in the local `kb` database as a
+Phase 1 artifact; its daily delta will fail visibly until it is suspended or its revision changed.
+
+## D-027 UploadSource adapter not needed as a delta feed (accepted, 2026-11-07)
+The brief lists `DocumentSource (uploads) -> UploadSource`. Uploads arrive through the gateway (one
+door), land in the raw store and are registered as `RECEIVED`; the upload sensor processes them. No
+component ever needs to *pull* uploads, so the adapter stays an explicit stub instead of dead code.
+Revisit if CML ever needs uploads from another channel (e.g. a drop folder).
