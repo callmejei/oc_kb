@@ -69,11 +69,23 @@ def create_app(
 
 def default_qa(settings: Settings, st: GatewayState) -> Any:
     from kb.agent.service import AskService
+    from kb.gateway.acl import graph_scope
+    from kb.graph.ontology import Ontology
+    from kb.graph.table_map import TableMap
+    from kb.retrieval.expansion import GraphExpander
     from kb.retrieval.pipeline import HybridRetriever
     from kb.sql.text_to_sql import TextToSql
 
     llm = build(settings, "llm")
+    ontology = Ontology()
+    expander = None
+    if settings.graph.get("expansion"):
+        expander = GraphExpander(
+            build(settings, "graph_store"), ontology, int(settings.graph.get("expansion_terms", 10))
+        )
     retriever = HybridRetriever(
-        st.chunk_index, build(settings, "embedder"), build(settings, "reranker"), settings.retrieval
+        st.chunk_index, build(settings, "embedder"), build(settings, "reranker"), settings.retrieval, expander
     )
-    return AskService(retriever, llm, st.registry, settings.retrieval, TextToSql(build(settings, "sql_engine"), llm))
+    t2s = TextToSql(build(settings, "sql_engine"), llm, table_map=TableMap(ontology))
+    scope = (lambda ident: graph_scope(ident, st.idp.readable_bus(ident))) if expander else None
+    return AskService(retriever, llm, st.registry, settings.retrieval, t2s, scope_fn=scope)

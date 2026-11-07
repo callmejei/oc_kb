@@ -27,9 +27,10 @@ def test_local_adapter_builds_and_satisfies_protocol(settings, port):
 
 
 def test_stubs_fail_loudly_with_their_phase():
-    stub = adapter_class("local.OxigraphGraphStore")(path="x")
-    with pytest.raises(NotImplementedYetError, match="Phase 5"):
-        stub.query("SELECT * WHERE {?s ?p ?o}", [])
+    stub = adapter_class("local.PhoenixTracer")(endpoint="x")  # GraphStore was the example until Phase 5
+    with pytest.raises(NotImplementedYetError, match="Phase 7"):
+        stub.span("q")
+    assert adapter_class("local.OxigraphGraphStore").STATUS == "implemented"
 
 
 def test_unknown_adapter_raises():

@@ -252,3 +252,30 @@ def request_hold_release(hold_id: str, body: Comment, ident: Ident, st: St) -> A
     """Releasing a hold re-enables purge: four eyes (maker requests, checker decides)."""
     with st.registry.transaction(ident.user_id) as conn, db_errors():
         return {"request_id": repo.request_hold_release(conn, hold_id, body.comment)}
+
+
+# ---------------------------------------------------------------------------- ontology review queue
+@router.get("/concept-reviews")
+def concept_reviews(ident: Ident, st: St, status_filter: str = "PENDING") -> Any:
+    bus = roles(st, ident, "CHECKER")
+    if not bus:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "you are not a CHECKER for any BU")
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        return conn.execute(
+            "SELECT * FROM kb.concept_review WHERE bu = ANY(%s) AND status = %s ORDER BY confidence DESC, created_at",
+            (bus, status_filter),
+        ).fetchall()
+
+
+@router.post("/concept-reviews/{review_id}/accept")
+def accept_concept(review_id: str, body: Reason, ident: Ident, st: St) -> Any:
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        conn.execute("SELECT kb.decide_concept(%s, true, %s)", (review_id, body.reason))
+        return conn.execute("SELECT * FROM kb.concept_review WHERE review_id = %s", (review_id,)).fetchone()
+
+
+@router.post("/concept-reviews/{review_id}/reject")
+def reject_concept(review_id: str, body: RequiredReason, ident: Ident, st: St) -> Any:
+    with st.registry.transaction(ident.user_id) as conn, db_errors():
+        conn.execute("SELECT kb.decide_concept(%s, false, %s)", (review_id, body.reason))
+        return conn.execute("SELECT * FROM kb.concept_review WHERE review_id = %s", (review_id,)).fetchone()

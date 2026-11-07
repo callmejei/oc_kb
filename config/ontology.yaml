@@ -1,0 +1,125 @@
+# Ontology layer (graphify-fibo skill). FIBO release + local extension + synonyms + thresholds.
+fibo_release: master_2026Q3
+namespace: https://kb.local/ontology/         # local extension concepts (each is a subclass of a FIBO class)
+
+thresholds:
+  auto_accept: 0.85      # >= : skos:exactMatch, used for expansion; below: skos:closeMatch + review item
+  embed_min: 0.55        # below this the best embedding candidate is still queued, flagged low
+  contained_term: 0.88   # an entity label whose head phrase IS a known term (e.g. "Document Retrieval Fee")
+  partial_term: 0.75     # a known term appears in the label but is not its head (e.g. "Mortgage Campaign")
+
+# FIBO modules whose classes a BU's entities may map to (SHACL checks mapped classes against this).
+allowed_modules:
+  retail:    [FND, BE, FBC, LOAN]
+  corporate: [FND, BE, FBC, LOAN, SEC]
+  wealth:    [FND, BE, FBC, LOAN, SEC]
+  shared:    [FND, BE, FBC, LOAN, SEC]
+
+# Concepts too generic to tag chunks with (they appear everywhere and would only add noise to expansion).
+spot_exclude: [fibo-fnd:Policy, fibo-fnd:Customer, fibo-fnd:AmountOfMoney]
+
+# Local extension: narrower concepts the corpus needs that FIBO has no class for.
+concepts:
+  InvestmentResidentialProperty:
+    broader: fibo-fnd:RealProperty
+    labels: [investment residential, investment property, buy-to-let, buy to let, rental property]
+  OwnerOccupiedResidentialProperty:
+    broader: fibo-fnd:RealProperty
+    labels: [owner-occupied residential, owner occupied residential, owner-occupied home, primary residence]
+  ShophouseProperty:
+    broader: fibo-fnd:RealProperty
+    labels: [shophouse, mixed use property, mixed-use property]
+  CommercialOfficeProperty:
+    broader: fibo-fnd:RealProperty
+    labels: [commercial office, office building, office property]
+  IndustrialProperty:
+    broader: fibo-fnd:RealProperty
+    labels: [industrial property, industrial b1 b2, warehouse property]
+  LandForDevelopment:
+    broader: fibo-fnd:RealEstate
+    labels: [land for development, development land, development site]
+  LatePaymentFee:
+    broader: fibo-fbc:Fee
+    labels: [late payment fee, late payment, late fee, penalty for paying late, overdue charge]
+  DocumentRetrievalFee:
+    broader: fibo-fbc:Fee
+    labels: [document retrieval fee, document retrieval, copy fee]
+  TelegraphicTransferFee:
+    broader: fibo-fbc:Fee
+    labels: [telegraphic transfer fee, telegraphic transfer, wire transfer fee, wire transfer]
+  PlatformFee:
+    broader: fibo-fbc:Fee
+    labels: [annual platform fee, platform fee]
+  Arrears:
+    broader: fibo-fbc:DefaultEvent
+    labels: [arrears, in arrears, past due, delinquency, overdue loan]
+  TermLoan:
+    broader: fibo-loan:Loan
+    labels: [term loan, term facility]
+  WorkingCapitalFacility:
+    broader: fibo-loan:Loan
+    labels: [working capital facility, working capital loan, working capital]
+  AssetsUnderManagement:
+    broader: fibo-fnd:AmountOfMoney
+    labels: [assets under management, aum]
+  ModelPortfolioAllocation:
+    broader: fibo-fnd:Portfolio
+    labels: [model portfolio, asset allocation, risk profile allocation, mandate allocation]
+  CreditFile:
+    broader: fibo-loan:Loan
+    labels: [credit file, credit files, loan file, loan files]
+  PolicyException:
+    broader: fibo-fnd:Policy
+    labels: [policy exception, exception register, dispensation, waiver, exceptions and dispensations, exceptions]
+  # --- bank governance vocabulary (curated 2026-11-07, user decision; FIBO 2026Q3 has no Organization/Party/
+  # --- Document/Procedure classes in the loaded modules, so each hangs off the closest FIBO class that exists)
+  GovernanceCommittee:
+    broader: fibo-be:BoardOfDirectors
+    labels: [committee, risk committee, credit committee, investment committee, steering committee]
+  OperatingProcedure:
+    broader: fibo-fnd:Policy
+    labels: [procedure, operating procedure, standard operating procedure, procedure steps]
+  ProductDisclosureDocument:
+    broader: fibo-fnd:Report
+    labels: [product sheet, product briefing, fact sheet, factsheet, term sheet]
+  ControlRole:
+    broader: fibo-fnd:Employee
+    labels: [checker, maker, independent checker, approver, reviewer, relationship manager, credit officer]
+  Escalation:
+    broader: fibo-fnd:Occurrence
+    labels: [escalation, escalation path, escalation matrix]
+  ApprovalThreshold:
+    broader: fibo-fnd:Policy
+    labels: [threshold, thresholds, approval threshold, approval limit, approval authority]
+  ControlBreach:
+    broader: fibo-fnd:Occurrence
+    labels: [control breach, control breaches, policy breach]
+  SystemOfRecord:
+    broader: fibo-fnd:FinancialRecord
+    labels: [system of record, record keeping, recordkeeping]
+
+# Terms that map straight to a FIBO class.
+synonyms:
+  fibo-loan:LoanToValueRatio: [ltv, loan-to-value, loan to value, loan to valuation, loan-to-value ratio, ltv ratio,
+                               advance ratio, lending ratio, standard advance]
+  fibo-loan:Mortgage: [home loan, housing loan, mortgage loan, mortgages]
+  fibo-loan:MotorVehicleLoan: [car loan, auto loan, vehicle loan]
+  fibo-loan:UnsecuredConsumerLoan: [personal loan, unsecured personal loan]
+  fibo-loan:CreditCard: [credit cards]
+  fibo-fbc:Collateral: [collateral class, security, pledged assets, collateral pledged]
+  fibo-loan:CollateralValuation: [valuation, collateral valuation, independent valuation, property valuation]
+  fibo-fnd:InterestRate: [interest rate, indicative rate, rate p.a., pricing tier]
+  fibo-fbc:Fee: [fees, charges, fees and charges, fee schedule]
+  fibo-fnd:Portfolio: [portfolio, portfolios, mandate]
+  fibo-sec:Bond: [bonds, investment-grade bonds, fixed income]
+  fibo-fbc:EquityInstrument: [equities, equity, stocks, shares, blue-chip equities, blue chip shares]
+  fibo-sec:PooledFund: [diversified funds, funds, unit trusts]
+  fibo-fbc:PackagedFinancialProduct: [structured notes, structured products, structured note]
+  fibo-fbc:InsurancePolicy: [insurance wrapper, insurance policy]
+  fibo-fbc:CreditRating: [credit rating, rating methodology, internal rating]
+  fibo-fbc:RevolvingLineOfCredit: [revolving credit, revolving facility]
+  fibo-loan:SecuredLoan: [secured lending, secured loan]
+  fibo-fbc:Borrower: [borrower, borrowers, obligor]
+  fibo-fnd:Regulation: [local regulation, regulatory requirements, regulations]
+  fibo-fnd:Duty: [roles and responsibilities, responsibilities]
+  fibo-loan:CreditRiskAssessment: [risk assessment, risks and mitigations, credit assessment]

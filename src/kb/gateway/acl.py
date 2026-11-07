@@ -24,3 +24,9 @@ def describe(flt: AccessFilter) -> dict[str, object]:
         "source_active": flt.require_source_active,
         "bus": sorted(flt.bus) if flt.bus is not None else None,
     }
+
+
+def graph_scope(identity: Identity, readable_bus: set[str]) -> list[str]:
+    """BUs whose knowledge graphs the caller may read for expansion: exactly the BUs they can read
+    documents of (from the live IdentityProvider), never more."""
+    return sorted(readable_bus)

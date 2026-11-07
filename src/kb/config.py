@@ -77,6 +77,7 @@ class Settings(BaseModel):
     gateway: dict[str, Any] = Field(default_factory=dict)
     processing: dict[str, Any] = Field(default_factory=dict)
     retrieval: dict[str, Any] = Field(default_factory=dict)
+    graph: dict[str, Any] = Field(default_factory=dict)
     ports: dict[str, PortConfig]
 
     @property
