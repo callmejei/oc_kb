@@ -21,7 +21,9 @@ def test_all_migrations_applied_in_order(regdb, as_admin):
     with as_admin() as c:
         rows = c.execute("SELECT version FROM kb_meta.schema_migration ORDER BY version").fetchall()
     assert (
-        [r["version"] for r in rows] == [m.version for m in migrate.discover()] == ["000", "001", "002", "003", "004"]
+        [r["version"] for r in rows]
+        == [m.version for m in migrate.discover()]
+        == ["000", "001", "002", "003", "004", "005"]
     )
 
 

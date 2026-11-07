@@ -24,6 +24,8 @@ dependencies = [
   "elasticsearch==8.19.3",
   "en-core-web-lg",
   "python-multipart==0.0.32",
+  "haystack-ai==2.31.0",
+  "pyjwt==2.15.1",
 ]
 
 [dependency-groups]

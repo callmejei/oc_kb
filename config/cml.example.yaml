@@ -27,7 +27,7 @@ ports:
   chunk_index:       {adapter: local.ElasticsearchChunkIndex, url: https://es.example.internal:9200, index_alias: kb-chunks, dims: 1024}
   embedder:          {adapter: cml.RayServeEmbedder, url: https://ray-serve.example.internal/embed, model: BAAI/bge-m3, dims: 1024}
   reranker:          {adapter: cml.RayServeReranker, url: https://ray-serve.example.internal/rerank, model: BAAI/bge-reranker-v2-m3}
-  llm:               {adapter: local.OpenAICompatibleLLM, base_url: https://vllm.example.internal/v1, model: "${KB_LLM_MODEL}"}
+  llm:               {adapter: local.OpenAICompatibleLLM, base_url: https://vllm.example.internal/v1, model: "${KB_LLM_MODEL}", extra_body: {chat_template_kwargs: {enable_thinking: false}}}
   sql_engine:        {adapter: cml.StarburstSqlEngine, url: https://starburst.example.internal:8443, catalog: hive}
   identity_provider: {adapter: cml.LdapIdentityProvider, url: ldaps://ldap.example.internal}
   graph_store:       {adapter: local.OxigraphGraphStore, path: /home/cdsw/kb-data/graph}

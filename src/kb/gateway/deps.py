@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any
@@ -13,6 +13,7 @@ from psycopg import errors as pg
 
 from kb.adapters.local.identity import UnknownUserError, YamlIdentityProvider
 from kb.adapters.local.registry import PostgresRegistry
+from kb.gateway.auth import AuthError, LocalPasswordStore, TokenIssuer
 from kb.ports import ChunkIndex, RawStore
 from kb.ports.types import Identity
 from kb.registry.repository import ConflictError, NotFoundError
@@ -20,7 +21,7 @@ from kb.registry.repository import ConflictError, NotFoundError
 DEV_HEADER = "X-KB-User"
 
 
-@dataclass(frozen=True)
+@dataclass
 class GatewayState:
     registry: PostgresRegistry
     idp: YamlIdentityProvider
@@ -28,6 +29,18 @@ class GatewayState:
     trusted_clients: frozenset[str]
     raw_store: RawStore
     chunk_index: ChunkIndex
+    issuer: TokenIssuer | None = None
+    passwords: LocalPasswordStore | None = None
+    qa_factory: Callable[[], Any] | None = None
+    _qa: Any = None
+
+    def qa(self) -> Any:
+        """AskService, built on first use (loads the embedder, reranker and LLM client)."""
+        if self._qa is None:
+            if self.qa_factory is None:
+                raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "Q&A is not configured")
+            self._qa = self.qa_factory()
+        return self._qa
 
 
 def state(request: Request) -> GatewayState:
@@ -36,16 +49,25 @@ def state(request: Request) -> GatewayState:
 
 
 def current_identity(request: Request) -> Identity:
-    """Resolve the caller. Phase 1 dev mode: X-KB-User from a trusted loopback client only."""
+    """Resolve the caller: a valid Bearer token (local_jwt), or the X-KB-User dev header from an explicitly
+    trusted test client. Groups are always resolved live from the IdentityProvider."""
     st = state(request)
-    if st.auth_mode != "dev_header":
-        raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "only dev_header auth exists before Phase 3")
-    client = request.client.host if request.client else ""
-    if client not in st.trusted_clients:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "dev auth is accepted only from loopback clients")
-    user_id = request.headers.get(DEV_HEADER, "").strip()
-    if not user_id:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, f"missing {DEV_HEADER} header")
+    authz = request.headers.get("Authorization", "")
+    dev_user = request.headers.get(DEV_HEADER, "").strip()
+    if authz.lower().startswith("bearer "):
+        if st.issuer is None:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, "token auth is not enabled")
+        try:
+            user_id = st.issuer.verify(authz[7:].strip())
+        except AuthError as e:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED, f"invalid token: {e}") from None
+    elif dev_user:
+        client = request.client.host if request.client else ""
+        if client not in st.trusted_clients:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "the dev header is accepted only from trusted test clients")
+        user_id = dev_user
+    else:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "missing bearer token")
     try:
         return st.idp.resolve(user_id)
     except UnknownUserError:

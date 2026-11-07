@@ -76,6 +76,7 @@ class Settings(BaseModel):
     services: dict[str, dict[str, Any]] = Field(default_factory=dict)
     gateway: dict[str, Any] = Field(default_factory=dict)
     processing: dict[str, Any] = Field(default_factory=dict)
+    retrieval: dict[str, Any] = Field(default_factory=dict)
     ports: dict[str, PortConfig]
 
     @property
@@ -103,8 +104,11 @@ class Settings(BaseModel):
                     raise ConfigError(f"port {name} points at hosted AI endpoint {host}")
                 if host not in self.allowed_hosts:
                     raise ConfigError(f"port {name} uses host {host} not in network.allowed_hosts")
-        if self.gateway.get("auth") == "dev_header" and self.env != "local":
-            raise ConfigError("gateway.auth=dev_header is a local-only development mode")
+        auth = self.gateway.get("auth")
+        if auth in ("dev_header", "local_jwt") and self.env != "local":
+            raise ConfigError(f"gateway.auth={auth} is a local-only development mode")
+        if self.gateway.get("trusted_clients") and self.env != "local":
+            raise ConfigError("gateway.trusted_clients (dev header) is local-only")
         for svc, opts in self.services.items():
             for url in _urls_in(opts):
                 host = (urlparse(url).hostname or "").lower()
