@@ -185,6 +185,35 @@ class ElasticsearchChunkIndex:
     def set_source_active(self, source_id: str, active: bool) -> None:
         self._update({"term": {"source_id": source_id}}, "ctx._source.source_active = params.a", {"a": active})
 
+    def set_concepts(self, concepts: dict[str, list[str]]) -> int:
+        """Partial update of concept_ids per chunk (no re-embedding). Returns chunks updated."""
+        actions = [
+            {"_op_type": "update", "_index": self.alias, "_id": cid, "doc": {"concept_ids": sorted(set(c))}}
+            for cid, c in concepts.items()
+        ]
+        if not actions:
+            return 0
+        ok, _ = helpers.bulk(self.es, actions, refresh="wait_for", raise_on_error=False)
+        return int(ok)
+
+    def concept_search(
+        self, terms: Sequence[str], concept_ids: Sequence[str], flt: AccessFilter, k: int
+    ) -> list[ScoredChunk]:
+        """Graph-expansion retriever: expansion terms over content + concept_ids, inside the same mandatory
+        pre-filter as BM25 and kNN."""
+        should: list[dict[str, Any]] = []
+        if concept_ids:
+            should.append({"terms": {"concept_ids": list(concept_ids), "boost": 2.0}})
+        should += [{"match_phrase": {"content": {"query": t, "slop": 2}}} for t in terms]
+        if not should:
+            return []
+        body = {
+            "size": k,
+            "query": {"bool": {"should": should, "minimum_should_match": 1, "filter": render_filter(flt)}},
+            "_source": {"excludes": ["embedding"]},
+        }
+        return self._hits(body, "concept")
+
     def delete_version(self, version_id: str) -> None:
         self.es.delete_by_query(index=self.alias, query={"term": {"version_id": version_id}}, refresh=True)
 

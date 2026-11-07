@@ -45,6 +45,18 @@ retrieval:
   min_rerank_score: 0.05        # cross-encoder probability (sigmoid applied); below it a chunk is not context
   max_context_chars: 9000
 
+graph:
+  graphify_model: qwen3-graphify # qwen3:8b with thinking off (infra/local/ollama/qwen3-graphify.Modelfile)
+  graphify_token_budget: 400    # graphify packs files up to this estimate (chars/4): 400 -> one ~2k-char part per LLM call
+  num_ctx: 12288                # pinned Ollama context: fixed -> no per-chunk reload; fits all layers on an 8 GB GPU
+  max_output_tokens: 3072       # one ~2k-char part per call needs ~1.5k; a repetition loop is cut at 3072 (~1m50s)
+  api_timeout_s: 300            # per LLM request; a failed chunk is retried/skipped by graphify
+  timeout_s: 14400              # whole graphify run per BU (resumable: semantic cache in data/ontology/work/<bu>/out)
+  part_chars: 2000              # graphify input per file: documents are exported in ~2k-char parts (qwen3-8B loops on long outputs)
+  seed: 42                      # fixed sampling seed (temperature 0.7 per Qwen3 guidance; greedy decoding repeats)
+  expansion: true               # graph expansion as a third retriever (Phase 5); false = Phase 3/4 behaviour
+  expansion_terms: 10
+
 processing:
   registry_dsn: "postgresql://kb_pipe:${KB_PG_PIPELINE_PASSWORD}@127.0.0.1:5433/kb"   # pipeline role, never kb_api
   docling_artifacts: .infra/models/docling

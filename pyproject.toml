@@ -27,10 +27,20 @@ dependencies = [
   "haystack-ai==2.31.0",
   "pyjwt==2.15.1",
   "sqlglot==30.24.0",
+  "rdflib==7.6.0",
+  "pyoxigraph==0.5.13",
+  "pyshacl==0.40.1",
 ]
 
 [dependency-groups]
-dev = ["pytest==9.1.1", "ruff==0.17.2", "mypy==2.4.0", "types-PyYAML==6.0.12.20260906", "pypdf==6.21.2"]
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.17.2",
+    "mypy==2.4.0",
+    "types-PyYAML==6.0.12.20260906",
+    "pypdf==6.21.2",
+    "psutil==7.2.2",
+]
 synthetic = ["python-docx==1.2.0", "python-pptx==1.0.2", "openpyxl==3.1.5", "reportlab==5.1.0", "pillow==13.0.0"]
 
 [tool.uv]

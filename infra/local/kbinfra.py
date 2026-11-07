@@ -433,6 +433,14 @@ def ollama_models(settings: Any) -> None:
     model = settings.ports["llm"].options["model"]
     envsafe.run([str(OLLAMA_BIN), "pull", model], extra_env=_ollama_env(settings))
     log(f"model {model} present")
+    # derived local model for graphify (same weights, thinking disabled in the template)
+    mf = REPO_ROOT / "infra" / "local" / "ollama" / "qwen3-graphify.Modelfile"
+    envsafe.run(
+        [str(OLLAMA_BIN), "create", "qwen3-graphify", "-f", str(mf)],
+        extra_env=_ollama_env(settings),
+        capture_output=True,
+    )
+    log("model qwen3-graphify created from infra/local/ollama/qwen3-graphify.Modelfile")
 
 
 # Pinned Hugging Face snapshots (repo, exact commit). Downloaded once; runtime is offline.

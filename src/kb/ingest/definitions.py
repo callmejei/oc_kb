@@ -99,6 +99,35 @@ def purge_op(context: dg.OpExecutionContext, kb: KbIngest) -> dict[str, Any]:
     return kb.engine().purge()
 
 
+@dg.op
+def ontology_build_op(context: dg.OpExecutionContext, kb: KbIngest) -> dict[str, Any]:
+    from kb.graph.build import build_builder
+
+    builder = build_builder(
+        load_settings(kb.env, strict=True),
+        registry_dsn=kb.registry_dsn,
+        index_alias=kb.index_alias,
+        processed_url=kb.processed_url,
+    )
+    reports = builder.build_all()
+    out = {
+        bu: {
+            "entities": r.entities,
+            "coverage": round(r.coverage, 3),
+            "queued": r.queued,
+            "tagged_chunks": r.tagged_chunks,
+        }
+        for bu, r in reports.items()
+    }
+    context.log.info(f"ontology build: {out}")
+    return out
+
+
+@dg.job(tags={"kb/run_kind": "ONTOLOGY", "kb/source": "_ontology"})
+def ontology_build_job() -> None:
+    ontology_build_op()
+
+
 @dg.job(tags={"kb/run_kind": "DRY_RUN"})
 def dry_run_job() -> None:
     dry_run_op()
@@ -240,6 +269,13 @@ def weekly_reconcile(context: dg.ScheduleEvaluationContext, kb: KbIngest) -> Any
     ]
 
 
+weekly_ontology = dg.ScheduleDefinition(
+    job=ontology_build_job,
+    cron_schedule="0 5 * * 0",
+    execution_timezone="Asia/Singapore",
+    default_status=dg.DefaultScheduleStatus.RUNNING,
+)
+
 daily_purge = dg.ScheduleDefinition(
     job=purge_job,
     cron_schedule="0 3 * * *",
@@ -248,8 +284,8 @@ daily_purge = dg.ScheduleDefinition(
 )
 
 defs = dg.Definitions(
-    jobs=[dry_run_job, sync_job, upload_job, reprocess_job, index_sync_job, purge_job],
+    jobs=[dry_run_job, sync_job, upload_job, reprocess_job, index_sync_job, purge_job, ontology_build_job],
     sensors=[dry_run_sensor, first_load_sensor, upload_sensor, released_exception_sensor, index_sync_sensor],
-    schedules=[daily_delta, weekly_reconcile, daily_purge],
+    schedules=[daily_delta, weekly_reconcile, daily_purge, weekly_ontology],
     resources={"kb": KbIngest()},
 )

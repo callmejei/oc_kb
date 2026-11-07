@@ -57,6 +57,10 @@ class FsspecRawStore:
         self.fs.mv(tmp, dest)
         return StoredObject(uri=self._uri(dest), sha256=h.hexdigest(), size_bytes=size)
 
+    def uri_for(self, key: str) -> str:
+        """The URI an object stored under `key` has (does not check existence)."""
+        return self._uri(self._path(key))
+
     def _strip(self, uri: str) -> str:
         _, path = fsspec.core.url_to_fs(uri)
         if not str(path).replace("\\", "/").startswith(str(self.root).replace("\\", "/")):
