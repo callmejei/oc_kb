@@ -168,8 +168,9 @@ def _ensure_request(conn: Conn, request_id: str) -> dict[str, Any]:
 def inbox(conn: Conn, actor: str, checker_bus: list[str]) -> list[dict[str, Any]]:
     """Pending requests a checker may decide: their BUs, never their own."""
     return conn.execute(
-        """SELECT a.*, s.bu, s.display_name AS source_name, s.source_type
+        """SELECT a.*, s.bu, s.display_name AS source_name, s.source_type, d.title AS doc_title
            FROM kb.approval_request a JOIN kb.kb_source s USING (source_id)
+           LEFT JOIN kb.document d ON d.doc_id = a.doc_id
            WHERE a.status = 'PENDING' AND s.bu = ANY(%s) AND a.maker_id <> %s
            ORDER BY a.submitted_at""",
         (checker_bus, actor),
@@ -198,7 +199,10 @@ def request_detail(conn: Conn, request_id: str) -> dict[str, Any]:
         ).fetchone()
         cur = get_revision(conn, str(src["current_revision_id"]))["acl_groups"] if src["current_revision_id"] else []
         uploader = out["document"]["uploaded_by"] if out["document"] else None
-        out["acl_change"] = {"from": [f"user:{uploader}"], "to": list(cur)}
+        if req["request_type"] == "PUBLISH_DOCUMENT":
+            out["acl_change"] = {"from": [f"user:{uploader}"], "to": list(cur)}
+        elif req["request_type"] == "INCLUDE_DOCUMENT":  # excluded (nobody) -> back to the source's groups
+            out["acl_change"] = {"from": [], "to": list(cur)}
     return out
 
 
