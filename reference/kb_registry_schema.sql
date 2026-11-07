@@ -16,6 +16,11 @@
 --   G7  every governance change is audited     AFTER trigger -> append-only audit_log
 --   G8  audit_log is append-only               trigger + no UPDATE/DELETE grants
 --   G9  no purge while a legal hold is active  trigger on purge_certificate
+--   G10 governed state changes only inside the governance functions (current_user = schema owner),
+--       never through a session setting a caller could flip
+--
+-- Apply as a non-superuser owner role (the migration runner does SET ROLE kb_owner) so the
+-- SECURITY DEFINER functions do not run with superuser rights.
 --
 -- Actor identity: the gateway sets   SELECT set_config('kb.actor_id', '<user id>', true)
 -- at the start of every transaction. kb.current_actor() raises if it is missing.
@@ -35,9 +40,29 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'kb_auditor')  THEN CREATE ROLE kb_auditor NOLOGIN;  END IF;
 END $$;
 
+-- functions created by this role are not executable by PUBLIC unless granted explicitly
+ALTER DEFAULT PRIVILEGES REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
+
 -- ---------------------------------------------------------------------------
--- Actor context
+-- Actor context and owner identity
 -- ---------------------------------------------------------------------------
+-- The schema owner; inside SECURITY DEFINER governance functions current_user equals it.
+CREATE OR REPLACE FUNCTION kb.owner_role() RETURNS text
+LANGUAGE sql STABLE AS $$
+  SELECT pg_get_userbyid(nspowner)::text FROM pg_namespace WHERE nspname = 'kb'
+$$;
+
+-- True when the session's login role is (transitively) a member of kb_pipeline. Unlike
+-- pg_has_role(), this does not treat superusers as members of every role.
+CREATE OR REPLACE FUNCTION kb.is_pipeline_session() RETURNS boolean
+LANGUAGE sql STABLE AS $$
+  WITH RECURSIVE m(roleid) AS (
+    SELECT oid FROM pg_roles WHERE rolname = session_user
+    UNION
+    SELECT am.roleid FROM pg_auth_members am JOIN m ON am.member = m.roleid)
+  SELECT EXISTS (SELECT 1 FROM m JOIN pg_roles r ON r.oid = m.roleid WHERE r.rolname = 'kb_pipeline')
+$$;
+
 CREATE OR REPLACE FUNCTION kb.current_actor() RETURNS text
 LANGUAGE plpgsql STABLE AS $$
 DECLARE a text := nullif(current_setting('kb.actor_id', true), '');
@@ -345,11 +370,14 @@ BEGIN
   IF OLD.status <> 'PENDING' THEN
     RAISE EXCEPTION 'request % already %; decisions are final', OLD.request_id, OLD.status USING ERRCODE = '42501';
   END IF;
+  IF current_user <> kb.owner_role() THEN
+    RAISE EXCEPTION 'approval requests change only through the governance functions' USING ERRCODE = '42501';
+  END IF;
   IF (to_jsonb(NEW) - ARRAY['status','checker_id','decision_reason','decided_at'])
      <> (to_jsonb(OLD) - ARRAY['status','checker_id','decision_reason','decided_at']) THEN
     RAISE EXCEPTION 'only the decision fields of a request may change' USING ERRCODE = '42501';
   END IF;
-  IF pg_has_role(session_user, 'kb_pipeline', 'MEMBER') THEN
+  IF kb.is_pipeline_session() THEN
     RAISE EXCEPTION 'pipeline role cannot decide approval requests' USING ERRCODE = '42501';
   END IF;
   IF NEW.status IN ('APPROVED','REJECTED') AND NEW.checker_id IS DISTINCT FROM kb.current_actor() THEN
@@ -427,7 +455,7 @@ CREATE TRIGGER purge_certificate_append_only BEFORE UPDATE OR DELETE ON kb.purge
 CREATE OR REPLACE FUNCTION kb.tg_exception_guard() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-  IF OLD.status <> NEW.status AND current_setting('kb.in_decision', true) IS DISTINCT FROM 'on' THEN
+  IF OLD.status <> NEW.status AND current_user <> kb.owner_role() THEN
     RAISE EXCEPTION 'exception status changes only through an approval decision' USING ERRCODE = '42501';
   END IF;
   RETURN NEW;
@@ -442,8 +470,7 @@ BEGIN
   IF TG_OP = 'DELETE' THEN
     RAISE EXCEPTION 'legal holds cannot be deleted' USING ERRCODE = '42501';
   END IF;
-  IF OLD.released_at IS NULL AND NEW.released_at IS NOT NULL
-     AND current_setting('kb.in_decision', true) IS DISTINCT FROM 'on' THEN
+  IF OLD.released_at IS NULL AND NEW.released_at IS NOT NULL AND current_user <> kb.owner_role() THEN
     RAISE EXCEPTION 'legal hold release needs an approved RELEASE_LEGAL_HOLD request' USING ERRCODE = '42501';
   END IF;
   IF (to_jsonb(NEW) - ARRAY['released_by','released_at']) <> (to_jsonb(OLD) - ARRAY['released_by','released_at'])
@@ -476,7 +503,7 @@ DECLARE
   v_rev kb.source_revision;
   v_id uuid;
 BEGIN
-  IF pg_has_role(session_user, 'kb_pipeline', 'MEMBER') THEN
+  IF kb.is_pipeline_session() THEN
     RAISE EXCEPTION 'pipeline role cannot submit governance requests' USING ERRCODE = '42501';
   END IF;
   SELECT bu INTO v_bu FROM kb.kb_source WHERE source_id = p_source_id;
@@ -525,7 +552,7 @@ DECLARE
   v_bu text;
   v_prev uuid;
 BEGIN
-  IF pg_has_role(session_user, 'kb_pipeline', 'MEMBER') THEN
+  IF kb.is_pipeline_session() THEN
     RAISE EXCEPTION 'pipeline role cannot decide approval requests' USING ERRCODE = '42501';
   END IF;
   SELECT * INTO r FROM kb.approval_request WHERE request_id = p_request_id FOR UPDATE;
@@ -542,8 +569,6 @@ BEGIN
      SET status = CASE WHEN p_approve THEN 'APPROVED' ELSE 'REJECTED' END,
          checker_id = me, decision_reason = p_reason, decided_at = clock_timestamp()
    WHERE request_id = p_request_id;
-
-  PERFORM set_config('kb.in_decision', 'on', true);
 
   IF r.request_type IN ('ONBOARD_SOURCE','CHANGE_SOURCE') THEN
     IF p_approve THEN
@@ -567,7 +592,6 @@ BEGIN
      WHERE hold_id = r.hold_id AND released_at IS NULL;
   END IF;
 
-  PERFORM set_config('kb.in_decision', 'off', true);
 END $$;
 
 -- single actor actions that only RESTRICT access (no four-eyes needed)
@@ -588,7 +612,7 @@ CREATE OR REPLACE FUNCTION kb.place_legal_hold(p_doc_id text, p_source_id text, 
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = kb, pg_catalog AS $$
 DECLARE me text := kb.current_actor(); v_id uuid;
 BEGIN
-  IF pg_has_role(session_user, 'kb_pipeline', 'MEMBER') THEN
+  IF kb.is_pipeline_session() THEN
     RAISE EXCEPTION 'pipeline role cannot place legal holds' USING ERRCODE = '42501';
   END IF;
   INSERT INTO kb.legal_hold (doc_id, source_id, reason, placed_by)
@@ -606,11 +630,9 @@ BEGIN
   IF NOT kb.has_gov_role(me, v_bu, 'CHECKER') THEN
     RAISE EXCEPTION '% is not a CHECKER for BU %', me, v_bu USING ERRCODE = '42501';
   END IF;
-  PERFORM set_config('kb.in_decision', 'on', true);
   UPDATE kb.exception_item SET status = 'EXCLUDED', resolved_at = clock_timestamp(),
          detail = detail || jsonb_build_object('excluded_reason', p_reason)
    WHERE exception_id = p_exception_id AND status = 'OPEN';
-  PERFORM set_config('kb.in_decision', 'off', true);
 END $$;
 
 -- =============================================================================
@@ -632,7 +654,7 @@ GRANT UPDATE (classification, retention_class, acl_groups, allowed_extensions, m
               include_paths, exclude_paths, pii_policy) ON kb.source_revision TO kb_app;
 GRANT INSERT ON kb.audit_log TO kb_app;            -- query audit (Phase 3)
 GRANT EXECUTE ON FUNCTION
-  kb.current_actor(), kb.has_gov_role(text,text,text),
+  kb.current_actor(), kb.owner_role(), kb.is_pipeline_session(), kb.has_gov_role(text,text,text),
   kb.submit_request(text,text,uuid,uuid,uuid,text), kb.withdraw_request(uuid,text),
   kb.decide_request(uuid,boolean,text), kb.suspend_source(text,text),
   kb.place_legal_hold(text,text,text), kb.exclude_exception(uuid,text)
@@ -642,7 +664,7 @@ GRANT EXECUTE ON FUNCTION
 GRANT INSERT, UPDATE ON kb.document, kb.document_version, kb.sync_state TO kb_pipeline;
 GRANT INSERT ON kb.ingestion_run, kb.exception_item, kb.purge_certificate, kb.audit_log TO kb_pipeline;
 GRANT UPDATE (status, orchestrator_run_id, stats, started_at, finished_at) ON kb.ingestion_run TO kb_pipeline;
-GRANT EXECUTE ON FUNCTION kb.current_actor() TO kb_pipeline;
+GRANT EXECUTE ON FUNCTION kb.current_actor(), kb.owner_role(), kb.is_pipeline_session() TO kb_pipeline;
 -- deliberately NOT granted to kb_pipeline: submit_request, withdraw_request, decide_request,
 -- place_legal_hold, exclude_exception, UPDATE on approval_request / legal_hold / exception_item
 
