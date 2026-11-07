@@ -1,0 +1,31 @@
+# CML deployment template. Copy to cml.yaml inside the CML project; secrets come from the
+# CML project environment / secret store, never from this file.
+# allowed_hosts must list only bank-internal hosts; hosted LLM APIs are rejected by validation.
+env: cml
+
+paths:
+  data_dir: /home/cdsw/kb-data
+  infra_dir: /home/cdsw/.kb
+
+network:
+  allowed_hosts: [sharepoint.example.internal, graph.microsoft.com, login.microsoftonline.com,
+                  es.example.internal, pg.example.internal, ray-serve.example.internal,
+                  vllm.example.internal, starburst.example.internal, phoenix.example.internal,
+                  av-scan.example.internal, ldap.example.internal]
+
+services: {}
+
+ports:
+  document_source:   {adapter: cml.SharePointGraphSource, tenant_id: "${GRAPH_TENANT_ID}", client_id: "${GRAPH_CLIENT_ID}", client_secret: "${GRAPH_CLIENT_SECRET}"}
+  upload_source:     {adapter: local.UploadSource, root: hdfs:///data/kb/raw/uploads}
+  malware_scanner:   {adapter: cml.BankAvScanner, url: https://av-scan.example.internal/scan}
+  raw_store:         {adapter: local.FsspecRawStore, url: hdfs:///data/kb/raw}
+  registry:          {adapter: local.PostgresRegistry, dsn: "postgresql://kb_api:${KB_PG_API_PASSWORD}@pg.example.internal:5432/kb?sslmode=verify-full"}
+  chunk_index:       {adapter: local.ElasticsearchChunkIndex, url: https://es.example.internal:9200, index_alias: kb-chunks, dims: 1024}
+  embedder:          {adapter: cml.RayServeEmbedder, url: https://ray-serve.example.internal/embed, model: BAAI/bge-m3, dims: 1024}
+  reranker:          {adapter: cml.RayServeReranker, url: https://ray-serve.example.internal/rerank, model: BAAI/bge-reranker-v2-m3}
+  llm:               {adapter: local.OpenAICompatibleLLM, base_url: https://vllm.example.internal/v1, model: "${KB_LLM_MODEL}"}
+  sql_engine:        {adapter: cml.StarburstSqlEngine, url: https://starburst.example.internal:8443, catalog: hive}
+  identity_provider: {adapter: cml.LdapIdentityProvider, url: ldaps://ldap.example.internal}
+  graph_store:       {adapter: local.OxigraphGraphStore, path: /home/cdsw/kb-data/graph}
+  tracer:            {adapter: local.PhoenixTracer, endpoint: https://phoenix.example.internal}

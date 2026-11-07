@@ -1,0 +1,60 @@
+[project]
+name = "kb"
+version = "0.0.1"
+description = "Enterprise knowledge base: local prototype (ports and adapters)"
+requires-python = "==3.11.*"
+dependencies = [
+  "pydantic==2.14.1",
+  "pydantic-settings==2.16.1",
+  "pyyaml==6.0.3",
+  "httpx==0.28.1",
+  "psycopg[binary]==3.3.6",
+  "fsspec==2026.9.0",
+  "duckdb==2.0.0",
+]
+
+[dependency-groups]
+dev = ["pytest==9.1.1", "ruff==0.17.2", "mypy==2.4.0", "types-PyYAML==6.0.12.20260906", "pypdf==6.21.2"]
+synthetic = ["python-docx==1.2.0", "python-pptx==1.0.2", "openpyxl==3.1.5", "reportlab==5.1.0", "pillow==13.0.0"]
+phoenix = ["arize-phoenix==20.26.0"]
+
+[tool.uv]
+# reproducibility: resolve only releases at least two weeks old at Phase 0 start
+exclude-newer = "2026-10-24T00:00:00Z"
+default-groups = ["dev", "synthetic"]
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kb", "synthetic"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["reference", ".infra"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "N", "SIM"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "N802"]
+"synthetic/**" = ["S311", "S105", "S106"]  # canary "secret" fields are test markers, not credentials
+
+[tool.mypy]
+python_version = "3.11"
+files = ["src/kb", "synthetic"]
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["kb.ports.*", "kb.config", "kb.envsafe"]
+strict = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: needs local infra running (make up)"]
+addopts = "-ra"
