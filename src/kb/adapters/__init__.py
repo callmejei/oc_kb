@@ -10,8 +10,7 @@ from kb.config import Settings
 from kb.ports import (
     LLM,
     PORT_PROTOCOLS,
-    ChunkIndex,
-    DocumentSource,
+    DocumentSourceFactory,
     Embedder,
     GraphStore,
     IdentityProvider,
@@ -26,21 +25,21 @@ _IMPLEMENTED: dict[str, str] = {
     "local.YamlIdentityProvider": "kb.adapters.local.identity:YamlIdentityProvider",
     "local.FsspecRawStore": "kb.adapters.local.raw_store:FsspecRawStore",
     "local.PostgresRegistry": "kb.adapters.local.registry:PostgresRegistry",
+    "local.SentenceTransformerEmbedder": "kb.adapters.local.embedder:SentenceTransformerEmbedder",
+    "local.ElasticsearchChunkIndex": "kb.adapters.local.es_index:ElasticsearchChunkIndex",
+    "local.AllowListScanner": "kb.adapters.local.scanner:AllowListScanner",
+    "local.LocalFolderSource": "kb.adapters.local.folder_source:LocalFolderSource",
 }
 
 # stubs: name -> (protocol, phase that implements it)
 _STUBS: dict[str, tuple[type, int]] = {
-    "local.LocalFolderSource": (DocumentSource, 2),
-    "local.UploadSource": (DocumentSource, 2),
-    "local.AllowListScanner": (MalwareScanner, 2),
-    "local.ElasticsearchChunkIndex": (ChunkIndex, 2),
-    "local.SentenceTransformerEmbedder": (Embedder, 2),
+    "local.UploadSource": (DocumentSourceFactory, 2),
     "local.CrossEncoderReranker": (Reranker, 3),
     "local.OpenAICompatibleLLM": (LLM, 3),
     "local.DuckDbPolicySqlEngine": (SqlEngine, 4),
     "local.OxigraphGraphStore": (GraphStore, 5),
     "local.PhoenixTracer": (Tracer, 7),
-    "cml.SharePointGraphSource": (DocumentSource, 7),
+    "cml.SharePointGraphSource": (DocumentSourceFactory, 7),
     "cml.BankAvScanner": (MalwareScanner, 7),
     "cml.RayServeEmbedder": (Embedder, 7),
     "cml.RayServeReranker": (Reranker, 7),

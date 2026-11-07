@@ -75,6 +75,7 @@ class Settings(BaseModel):
     network: dict[str, list[str]]
     services: dict[str, dict[str, Any]] = Field(default_factory=dict)
     gateway: dict[str, Any] = Field(default_factory=dict)
+    processing: dict[str, Any] = Field(default_factory=dict)
     ports: dict[str, PortConfig]
 
     @property

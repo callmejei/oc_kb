@@ -44,14 +44,19 @@ class SharePointSim:
         if self.path.exists():
             raw = json.loads(self.path.read_text(encoding="utf-8"))
             self.seq: int = raw["seq"]
+            self.token_floor: int = raw.get("token_floor", 0)
             self.items = {k: LedgerItem(**v) for k, v in raw["items"].items()}
         else:
-            self.seq, self.items = 0, {}
+            self.seq, self.token_floor, self.items = 0, 0, {}
 
     # ------------------------------------------------------------------ persistence
     def save(self) -> None:
         self.root.mkdir(parents=True, exist_ok=True)
-        data = {"seq": self.seq, "items": {k: asdict(v) for k, v in sorted(self.items.items())}}
+        data = {
+            "seq": self.seq,
+            "token_floor": self.token_floor,
+            "items": {k: asdict(v) for k, v in sorted(self.items.items())},
+        }
         self.path.write_text(json.dumps(data, indent=1, sort_keys=True) + "\n", encoding="utf-8")
 
     @staticmethod
@@ -107,3 +112,8 @@ class SharePointSim:
         item.etag = f'"{{{item.item_id}}},{item.version}m"'  # metadata change, cTag unchanged
         item.changed_seq = self._tick()
         return item
+
+    def expire_tokens(self) -> int:
+        """Simulate Graph expiring delta tokens: every token older than now must resync (410)."""
+        self.token_floor = self.seq
+        return self.token_floor

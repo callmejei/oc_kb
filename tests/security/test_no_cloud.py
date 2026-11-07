@@ -58,7 +58,12 @@ def test_env_kwarg_cannot_bypass_sanitizer():
 
 def _source_files() -> list[Path]:
     roots = [REPO_ROOT / "src", REPO_ROOT / "synthetic", REPO_ROOT / "infra", REPO_ROOT / "config"]
-    return [p for r in roots for p in r.rglob("*") if p.suffix in {".py", ".yaml", ".yml", ".ps1", ".sh"}]
+    return [
+        p
+        for r in roots
+        for p in r.rglob("*")
+        if p.suffix in {".py", ".yaml", ".yml", ".ps1", ".sh"} and ".venv" not in p.parts  # our code only
+    ]
 
 
 def test_no_hosted_ai_hosts_in_code_or_config():

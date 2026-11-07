@@ -25,11 +25,23 @@ from kb.ports.types import (
 
 @runtime_checkable
 class DocumentSource(Protocol):
-    """SharePoint-like source with Graph delta semantics (also used for upload spaces)."""
+    """One onboarded library with Graph delta semantics.
+
+    ``delta(None)`` returns the current state; later tokens return changes since. Only the last page
+    carries ``next_token``; a caller commits it only after the whole run succeeded. A page with
+    ``resync_required`` means the token expired: the caller must reconcile with ``list_all``.
+    """
 
     def delta(self, token: str | None) -> Iterator[DeltaPage]: ...
     def list_all(self) -> Iterator[SourceItem]: ...
     def open(self, item: SourceItem) -> AbstractContextManager[BinaryIO]: ...
+
+
+@runtime_checkable
+class DocumentSourceFactory(Protocol):
+    """Binds the configured connector to one source (site, drive, folder from the approved revision)."""
+
+    def bind(self, site_id: str, drive_id: str, folder_path: str) -> DocumentSource: ...
 
 
 @runtime_checkable
@@ -59,6 +71,8 @@ class ChunkIndex(Protocol):
     def upsert(self, chunks: Sequence[Chunk]) -> None: ...
     def set_visibility(self, doc_id: str, *, current_version_id: str | None) -> None: ...
     def restamp_acl(self, doc_id: str, acl_groups: Sequence[str]) -> None: ...
+    def set_source_active(self, source_id: str, active: bool) -> None: ...
+    def delete_version(self, version_id: str) -> None: ...
     def bm25(self, query: str, flt: AccessFilter, k: int) -> Sequence[ScoredChunk]: ...
     def knn(self, vector: Sequence[float], flt: AccessFilter, k: int) -> Sequence[ScoredChunk]: ...
 
@@ -112,6 +126,7 @@ __all__ = [
     "LLM",
     "ChunkIndex",
     "DocumentSource",
+    "DocumentSourceFactory",
     "Embedder",
     "GraphStore",
     "IdentityProvider",
@@ -124,8 +139,8 @@ __all__ = [
 ]
 
 PORT_PROTOCOLS: dict[str, type] = {
-    "document_source": DocumentSource,
-    "upload_source": DocumentSource,
+    "document_source": DocumentSourceFactory,
+    "upload_source": DocumentSourceFactory,
     "malware_scanner": MalwareScanner,
     "raw_store": RawStore,
     "registry": Registry,

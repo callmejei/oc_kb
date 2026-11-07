@@ -96,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
     else:
         fn = LIFECYCLE[a.name]
         arg = a.doc if a.name in ("new_version", "delete", "move_out_of_scope") else a.bu
-        if not arg:
+        if not arg and a.name != "expire_tokens":
             ap.error("--doc or --bu required for this scenario")
         print(json.dumps(fn(data / "sharepoint", arg)))
     return 0

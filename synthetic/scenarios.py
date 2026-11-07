@@ -98,6 +98,34 @@ def add_corrupt(sp_root: Path, bu: str) -> dict[str, Any]:
     return _register(sp_root, f"{bu}/{IN_SCOPE_FOLDER}/Products/Corrupt_Product_Sheet.pdf", w, "add_corrupt")
 
 
+def expire_tokens(sp_root: Path, _: str | None = None) -> dict[str, Any]:
+    sim = SharePointSim(sp_root)
+    floor = sim.expire_tokens()
+    sim.save()
+    return {"scenario": "expire_tokens", "token_floor": floor}
+
+
+def add_pii_heavy(sp_root: Path, bu: str) -> dict[str, Any]:
+    """A document full of obviously fake but well-formed PII: must trip the PII gate."""
+    rows = [
+        f"Test Person {i:03d}, email test.person{i:03d}@example.com, card 4111 1111 1111 1111, "
+        f"phone (212) 555-01{i:02d}, IBAN GB82 WEST 1234 5698 7654 32"
+        for i in range(1, 13)
+    ]
+    content = DocContent(
+        "Customer Contact Export",
+        "synthetic PII test file",
+        1,
+        [Section("1. Export", ["This file must be stopped by the PII gate.", *rows])],
+    )
+    return _register(
+        sp_root,
+        f"{bu}/{IN_SCOPE_FOLDER}/Procedures/Customer_Contact_Export.docx",
+        lambda p: write_docx(content, p),
+        "add_pii_heavy",
+    )
+
+
 LIFECYCLE = {
     "new_version": new_version,
     "delete": delete,
@@ -105,6 +133,8 @@ LIFECYCLE = {
     "add_oversized": add_oversized,
     "add_unsupported": add_unsupported,
     "add_corrupt": add_corrupt,
+    "add_pii_heavy": add_pii_heavy,
+    "expire_tokens": expire_tokens,
 }
 
 # ============================================================================ uploads

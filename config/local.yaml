@@ -34,14 +34,33 @@ gateway:
   auth: dev_header
   trusted_clients: [127.0.0.1, "::1"]
 
+processing:
+  docling_artifacts: .infra/models/docling
+  ocr_backend: torch            # RapidOCR on PyTorch, CPU; models from docling_artifacts (offline)
+  chunk_max_tokens: 400         # HybridChunker budget, bge-small tokenizer (max 512)
+  processed_url: file://data/processed
+  pii:                          # default gate; a source revision's pii_policy overrides keys
+    spacy_model: en_core_web_lg
+    min_score: 0.6
+    max_entities: 5
+    entities: [EMAIL_ADDRESS, PHONE_NUMBER, CREDIT_CARD, IBAN_CODE, US_SSN, UK_NHS, PERSON]
+  retention_days:               # retention class -> days kept after a version stops being current
+    R0D: 0
+    R1Y: 365
+    R2Y: 730
+    R7Y: 2555
+    R10Y: 3650
+    PERM: null                  # never purged
+  max_concurrent_ingestion_runs: 4
+
 ports:
-  document_source:   {adapter: local.LocalFolderSource, root: data/sharepoint}
+  document_source:   {adapter: local.LocalFolderSource, root: data/sharepoint, page_size: 25}
   upload_source:     {adapter: local.UploadSource, root: data/raw/uploads}
   malware_scanner:   {adapter: local.AllowListScanner}
   raw_store:         {adapter: local.FsspecRawStore, url: file://data/raw}
   registry:          {adapter: local.PostgresRegistry, dsn: "postgresql://kb_api:${KB_PG_API_PASSWORD}@127.0.0.1:5433/kb"}
-  chunk_index:       {adapter: local.ElasticsearchChunkIndex, url: http://127.0.0.1:9250, index_alias: kb-chunks, dims: 384}
-  embedder:          {adapter: local.SentenceTransformerEmbedder, model: BAAI/bge-small-en-v1.5, dims: 384}
+  chunk_index:       {adapter: local.ElasticsearchChunkIndex, url: http://127.0.0.1:9250, index_alias: kb-chunks, dims: 384, user: elastic, password: "${KB_ES_PASSWORD}"}
+  embedder:          {adapter: local.SentenceTransformerEmbedder, model: BAAI/bge-small-en-v1.5, revision: 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a, path: .infra/models/hf/BAAI--bge-small-en-v1.5, dims: 384, device: cpu}
   reranker:          {adapter: local.CrossEncoderReranker, model: BAAI/bge-reranker-base}
   llm:               {adapter: local.OpenAICompatibleLLM, base_url: http://127.0.0.1:11435/v1, model: qwen3:8b}
   sql_engine:        {adapter: local.DuckDbPolicySqlEngine, path: data/marts/marts.duckdb, policies: config/policies.yaml}

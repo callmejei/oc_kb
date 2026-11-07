@@ -27,6 +27,7 @@ class SourceItem:
     etag: str
     modified_at: datetime
     change: ChangeKind = ChangeKind.UPSERT
+    sha256: str | None = None  # when the source exposes a content hash (Graph: quickXorHash differs)
 
 
 @dataclass(frozen=True)
