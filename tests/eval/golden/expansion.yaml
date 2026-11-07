@@ -1,0 +1,51 @@
+# Paraphrase questions for graph expansion (Phase 5). Each uses vocabulary the documents do NOT use
+# (left) for a fact stated with the documents' own terms (right). Same structure as golden.yaml; facts are
+# checked against the real files by tests/eval/test_golden_consistency.py.
+#   buy-to-let / loan to valuation -> investment residential / LTV      penalty for paying late -> late payment
+#   blue chip shares / advance      -> blue-chip equities / standard     development site -> land for development
+#   stocks                          -> equities                          loan files -> credit files
+#   wire transfer                   -> telegraphic transfer              office building -> commercial office
+retail:
+  user: ret.user1
+  questions:
+    - id: e1
+      q: What is the maximum loan to valuation for a buy-to-let property on a first facility?
+      facts: ["70%"]
+      expected_docs: [ret-home-loan-policy, ret-home-loan-sheet, ret-valuation-guide, ret-car-loan-sheet]
+    - id: e2
+      q: How much is the penalty for paying late?
+      facts: ["75.00"]
+      expected_docs: [ret-fees]
+    - id: e7
+      q: What does a wire transfer cost?
+      facts: ["25.00"]
+      expected_docs: [ret-fees]
+corporate:
+  user: corp.user1
+  questions:
+    - id: e4
+      q: What is the maximum lending ratio for a development site on a first facility?
+      facts: ["35%"]
+      expected_docs: [corp-cre-policy, corp-syndication-guide]
+    - id: e8
+      q: What is the lending ratio for an office building on a third facility?
+      facts: ["15%"]
+      expected_docs: [corp-cre-policy, corp-syndication-guide]
+wealth:
+  user: wlth.user1
+  questions:
+    - id: e3
+      q: What advance can be given against blue chip shares?
+      facts: ["60%"]
+      expected_docs: [wlth-lombard-policy]
+    - id: e5
+      q: What share of a Balanced model portfolio goes into stocks?
+      facts: ["45%"]
+      expected_docs: [wlth-model-portfolios, wlth-mandate-guide, wlth-ic-briefing]
+shared:
+  user: grp.reader
+  questions:
+    - id: e6
+      q: How long do we keep loan files?
+      facts: ["10 years after closure", "ten years after closure"]
+      expected_docs: [shr-retention-standard]

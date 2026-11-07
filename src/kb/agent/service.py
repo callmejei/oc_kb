@@ -61,6 +61,7 @@ class Computed:
     retrieved_ids: list[str]
     filter: dict[str, Any]
     latency_ms: int
+    expansion: dict[str, Any] = field(default_factory=dict)
 
 
 class AskService:
@@ -71,8 +72,10 @@ class AskService:
         registry: PostgresRegistry,
         cfg: dict[str, Any],
         text_to_sql: TextToSql | None = None,
+        scope_fn: Any = None,
     ) -> None:
         self.retriever, self.llm, self.registry, self.cfg, self.t2s = retriever, llm, registry, cfg, text_to_sql
+        self.scope_fn = scope_fn  # identity -> BUs whose graphs may be read for expansion (None: no expansion)
 
     def ask(self, identity: Identity, question: str) -> AskResult:
         c = self.compute(identity, question)
@@ -98,12 +101,23 @@ class AskService:
                 notes.append(DATA_FAILED_NOTE)
         context: list[ScoredChunk] = []
         retrieved_ids: list[str] = []
+        expansion: dict[str, Any] = {}
         if route in ("documents", "both") or not data:  # data failed -> fall back to documents
-            ret = self.retriever.retrieve(question, flt)
+            scope = self.scope_fn(identity) if self.scope_fn else None
+            ret = self.retriever.retrieve(question, flt, scope=scope)
             context, retrieved_ids = ret.context, ret.retrieved_ids
+            if ret.expansion is not None:
+                expansion = {
+                    "concepts": ret.expansion.concepts,
+                    "related": ret.expansion.related,
+                    "graphs": ret.expansion.graphs,
+                    "terms": ret.expansion.terms,
+                }
         ans = answer(question, context, self.llm, int(self.cfg.get("max_context_chars", 9000)), data=data)
         latency = int((time.monotonic() - t0) * 1000)
-        return Computed(ans, route, route_method, data_question, notes, sql, retrieved_ids, describe(flt), latency)
+        return Computed(
+            ans, route, route_method, data_question, notes, sql, retrieved_ids, describe(flt), latency, expansion
+        )
 
     def _audit(self, identity: Identity, question: str, c: Computed) -> AskResult:
         ans, route, route_method, data_question, notes, sql, retrieved_ids, latency = (
@@ -124,6 +138,7 @@ class AskService:
             "route_method": route_method,
             "data_question_sha256": hashlib.sha256(data_question.encode()).hexdigest(),
             "retrieved_chunk_ids": retrieved_ids,
+            "graph_expansion": c.expansion,
             "context_chunk_ids": ans.context_ids,
             "cited_chunk_ids": [c.chunk_id for c in ans.citations if c.chunk_id],
             "cited_doc_versions": sorted({c.version_id for c in ans.citations if c.version_id}),

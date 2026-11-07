@@ -7,14 +7,15 @@ import pytest
 
 from kb.adapters.local.identity import YamlIdentityProvider
 from kb.config import load_settings
-from kb.evaluation.golden import load_golden
+from kb.evaluation.golden import EXPANSION, load_golden
 from synthetic.extract import extract_text
 from synthetic.world import DOC_BY_KEY
 
 GOLDEN = load_golden()
+EXPANSION_SET = load_golden(EXPANSION)
 IDP = YamlIdentityProvider("config/users.yaml")
 SP = load_settings().path("data_dir") / "sharepoint"
-CASES = [(bu, q, block["user"]) for bu, block in GOLDEN.items() for q in block["questions"]]
+CASES = [(bu, q, block["user"]) for g in (GOLDEN, EXPANSION_SET) for bu, block in g.items() for q in block["questions"]]
 
 
 @pytest.mark.parametrize(("bu", "q", "user"), CASES, ids=[c[1]["id"] for c in CASES])

@@ -46,12 +46,27 @@ class SqlAttempt:
 
 
 class TextToSql:
-    def __init__(self, engine: DuckDbPolicySqlEngine, llm: LLM, max_attempts: int = 2, row_limit: int = 50) -> None:
+    def __init__(
+        self,
+        engine: DuckDbPolicySqlEngine,
+        llm: LLM,
+        max_attempts: int = 2,
+        row_limit: int = 50,
+        table_map: Any = None,
+    ) -> None:
         self.engine, self.llm, self.max_attempts, self.row_limit = engine, llm, max_attempts, row_limit
+        self.table_map = table_map
+        self.last_hints: list[str] = []
 
     def run(self, question: str, identity: Identity) -> SqlAttempt:
         schema = self.engine.schema_context(identity)
         out = SqlAttempt(data=None)
+        hints: list[str] = []
+        if self.table_map is not None and schema:
+            hints = self.table_map.hints(self.table_map.o.spot(question), self.engine.policy.granted_tables(identity))
+            if hints:
+                schema += "\n\nConcept hints (business term -> where it lives):\n" + "\n".join(hints)
+        self.last_hints = hints
         if not schema:
             out.attempts.append({"error": "no permitted tables"})
             return out

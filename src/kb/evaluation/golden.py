@@ -29,6 +29,9 @@ from synthetic.world import DOC_BY_KEY
 GOLDEN = REPO_ROOT / "tests" / "eval" / "golden" / "golden.yaml"
 
 
+EXPANSION = REPO_ROOT / "tests" / "eval" / "golden" / "expansion.yaml"
+
+
 def load_golden(path: Path = GOLDEN) -> dict[str, Any]:
     data: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
     return data
@@ -101,11 +104,11 @@ def evaluate(settings: Settings, k: int = 5, log: Any = print) -> dict[str, Any]
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="kb.evaluation.golden")
     ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--suite", choices=["documents", "structured"], default="documents")
+    ap.add_argument("--suite", choices=["documents", "structured", "expansion"], default="documents")
     a = ap.parse_args(argv)
     settings = load_settings(strict=True)
-    if a.suite == "structured":
-        report = evaluate_structured(settings)
+    if a.suite in ("structured", "expansion"):
+        report = evaluate_structured(settings) if a.suite == "structured" else evaluate_expansion(settings)
         a.out.parent.mkdir(parents=True, exist_ok=True)
         a.out.write_text(json.dumps(report, indent=1, default=str) + chr(10), encoding="utf-8")
         print(json.dumps(report["overall"], indent=1))
@@ -186,6 +189,66 @@ def evaluate_structured(settings: Settings, log: Any = print) -> dict[str, Any]:
             "doc_correct_on_combined": round(sum(bool(r["doc_correct"]) for r in both) / max(1, len(both)), 3),
             "citations_ok": round(sum(r["citations_ok"] for r in rows) / n, 3),
             "median_latency_ms": int(statistics.median(r["latency_ms"] for r in rows)),
+        },
+        "questions": rows,
+    }
+
+
+# ================================================================================================= expansion
+def evaluate_expansion(settings: Settings, k: int = 5, log: Any = print) -> dict[str, Any]:
+    """Each paraphrase question is answered twice: without and with graph expansion."""
+    from kb.gateway.acl import graph_scope
+    from kb.graph.ontology import Ontology
+    from kb.retrieval.expansion import GraphExpander
+
+    idx = build(settings, "chunk_index")
+    emb, rr, llm = build(settings, "embedder"), build(settings, "reranker"), build(settings, "llm")
+    expander = GraphExpander(build(settings, "graph_store"), Ontology(), int(settings.graph.get("expansion_terms", 10)))
+    plain = HybridRetriever(idx, emb, rr, settings.retrieval)
+    expanded = HybridRetriever(idx, emb, rr, settings.retrieval, expander)
+    idp = YamlIdentityProvider("config/users.yaml")
+    rows = []
+    for bu, block in load_golden(EXPANSION).items():
+        ident = idp.resolve(block["user"])
+        flt = build_access_filter(ident)
+        scope = graph_scope(ident, idp.readable_bus(ident))
+        for q in block["questions"]:
+            titles = {doc_title(d) for d in q["expected_docs"]}
+            row: dict[str, Any] = {"bu": bu, "id": q["id"], "question": q["q"]}
+            for mode, r in (("off", plain.retrieve(q["q"], flt)), ("on", expanded.retrieve(q["q"], flt, scope=scope))):
+                a = answer(q["q"], r.context, llm, int(settings.retrieval.get("max_context_chars", 9000)))
+                row[mode] = {
+                    "hit_at_k": any(c.chunk.metadata.get("title") in titles for c in r.context[:k]),
+                    "correct": any(f.lower() in a.text.lower() for f in q["facts"]),
+                    "answer": a.text,
+                    "expansion": None
+                    if r.expansion is None
+                    else {"concepts": r.expansion.concepts, "related": r.expansion.related, "terms": r.expansion.terms},
+                }
+            row["improved"] = (row["on"]["correct"] and not row["off"]["correct"]) or (
+                row["on"]["hit_at_k"] and not row["off"]["hit_at_k"]
+            )
+            row["regressed"] = (row["off"]["correct"] and not row["on"]["correct"]) or (
+                row["off"]["hit_at_k"] and not row["on"]["hit_at_k"]
+            )
+            rows.append(row)
+            log(
+                f"{q['id']:<4} off: hit={row['off']['hit_at_k']!s:<5} ok={row['off']['correct']!s:<5} | "
+                f"on: hit={row['on']['hit_at_k']!s:<5} ok={row['on']['correct']!s:<5} improved={row['improved']}"
+            )
+    n = len(rows)
+
+    def rate(mode: str, key: str) -> float:
+        return float(round(sum(r[mode][key] for r in rows) / n, 3))
+
+    return {
+        "generated_at": datetime.now(UTC).isoformat(timespec="seconds"),
+        "overall": {
+            "n": n,
+            "off": {f"hit@{k}": rate("off", "hit_at_k"), "answer_correct": rate("off", "correct")},
+            "on": {f"hit@{k}": rate("on", "hit_at_k"), "answer_correct": rate("on", "correct")},
+            "improved": [r["id"] for r in rows if r["improved"]],
+            "regressed": [r["id"] for r in rows if r["regressed"]],
         },
         "questions": rows,
     }

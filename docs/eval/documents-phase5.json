@@ -1,0 +1,415 @@
+{
+ "generated_at": "2026-11-07T15:21:11+00:00",
+ "config": {
+  "llm": "qwen3:8b",
+  "embedder": "BAAI/bge-small-en-v1.5@5c38ec7c40",
+  "reranker": "BAAI/bge-reranker-base@2cfc18c941",
+  "retrieval": {
+   "bm25_k": 20,
+   "knn_k": 20,
+   "fused_k": 20,
+   "rerank_k": 6,
+   "min_rerank_score": 0.05,
+   "max_context_chars": 9000
+  }
+ },
+ "overall": {
+  "n": 23,
+  "hit@5": 1.0,
+  "answer_correct": 1.0,
+  "citation_correct": 1.0,
+  "median_latency_ms": 7155
+ },
+ "by_bu": {
+  "corporate": {
+   "n": 6,
+   "hit@5": 1.0,
+   "answer_correct": 1.0,
+   "citation_correct": 1.0,
+   "median_latency_ms": 8077
+  },
+  "retail": {
+   "n": 6,
+   "hit@5": 1.0,
+   "answer_correct": 1.0,
+   "citation_correct": 1.0,
+   "median_latency_ms": 5937
+  },
+  "shared": {
+   "n": 5,
+   "hit@5": 1.0,
+   "answer_correct": 1.0,
+   "citation_correct": 1.0,
+   "median_latency_ms": 6141
+  },
+  "wealth": {
+   "n": 6,
+   "hit@5": 1.0,
+   "answer_correct": 1.0,
+   "citation_correct": 1.0,
+   "median_latency_ms": 7710
+  }
+ },
+ "questions": [
+  {
+   "bu": "retail",
+   "id": "r1",
+   "question": "What is the maximum LTV for a first facility on an owner-occupied residential property?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 17594,
+   "answer": "The maximum LTV for a first facility on an owner-occupied residential property is 75% [2].",
+   "cited": [
+    "Home_Loan_Credit_Policy | Home Loan Credit Policy > 4. Policy Statements | pNone | v1"
+   ]
+  },
+  {
+   "bu": "retail",
+   "id": "r2",
+   "question": "What is the LTV limit for a third or subsequent facility on an investment residential property?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7530,
+   "answer": "The LTV limit for a third or subsequent facility on an investment residential property is 40% [1].",
+   "cited": [
+    "Home_Loan_Credit_Policy | Home Loan Credit Policy > 4. Policy Statements | pNone | v1"
+   ]
+  },
+  {
+   "bu": "retail",
+   "id": "r3",
+   "question": "How much is the late payment fee?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 3985,
+   "answer": "The late payment fee is 75.00 [1].",
+   "cited": [
+    "Retail_Fees_and_Charges_Schedule | None | p1 | v1"
+   ]
+  },
+  {
+   "bu": "retail",
+   "id": "r4",
+   "question": "What does document retrieval cost per copy?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 5796,
+   "answer": "Document retrieval costs 20.00 per copy [1].",
+   "cited": [
+    "Retail_Fees_and_Charges_Schedule | None | p1 | v1"
+   ]
+  },
+  {
+   "bu": "retail",
+   "id": "r5",
+   "question": "What is the fee for a telegraphic transfer?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 6078,
+   "answer": "The fee for a telegraphic transfer is 25.00 [1].",
+   "cited": [
+    "Retail_Fees_and_Charges_Schedule | None | p1 | v1"
+   ]
+  },
+  {
+   "bu": "retail",
+   "id": "r6",
+   "question": "For how long can a policy exception be granted at most?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 3967,
+   "answer": "A policy exception can be granted for a maximum of twelve months [1], [2], [3], [4], [5], [6].",
+   "cited": [
+    "Group_Complaints_Handling_Procedure | 2. Scope | p1 | v1",
+    "Home_Loan_Credit_Policy | Home Loan Credit Policy > 1. Purpose | pNone | v1",
+    "Group_Outsourcing_Policy | Group Outsourcing Policy > 6. Exceptions and Dispensations | pNone | v1",
+    "Group_Information_Security_Policy | 5. Roles and Responsibilities | p1 | v1",
+    "Mortgage_Valuation_Guidelines | 4. Worked Example | p1 | v1",
+    "Retail_Product_Briefing_Q3 | 4. Risks and Mitigations | p6 | v1"
+   ]
+  },
+  {
+   "bu": "corporate",
+   "id": "c1",
+   "question": "What is the maximum first-facility LTV for land for development?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 9187,
+   "answer": "The maximum first-facility LTV for land for development is 35% [1].",
+   "cited": [
+    "Syndicated_Loan_Guidelines | 2. Principles | p1 | v1"
+   ]
+  },
+  {
+   "bu": "corporate",
+   "id": "c2",
+   "question": "What is the first-facility LTV limit for industrial (B1/B2) property?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 9296,
+   "answer": "The first-facility LTV limit for industrial (B1/B2) property is 40% [1].",
+   "cited": [
+    "Syndicated_Loan_Guidelines | 2. Principles | p1 | v1"
+   ]
+  },
+  {
+   "bu": "corporate",
+   "id": "c3",
+   "question": "What is the LTV for a third or more facility on commercial office property?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7109,
+   "answer": "The LTV for a third or more facility on commercial office property is 15% [1].",
+   "cited": [
+    "Commercial_Property_Lending_Policy | Commercial Property Lending Policy > 4. Policy Statements | pNone | v1"
+   ]
+  },
+  {
+   "bu": "corporate",
+   "id": "c4",
+   "question": "What is the indicative rate for Tier B on the SME working capital product?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8375,
+   "answer": "The indicative rate for Tier B on the SME working capital product is 3.00% p.a. [1].",
+   "cited": [
+    "SME_Working_Capital_Product_Sheet | 3. Key Features | p1 | v1"
+   ]
+  },
+  {
+   "bu": "corporate",
+   "id": "c5",
+   "question": "What is the minimum amount for Tier D on the SME working capital product?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7780,
+   "answer": "The minimum amount for Tier D on the SME working capital product is 40,000 [3].",
+   "cited": [
+    "SME_Working_Capital_Product_Sheet | 3. Key Features | p1 | v1"
+   ]
+  },
+  {
+   "bu": "corporate",
+   "id": "c6",
+   "question": "Within how many business days must a conflict with local regulation be raised?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4500,
+   "answer": "A conflict with local regulation must be raised within five business days [1], [2], [3], [4], [5], [6].",
+   "cited": [
+    "Syndicated_Loan_Guidelines | 1. Introduction | p1 | v1",
+    "SME_Working_Capital_Product_Sheet | 5. Risks | p2 | v1",
+    "Group_Data_Classification_Standard | Group Data Classification Standard > 5. Governance | pNone | v1",
+    "Group_Complaints_Handling_Procedure | 2. Scope | p1 | v1",
+    "Group_Code_of_Conduct | Group Code of Conduct > 5. Roles and Responsibilities | pNone | v1",
+    "SME_Working_Capital_Product_Sheet | 2. Eligibility | p1 | v1"
+   ]
+  },
+  {
+   "bu": "wealth",
+   "id": "w1",
+   "question": "What is the standard advance ratio for blue-chip equities?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8266,
+   "answer": "The standard advance ratio for blue-chip equities is 60% [1].",
+   "cited": [
+    "Portfolio_Lombard_Lending_Policy | Portfolio Lombard Lending Policy > 4. Policy Statements | pNone | v1"
+   ]
+  },
+  {
+   "bu": "wealth",
+   "id": "w2",
+   "question": "What is the concentrated holding advance for investment-grade bonds?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7155,
+   "answer": "The concentrated holding advance for investment-grade bonds is 65% [1].",
+   "cited": [
+    "Portfolio_Lombard_Lending_Policy | Portfolio Lombard Lending Policy > 4. Policy Statements | pNone | v1"
+   ]
+  },
+  {
+   "bu": "wealth",
+   "id": "w3",
+   "question": "What is the standard advance for structured notes?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8407,
+   "answer": "The standard advance for structured notes is 40% [1].",
+   "cited": [
+    "Portfolio_Lombard_Lending_Policy | Portfolio Lombard Lending Policy > 4. Policy Statements | pNone | v1"
+   ]
+  },
+  {
+   "bu": "wealth",
+   "id": "w4",
+   "question": "What equity allocation does the Balanced risk profile have?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8640,
+   "answer": "The Balanced risk profile has an equity allocation of 45% [2].",
+   "cited": [
+    "Discretionary_Mandate_Guidelines | 2. Principles | p1 | v1"
+   ]
+  },
+  {
+   "bu": "wealth",
+   "id": "w5",
+   "question": "How much cash does the Growth model portfolio hold?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 6577,
+   "answer": "The Growth model portfolio holds 5% cash [1].",
+   "cited": [
+    "Investment_Committee_Briefing | 2. Performance: Table 4: Model portfolio allocation by risk profile (synthetic) | p3 | v1"
+   ]
+  },
+  {
+   "bu": "wealth",
+   "id": "w6",
+   "question": "What is the annual platform fee?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7141,
+   "answer": "The annual platform fee is 0.40% of AUM [1].",
+   "cited": [
+    "Wealth_Fee_Schedule | None | p1 | v1"
+   ]
+  },
+  {
+   "bu": "shared",
+   "id": "s1",
+   "question": "How long must credit files be retained?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4578,
+   "answer": "Credit files must be retained for 10 years after closure [1].",
+   "cited": [
+    "Group_Records_Retention_Standard | None | p1 | v1"
+   ]
+  },
+  {
+   "bu": "shared",
+   "id": "s2",
+   "question": "What is the retention period for board papers?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 6141,
+   "answer": "The retention period for board papers is permanent [1].",
+   "cited": [
+    "Group_Records_Retention_Standard | None | p1 | v1"
+   ]
+  },
+  {
+   "bu": "shared",
+   "id": "s3",
+   "question": "How long is marketing material retained?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 3952,
+   "answer": "Marketing material is retained for 2 years [1].",
+   "cited": [
+    "Group_Records_Retention_Standard | None | p1 | v1"
+   ]
+  },
+  {
+   "bu": "shared",
+   "id": "s4",
+   "question": "In the group credit risk appetite statement, what is the maximum first-facility LTV for owner-occupied residential property?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7312,
+   "answer": "The maximum first-facility LTV for owner-occupied residential property is 70% [1].",
+   "cited": [
+    "Group_Credit_Risk_Appetite_Statement | 2. Performance: Table 1: Maximum loan-to-value (LTV) by property type (synthetic) | p3 | v1"
+   ]
+  },
+  {
+   "bu": "shared",
+   "id": "s5",
+   "question": "For how long can an exception be granted under group policies?",
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7750,
+   "answer": "Exceptions can be granted for a maximum of twelve months [1][2][3][4][5][6].",
+   "cited": [
+    "Group_Outsourcing_Policy | Group Outsourcing Policy > 6. Exceptions and Dispensations | pNone | v1",
+    "Group_Data_Classification_Standard | Group Data Classification Standard > 4. Worked Example | pNone | v1",
+    "Group_Information_Security_Policy | 5. Roles and Responsibilities | p1 | v1",
+    "Group_Complaints_Handling_Procedure | 2. Scope | p1 | v1",
+    "Group_Code_of_Conduct | Group Code of Conduct > 1. Purpose | pNone | v1",
+    "Group_AML_and_CFT_Policy | 7. Review and Approval | p1 | v1"
+   ]
+  }
+ ]
+}
