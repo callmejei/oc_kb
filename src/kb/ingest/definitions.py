@@ -89,6 +89,15 @@ def reprocess_op(context: dg.OpExecutionContext, config: ReprocessConfig, kb: Kb
     return kb.engine().reprocess_released(config.exception_id)
 
 
+class ReparseConfig(dg.Config):
+    reparse_id: str
+
+
+@dg.op
+def reparse_op(context: dg.OpExecutionContext, config: ReparseConfig, kb: KbIngest) -> dict[str, Any]:
+    return kb.engine().reparse(config.reparse_id)
+
+
 @dg.op
 def index_sync_op(context: dg.OpExecutionContext, kb: KbIngest) -> dict[str, Any]:
     return kb.engine().index_sync()
@@ -146,6 +155,11 @@ def upload_job() -> None:
 @dg.job(tags={"kb/run_kind": "REPROCESS"})
 def reprocess_job() -> None:
     reprocess_op()
+
+
+@dg.job(tags={"kb/run_kind": "REPROCESS"})
+def reparse_job() -> None:
+    reparse_op()
 
 
 @dg.job(tags={"kb/run_kind": "INDEX_SYNC", "kb/source": "_index"})
@@ -226,6 +240,21 @@ def released_exception_sensor(context: dg.SensorEvaluationContext, kb: KbIngest)
     ]
 
 
+@dg.sensor(job=reparse_job, minimum_interval_seconds=30, default_status=ON)
+def reparse_sensor(context: dg.SensorEvaluationContext, kb: KbIngest) -> Any:
+    rows = work.queued_reparses(kb.engine())
+    if not rows:
+        return dg.SkipReason("no queued re-parse")
+    return [
+        dg.RunRequest(
+            run_key=f"reparse:{r['reparse_id']}",
+            tags=_src_tags(r["source_id"]),
+            run_config=dg.RunConfig(ops={"reparse_op": ReparseConfig(reparse_id=r["reparse_id"])}),
+        )
+        for r in rows
+    ]
+
+
 @dg.sensor(job=index_sync_job, minimum_interval_seconds=30, default_status=ON)
 def index_sync_sensor(context: dg.SensorEvaluationContext, kb: KbIngest) -> Any:
     drift = work.index_drift(kb.engine())
@@ -284,8 +313,15 @@ daily_purge = dg.ScheduleDefinition(
 )
 
 defs = dg.Definitions(
-    jobs=[dry_run_job, sync_job, upload_job, reprocess_job, index_sync_job, purge_job, ontology_build_job],
-    sensors=[dry_run_sensor, first_load_sensor, upload_sensor, released_exception_sensor, index_sync_sensor],
+    jobs=[dry_run_job, sync_job, upload_job, reprocess_job, reparse_job, index_sync_job, purge_job, ontology_build_job],
+    sensors=[
+        dry_run_sensor,
+        first_load_sensor,
+        upload_sensor,
+        released_exception_sensor,
+        reparse_sensor,
+        index_sync_sensor,
+    ],
     schedules=[daily_delta, weekly_reconcile, daily_purge, weekly_ontology],
     resources={"kb": KbIngest()},
 )

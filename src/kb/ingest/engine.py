@@ -296,6 +296,9 @@ class IngestEngine:
                    ORDER BY v.version_no DESC LIMIT 1""",
                 (doc_id, item.ctag),
             ).fetchone()
+        if cur and cur["status"] == "EXCLUDED":  # excluded by governance: only an approved include brings it back
+            stats.add("excluded_skipped")
+            return
         if cur and cur["ctag"] == item.ctag and cur["status"] == "ACTIVE":
             if cur["current_path"] != item.path:
                 with self.tx() as c:
@@ -414,14 +417,18 @@ class IngestEngine:
         item: SourceItem | None = None,
         skip_pii: bool = False,
         notify: str | None = None,
+        parse_options: dict[str, Any] | None = None,
     ) -> bool:
         with self.tx() as c:
             v = c.execute(
-                """SELECT v.*, d.origin, d.uploaded_by, d.visibility, d.title, d.source_id
+                """SELECT v.*, d.origin, d.uploaded_by, d.visibility, d.title, d.source_id, d.status AS doc_status
                    FROM kb.document_version v JOIN kb.document d USING (doc_id) WHERE v.version_id = %s""",
                 (version_id,),
             ).fetchone()
         assert v is not None
+        if v["doc_status"] == "EXCLUDED":  # never index (or flip visible) an excluded document
+            stats.add("excluded_skipped")
+            return False
         filename = v["original_filename"] or (item.name if item else f"{doc_id}.{v['mime_type']}")
         with tempfile.TemporaryDirectory(prefix="kb-parse-") as tmp:
             local = Path(tmp) / PurePosixPath(filename).name
@@ -429,7 +436,7 @@ class IngestEngine:
                 while block := fin.read(1 << 20):
                     fout.write(block)
             try:
-                parsed = self.parser.parse(local)
+                parsed = self.parser.parse(local, parse_options)
             except ParseError as e:
                 self._version_exception(
                     src,
@@ -505,6 +512,7 @@ class IngestEngine:
                 "chunks": len(chunks),
                 "pii_overridden": bool(report.exceeded and skip_pii),
                 "parse_warnings": parsed.warnings[:20],
+                "parse_options": parse_options or {},
             },
         )
         stats.add("indexed_versions")
@@ -661,11 +669,82 @@ class IngestEngine:
             stats.add("reprocessed_ok" if ok else "reprocessed_failed")
         return stats.as_json()
 
+    # ================================================================== re-parse (inspector action)
+    def reparse(self, reparse_id: str) -> dict[str, Any]:
+        """Re-parse the current version's raw copy with new parser options as version n+1 (its own raw copy,
+        so retention/purge of the old version never touches the new one). The old version stays current
+        unless the new one indexes cleanly."""
+        with self.tx() as c:
+            r = c.execute(
+                """SELECT r.*, d.status AS doc_status, d.source_id, v.raw_uri, v.sha256, v.size_bytes, v.mime_type,
+                          v.ctag, v.original_filename, v.is_current, v.processing AS from_processing
+                   FROM kb.reparse_request r JOIN kb.document d USING (doc_id)
+                   JOIN kb.document_version v ON v.version_id = r.from_version_id
+                   WHERE r.reparse_id = %s""",
+                (reparse_id,),
+            ).fetchone()
+        if r is None or r["status"] != "QUEUED":
+            return {"skipped": reparse_id}
+        if r["doc_status"] != "ACTIVE" or not r["is_current"]:
+            self._finish_reparse(reparse_id, None, f"document {r['doc_status']}; version no longer current")
+            return {"failed": reparse_id}
+        src = self.source_ctx(r["source_id"])
+        doc_id = r["doc_id"]
+        with self.run(src, "REPROCESS") as (run_id, stats):
+            version_no = self._next_version(doc_id)
+            version_id = f"{doc_id}:v{version_no}"
+            name = r["original_filename"] or PurePosixPath(str(r["raw_uri"])).name
+            key = f"{src.bu}/{src.source_id}/{doc_id}/v{version_no}/{PurePosixPath(name).name}"
+            with self.raw.open(r["raw_uri"]) as fin:
+                stored = self.raw.put_stream(key, fin)
+            if stored.sha256 != r["sha256"]:  # the raw copy changed under us: refuse rather than mislabel
+                self.raw.delete(stored.uri)
+                self._finish_reparse(reparse_id, None, "raw copy checksum mismatch")
+                stats.add("reparse_failed")
+                return stats.as_json()
+            with self.tx() as c:
+                c.execute(
+                    """INSERT INTO kb.document_version (version_id, doc_id, version_no, ctag, sha256, size_bytes,
+                                                        mime_type, raw_uri, status, run_id, original_filename,
+                                                        processing)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'PROCESSING', %s, %s, %s)""",
+                    (
+                        version_id,
+                        doc_id,
+                        version_no,
+                        r["ctag"],
+                        stored.sha256,
+                        stored.size_bytes,
+                        r["mime_type"],
+                        stored.uri,
+                        run_id,
+                        name,
+                        Jsonb({"reparse_of": r["from_version_id"], "reparse_id": reparse_id}),
+                    ),
+                )
+            # a checker-approved PII override was for this exact content (same sha): it carries over
+            overridden = bool((r["from_processing"] or {}).get("pii_overridden"))
+            ok = self.process_version(
+                src, run_id, doc_id, version_id, stats, skip_pii=overridden, parse_options=dict(r["options"])
+            )
+            self._finish_reparse(reparse_id, version_id if ok else None, None if ok else "re-parse raised an exception")
+            stats.add("reparsed_ok" if ok else "reparse_failed")
+        return stats.as_json()
+
+    def _finish_reparse(self, reparse_id: str, version_id: str | None, error: str | None) -> None:
+        with self.tx() as c:
+            c.execute(
+                """UPDATE kb.reparse_request SET status = %s, result_version_id = %s, error = %s,
+                       finished_at = clock_timestamp() WHERE reparse_id = %s""",
+                ("DONE" if version_id else "FAILED", version_id, error, reparse_id),
+            )
+
     # ================================================================== index sync (ACL / source-active / deletes)
     def index_sync(self) -> dict[str, Any]:
         """Converge the index to the registry: publish/unpublish re-stamps, approved ACL changes, suspended
-        sources, uploader deletions. Never re-embeds."""
+        sources, uploader deletions, approved re-includes. Never re-embeds."""
         stats = RunStats()
+        self._restore_included(stats)
         with self.tx() as c:
             rows = c.execute(
                 """SELECT d.doc_id, d.status, d.origin, d.visibility, d.uploaded_by, d.acl_stamp, d.active_stamp,
@@ -696,6 +775,39 @@ class IngestEngine:
                     c.execute("UPDATE kb.document SET active_stamp = %s WHERE source_id = %s", (active, r["source_id"]))
                 stats.add("source_active_restamped")
         return stats.as_json()
+
+    def _restore_included(self, stats: RunStats) -> None:
+        """An approved INCLUDE_DOCUMENT left restore_pending: re-stamp the ACL to today's rule *before*
+        making the latest hidden version visible again (the ACL may have narrowed while it was excluded)."""
+        with self.tx() as c:
+            rows = c.execute(
+                """SELECT d.doc_id, d.source_id, d.origin, d.visibility, d.uploaded_by, r.acl_groups,
+                          (SELECT v.version_id FROM kb.document_version v WHERE v.doc_id = d.doc_id
+                             AND v.status = 'DELETED' ORDER BY v.version_no DESC LIMIT 1) AS version_id
+                   FROM kb.document d JOIN kb.kb_source s USING (source_id)
+                   JOIN kb.source_revision r ON r.revision_id = s.current_revision_id
+                   WHERE d.restore_pending"""
+            ).fetchall()
+        for r in rows:
+            if r["version_id"] is not None:
+                want = (
+                    [f"user:{r['uploaded_by']}"]
+                    if r["origin"] == "UPLOAD" and r["visibility"] != "PUBLISHED"
+                    else list(r["acl_groups"])
+                )
+                self.index.restamp_acl(r["doc_id"], want)
+                with self.tx() as c:
+                    c.execute("UPDATE kb.document SET acl_stamp = %s WHERE doc_id = %s", (want, r["doc_id"]))
+                self._restore_document(r["doc_id"], r["version_id"], self.source_ctx(r["source_id"]), stats)
+            else:
+                stats.add("restore_nothing_left")  # purged meanwhile: the next sync re-ingests it
+            with self.tx() as c:
+                c.execute("UPDATE kb.document SET restore_pending = false WHERE doc_id = %s", (r["doc_id"],))
+                if r["origin"] == "SHAREPOINT":
+                    # edits made while excluded were skipped but the delta token moved past them: drop the
+                    # token so the next sync is a full (idempotent) listing that picks them up
+                    c.execute("UPDATE kb.sync_state SET delta_token = NULL WHERE source_id = %s", (r["source_id"],))
+                    stats.add("resync_scheduled")
 
     def _hide_document_any(self, doc_id: str, status: str, stats: RunStats) -> None:
         """A document already marked non-ACTIVE in the registry (e.g. uploader delete) still shows a current

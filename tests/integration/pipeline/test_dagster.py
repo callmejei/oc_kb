@@ -110,3 +110,26 @@ def test_upload_sensor_and_job_execute(api: Api, kb_res, client, as_admin):
         ).fetchone()
     assert st == {"status": "INDEXED", "is_current": True}
     assert f"upload:{up['version_id']}" not in {r.run_key for r in run_requests(d.upload_sensor, kb_res)}
+
+
+def test_reparse_sensor_emits_one_run_per_queued_reparse(api: Api, kb_res, as_pipe, as_api):
+    """The inspector's re-parse button only queues a row; the sensor turns it into a run (pipeline role)."""
+    names = {j.name for j in d.defs.resolve_all_job_defs()}
+    assert "reparse_job" in names
+    src = onboard(api, "retail")["source_id"]
+    doc = f"doc-{uuid.uuid4().hex[:10]}"
+    with as_pipe() as c:
+        c.execute(
+            "INSERT INTO kb.document (doc_id, source_id, external_item_id, current_path, title, origin) "
+            "VALUES (%s, %s, %s, '/KB/x.pdf', 'x', 'SHAREPOINT')",
+            (doc, src, doc),
+        )
+        c.execute(
+            "INSERT INTO kb.document_version (version_id, doc_id, version_no, sha256, size_bytes, raw_uri, status, "
+            "is_current) VALUES (%s, %s, 1, %s, 1, 'file:///x', 'INDEXED', true)",
+            (f"{doc}:v1", doc, "c" * 64),
+        )
+    with as_api("ret.maker") as c:
+        rid = c.execute("SELECT kb.request_reparse(%s, '{}', 'garbled') AS r", (doc,)).fetchone()["r"]
+    reqs = {r.run_key: r for r in run_requests(d.reparse_sensor, kb_res)}
+    assert f"reparse:{rid}" in reqs and reqs[f"reparse:{rid}"].tags["kb/source"] == src

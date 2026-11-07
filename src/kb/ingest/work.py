@@ -69,9 +69,19 @@ def index_drift(engine: IngestEngine) -> list[str]:
                   OR d.acl_stamp IS DISTINCT FROM (
                        CASE WHEN d.origin = 'UPLOAD' AND d.visibility <> 'PUBLISHED'
                             THEN ARRAY['user:' || d.uploaded_by] ELSE r.acl_groups END)
-               ORDER BY d.doc_id"""
+               UNION
+               SELECT doc_id FROM kb.document WHERE restore_pending
+               ORDER BY doc_id"""
         ).fetchall()
     return [r["doc_id"] for r in rows]
+
+
+def queued_reparses(engine: IngestEngine) -> list[dict[str, Any]]:
+    with engine.tx() as c:
+        return c.execute(
+            """SELECT r.reparse_id::text AS reparse_id, d.source_id FROM kb.reparse_request r
+               JOIN kb.document d USING (doc_id) WHERE r.status = 'QUEUED' ORDER BY r.created_at"""
+        ).fetchall()
 
 
 def drift_key(doc_ids: list[str]) -> str:
