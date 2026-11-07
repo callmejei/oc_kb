@@ -113,3 +113,12 @@ Revisit if a cross-BU source is ever needed (it would need its own decision).
 ## D-018 Every source configuration change needs four eyes (accepted, 2026-11-07, user approved)
 Including changes that only restrict access. Emergency restriction uses `kb.suspend_source`
 (single actor, audited), which already exists.
+
+## D-019 Phoenix server in its own environment (accepted, 2026-11-07)
+`arize-phoenix` 20.26.0 needs graphql-core >= 3.3; `dagster-webserver` 1.13.26 needs < 3.3. Phoenix is
+infrastructure, so it lives in `infra/local/phoenix/` (own pyproject + lock, synced by `kbinfra`);
+the app environment will export traces with a light OTel client (Phase 7).
+**Risk noted:** Phoenix bundles LLM SDKs for its UI "playground", which can call hosted models if a
+user enters a key in the UI. Locally it is loopback-only and started with a sanitized environment.
+For CML: deploy with egress blocked to the internet (only the bank's endpoints), or disable the
+playground; to be confirmed in `docs/cml-deployment.md` (Phase 7).

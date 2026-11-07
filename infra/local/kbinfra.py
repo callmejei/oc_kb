@@ -422,10 +422,46 @@ def ollama_models(settings: Any) -> None:
     log(f"model {model} present")
 
 
+# Pinned Hugging Face snapshots (repo, exact commit). Downloaded once; runtime is offline.
+HF_MODELS: dict[str, str] = {
+    "BAAI/bge-small-en-v1.5": "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a",
+}
+HF_PATTERNS = ["*.json", "*.txt", "model.safetensors", "1_Pooling/*"]
+DOCLING_MODELS = ["layout", "tableformer", "rapidocr"]  # versions pinned by the docling release
+
+
+def models_dir() -> Path:
+    return INFRA / "models"
+
+
+def hf_models() -> None:
+    from huggingface_hub import snapshot_download
+
+    for repo, rev in HF_MODELS.items():
+        dest = models_dir() / "hf" / repo.replace("/", "--")
+        snapshot_download(repo, revision=rev, local_dir=str(dest), allow_patterns=HF_PATTERNS)
+        (dest / ".revision").write_text(rev, encoding="utf-8")
+        log(f"{repo}@{rev[:10]} present")
+
+
+def docling_models() -> None:
+    exe = REPO_ROOT / ".venv" / ("Scripts" if IS_WIN else "bin") / f"docling-tools{EXE}"
+    out = models_dir() / "docling"
+    envsafe.run([str(exe), "models", "download", *DOCLING_MODELS, "-o", str(out)], capture_output=True)
+    log(f"docling models {DOCLING_MODELS} present")
+
+
 # ---- Phoenix ---------------------------------------------------------------------------------
+PHOENIX_PROJECT = REPO_ROOT / "infra" / "local" / "phoenix"  # isolated env: its deps clash with dagster's
+
+
 def _phoenix_exe() -> Path:
-    scripts = REPO_ROOT / ".venv" / ("Scripts" if IS_WIN else "bin")
+    scripts = PHOENIX_PROJECT / ".venv" / ("Scripts" if IS_WIN else "bin")
     return scripts / f"phoenix{EXE}"
+
+
+def phoenix_sync() -> None:
+    envsafe.run(["uv", "sync", "--locked", "--project", str(PHOENIX_PROJECT)], capture_output=True)
 
 
 def phoenix_health(settings: Any, env: dict[str, str]) -> tuple[bool, Any]:
@@ -437,7 +473,7 @@ def phoenix_up(settings: Any, env: dict[str, str]) -> None:
         log("phoenix already running")
         return
     if not _phoenix_exe().exists():
-        raise SystemExit("[kbinfra] phoenix not installed: run `uv sync --all-groups`")
+        phoenix_sync()
     port = str(settings.services["phoenix"]["url"]).rsplit(":", 1)[1]
     (DATA / "phoenix").mkdir(parents=True, exist_ok=True)
     spawn(
@@ -483,6 +519,8 @@ def main(argv: list[str] | None = None) -> int:
     settings = load_settings("local", strict=True)
     if a.action == "models":
         ollama_models(settings)
+        hf_models()
+        docling_models()
         return 0
     names = a.services
     if a.action == "up":
