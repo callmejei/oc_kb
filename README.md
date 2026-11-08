@@ -88,7 +88,7 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | GraphStore (pyoxigraph, named graph per BU, atomic swap, scoped queries) | tested | `adapters/local/graph_store.py` |
 | graphify per BU (isolated env, sanitized env, loopback-only network guard, kill-tree) | tested | `src/kb/graph/graphify_runner.py`; local `qwen3-graphify` only |
 | FIBO mapping (rules auto-accept; embedding always reviewed), SHACL, review queue + checker API | tested | `src/kb/graph/`, migration 006, `shapes/` |
-| FIBO coverage of extracted entities | **below target** | 87/230 auto-mapped (0.38) vs skill's 80%; 143 in the checker queue (D-043). Test fails until checkers act |
+| FIBO coverage of extracted entities | **below target** | 94/252 auto-mapped (0.37, weekly rebuild 2026-11-08 05:00) vs skill's 80%; 158 in the checker queue (D-043). Test fails until checkers act |
 | Chunk `concept_ids`, graph expansion scoped to readable BUs | tested | expansion never crosses BUs for all 17 users; leak suite with expansion on: 0 leaks |
 | Expansion golden | recorded | `docs/eval/expansion-phase5.json`: answer_correct 0.875 -> 1.0 (e7), no regressions |
 | `table_map` (concept -> mart columns, permitted tables only) | tested | `config/table_map.yaml` |
