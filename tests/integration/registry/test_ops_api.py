@@ -85,3 +85,29 @@ def test_ops_payloads_carry_no_question_text_or_chunk_ids(client, as_api):
         )
     blob = json.dumps([get(client, p, OPS).json() for p in ENDPOINTS])
     assert secret_q not in blob and "chunk_id" not in blob and "question" not in blob
+
+
+def _record(as_pipe, report_uri: str) -> str:  # type: ignore[no-untyped-def]
+    run_id = str(uuid.uuid4())
+    run = {"run_id": run_id, "started_at": "2029-01-01T00:00:00+00:00", "finished_at": "2029-01-01T00:30:00+00:00",
+           "git_commit": "test456", "status": "PASS", "config": {}, "summary": {"failures": []},
+           "report_uri": report_uri}  # fmt: skip
+    with as_pipe("svc:eval") as c:
+        one = [{"bu": "all", "suite": "golden", "metric": "answer_correct", "value": 0.9, "n": 1, "threshold": None,
+                "passed": None}]  # fmt: skip
+        c.execute("SELECT kb.record_eval_run(%s, %s)", (Jsonb(run), Jsonb(one)))
+    return run_id
+
+
+def test_failing_questions_come_from_the_committed_report(client, as_pipe):
+    run_id = _record(as_pipe, "docs/eval/report-20261108T053412Z.json")  # Phase 7 acceptance run
+    assert get(client, f"/ops/eval/{run_id}/failures", "ret.checker").status_code == 403
+    body = get(client, f"/ops/eval/{run_id}/failures", OPS).json()
+    assert body["questions"] == 51
+    assert {f["id"] for f in body["failures"] if f["correct"] is False} == {"e4", "w5"}
+
+
+@pytest.mark.parametrize("uri", ["config/users.yaml", "docs/eval/../../config/users.yaml", "../outside.json"])
+def test_failing_questions_never_read_outside_docs_eval(client, as_pipe, uri):
+    run_id = _record(as_pipe, uri)
+    assert get(client, f"/ops/eval/{run_id}/failures", OPS).status_code == 404

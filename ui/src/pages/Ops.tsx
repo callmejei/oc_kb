@@ -88,6 +88,70 @@ function Tile({ label, value, note, testid }: { label: string; value: React.Reac
   );
 }
 
+interface Failure {
+  id: string;
+  bu: string;
+  kind: string;
+  question: string;
+  route: string | null;
+  correct: boolean | null;
+  citation_correct: boolean | null;
+  hit_at_k: boolean | null;
+}
+
+/** Golden questions the latest run got wrong (synthetic golden set, from the committed report). */
+function FailingQuestions({ runId }: { runId: string }) {
+  const [data, setData] = useState<{ questions: number; failures: Failure[] } | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    api
+      .get<{ questions: number; failures: Failure[] }>(`/ops/eval/${runId}/failures`)
+      .then(setData)
+      .catch((e: Error) => setErr(e.message));
+  }, [runId]);
+  const what = (f: Failure) =>
+    [f.correct === false && "answer", f.citation_correct === false && "citation", f.hit_at_k === false && "retrieval"]
+      .filter(Boolean)
+      .join(", ");
+  return (
+    <div className="panel" data-testid="ops-failing">
+      <h2>
+        Failing questions{data ? ` (${data.failures.length} of ${data.questions})` : ""}
+      </h2>
+      {err && <div className="muted">{err}</div>}
+      {data && data.failures.length === 0 && <p className="muted">None in the latest run.</p>}
+      {data && data.failures.length > 0 && (
+        <table>
+          <thead>
+            <tr>
+              <th>Id</th>
+              <th>BU</th>
+              <th>Kind</th>
+              <th>Question</th>
+              <th>Routed to</th>
+              <th>Wrong</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.failures.map((f) => (
+              <tr key={f.id}>
+                <td className="mono">{f.id}</td>
+                <td>{f.bu}</td>
+                <td>{f.kind}</td>
+                <td>{f.question}</td>
+                <td>{f.route ?? "—"}</td>
+                <td>
+                  <span className="chip warn">{what(f)}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 /** Answer-quality trend: one line per metric over eval runs (oldest left), 0-1 scale, hover crosshair. */
 function TrendChart({ runs }: { runs: EvalRun[] }) {
   const [hover, setHover] = useState<number | null>(null);
@@ -259,13 +323,15 @@ export default function Ops() {
         />
       </div>
 
-      <div className="panel">
+      <div className="panel" id="quality">
         <h2>Answer quality trend</h2>
         <TrendChart runs={trend.runs} />
         {latest?.summary.failures && latest.summary.failures.length > 0 && (
           <div className="muted">Latest run threshold failures: {latest.summary.failures.join("; ")}</div>
         )}
       </div>
+
+      {latest && <FailingQuestions runId={latest.run_id} />}
 
       <div className="panel">
         <h2>Ingestion health</h2>

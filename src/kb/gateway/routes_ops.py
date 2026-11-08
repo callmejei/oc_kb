@@ -9,10 +9,12 @@ groups only), so the dashboard cannot become a side door to content.
 
 from __future__ import annotations
 
+import json
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from kb.config import REPO_ROOT
 from kb.gateway.deps import GatewayState, current_identity, state
 from kb.ports.types import Identity
 
@@ -117,6 +119,27 @@ def eval_trend(st: St, ident: Ops, limit: Annotated[int, Query(ge=1, le=200)] = 
         leak = {"run_id": latest["run_id"], "at": latest["finished_at"], "leaks": row["value"], "tests": row["n"],
                 "passed": row["passed"]}  # fmt: skip
     return {"runs": runs, "leak": leak}
+
+
+@router.get("/eval/{run_id}/failures")
+def eval_failures(run_id: str, st: St, ident: Ops) -> dict[str, Any]:
+    """Golden questions a recorded run got wrong (answer, citation or retrieval), from the run's committed report.
+    These are the synthetic golden-set questions in tests/eval/golden, never user questions. The report path comes
+    from kb.eval_run and must resolve inside docs/eval."""
+    rows = _rows(st, ident, "SELECT report_uri FROM kb.eval_run WHERE run_id::text = %s", (run_id,))
+    if not rows or not rows[0]["report_uri"]:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "unknown run or no report")
+    base = (REPO_ROOT / "docs" / "eval").resolve()
+    path = (REPO_ROOT / rows[0]["report_uri"]).resolve()
+    if base not in path.parents or not path.is_file():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "report not available")
+    report = json.loads(path.read_text(encoding="utf-8"))
+    fails = [
+        {k: q.get(k) for k in ("id", "bu", "kind", "question", "route", "correct", "citation_correct", "hit_at_k")}
+        for q in report.get("questions", [])
+        if q.get("correct") is False or q.get("citation_correct") is False or q.get("hit_at_k") is False
+    ]
+    return {"run_id": run_id, "questions": len(report.get("questions", [])), "failures": fails}
 
 
 @router.get("/feedback")
