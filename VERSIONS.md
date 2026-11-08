@@ -77,6 +77,8 @@ Last verified: 2026-11-07 (Phase 4).
 | pyshacl | 0.40.1 | main |
 | psutil | 7.2.2 | dev |
 | graphifyy[ollama,office] | 0.9.95 | isolated env `infra/local/graphify`, uv-locked, exclude-newer 2026-10-24 (D-039) |
+| opentelemetry-sdk | 1.45.1 | main (Phase 7 tracer; matches opentelemetry-api 1.45.1) |
+| opentelemetry-exporter-otlp-proto-http | 1.45.1 | main (OTLP/HTTP to Phoenix `/v1/traces`) |
 
 ## Ontology (Phase 5)
 

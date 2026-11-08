@@ -30,6 +30,8 @@ dependencies = [
   "rdflib==7.6.0",
   "pyoxigraph==0.5.13",
   "pyshacl==0.40.1",
+  "opentelemetry-sdk==1.45.1",
+  "opentelemetry-exporter-otlp-proto-http==1.45.1",
 ]
 
 [dependency-groups]

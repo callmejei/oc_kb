@@ -90,7 +90,7 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | Chunk `concept_ids`, graph expansion scoped to readable BUs | tested | expansion never crosses BUs for all 17 users; leak suite with expansion on: 0 leaks |
 | Expansion golden | recorded | `docs/eval/expansion-phase5.json`: answer_correct 0.875 -> 1.0 (e7), no regressions |
 | `table_map` (concept -> mart columns, permitted tables only) | tested | `config/table_map.yaml` |
-| Tracer | stubbed (Phase 7) | Phoenix server runs |
+| Tracer (Phoenix via OTLP/HTTP; spans hold ids, counts, hashes only) | tested | `adapters/local/tracer.py`; QUERY audit row has `trace_id`, root span has `kb.audit_id` (D-056) |
 | All CML adapters | stubbed (Phase 7) | |
 | Answer flags (thumbs up/down + problem + reason), split per cited BU | tested | migration 007; `POST /api/v1/feedback`, `/governance/feedback` |
 | Document inspector API (versions, Docling blocks with page boxes, chunks, raw file) | tested | `gateway/routes_documents.py`; access = index ACL (D-049) |

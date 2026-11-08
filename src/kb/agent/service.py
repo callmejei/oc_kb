@@ -15,16 +15,21 @@ from typing import Any
 from psycopg.types.json import Jsonb
 
 from kb.adapters.local.registry import PostgresRegistry
+from kb.adapters.local.tracer import NullTracer
 from kb.agent import router
 from kb.agent.answer import Answer, DataSource, answer
 from kb.gateway.acl import build_access_filter, describe
-from kb.ports import LLM
+from kb.ports import LLM, Tracer
 from kb.ports.types import Identity, ScoredChunk
 from kb.retrieval.pipeline import HybridRetriever
 from kb.sql.text_to_sql import SqlAttempt, TextToSql
 
 NO_DATA_ACCESS_NOTE = "You don't have access to structured data for this question; the answer uses documents only."
 DATA_FAILED_NOTE = "This question could not be answered from the data you have access to."
+
+
+def _sha(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()
 
 
 @dataclass
@@ -73,13 +78,32 @@ class AskService:
         cfg: dict[str, Any],
         text_to_sql: TextToSql | None = None,
         scope_fn: Any = None,
+        tracer: Tracer | None = None,
     ) -> None:
         self.retriever, self.llm, self.registry, self.cfg, self.t2s = retriever, llm, registry, cfg, text_to_sql
+        self.tracer: Tracer = tracer or NullTracer()
         self.scope_fn = scope_fn  # identity -> BUs whose graphs may be read for expansion (None: no expansion)
 
     def ask(self, identity: Identity, question: str, spaces: list[str] | None = None) -> AskResult:
-        c = self.compute(identity, question, spaces)
-        return self._audit(identity, question, c)
+        with self.tracer.span(
+            "kb.ask",
+            **{"kb.user_id": identity.user_id, "kb.spaces": spaces or [], "kb.question_sha256": _sha(question)},
+        ) as sp:
+            c = self.compute(identity, question, spaces)
+            res = self._audit(identity, question, c, trace_id=sp.trace_id or None)
+            sp.set(
+                **{
+                    "kb.audit_id": res.audit_id,
+                    "kb.query_id": res.query_id,
+                    "kb.route": c.route,
+                    "kb.grounded": c.answer.grounded,
+                    "kb.blocked_reason": c.answer.blocked_reason,
+                    "kb.retrieved": len(c.retrieved_ids),
+                    "kb.cited": len(c.answer.citations),
+                    "kb.latency_ms": c.latency_ms,
+                }
+            )
+            return res
 
     def compute(self, identity: Identity, question: str, spaces: list[str] | None = None) -> Computed:
         """Everything except the audit write (used by ask() and by offline evaluation).
@@ -87,7 +111,9 @@ class AskService:
         t0 = time.monotonic()
         flt = build_access_filter(identity, spaces)
         tables = self.t2s.engine.policy.granted_tables(identity) if self.t2s else []
-        route, route_method, data_question = router.route(question, self.llm, tables)
+        with self.tracer.span("kb.route", **{"kb.granted_tables": len(tables)}) as sp:
+            route, route_method, data_question = router.route(question, self.llm, tables)
+            sp.set(**{"kb.route": route, "kb.route_method": route_method})
         notes: list[str] = []
         if not tables and router.heuristic(question) in ("data", "both"):
             notes.append(NO_DATA_ACCESS_NOTE)
@@ -95,7 +121,15 @@ class AskService:
         sql: SqlAttempt | None = None
         data: list[DataSource] = []
         if route in ("data", "both") and self.t2s:
-            sql = self.t2s.run(data_question, identity)
+            with self.tracer.span("kb.sql") as sp:
+                sql = self.t2s.run(data_question, identity)
+                sp.set(
+                    **{
+                        "kb.ok": bool(sql.data),
+                        "kb.attempts": len(sql.attempts),
+                        "kb.tables": sql.data.tables if sql.data else [],
+                    }
+                )
             if sql.data:
                 data.append(sql.data)
             else:
@@ -107,7 +141,15 @@ class AskService:
             scope = self.scope_fn(identity) if self.scope_fn else None
             if scope is not None and spaces:
                 scope = [b for b in scope if b in spaces]
-            ret = self.retriever.retrieve(question, flt, scope=scope)
+            with self.tracer.span("kb.retrieve", **{"kb.graph_scope": scope or []}) as sp:
+                ret = self.retriever.retrieve(question, flt, scope=scope)
+                sp.set(
+                    **{
+                        "kb.retrieved": len(ret.retrieved_ids),
+                        "kb.context": len(ret.context),
+                        "kb.expansion_concepts": len(ret.expansion.concepts) if ret.expansion else 0,
+                    }
+                )
             context, retrieved_ids = ret.context, ret.retrieved_ids
             if ret.expansion is not None:
                 expansion = {
@@ -116,13 +158,22 @@ class AskService:
                     "graphs": ret.expansion.graphs,
                     "terms": ret.expansion.terms,
                 }
-        ans = answer(question, context, self.llm, int(self.cfg.get("max_context_chars", 9000)), data=data)
+        with self.tracer.span("kb.answer", **{"kb.context": len(context), "kb.data_sources": len(data)}) as sp:
+            ans = answer(question, context, self.llm, int(self.cfg.get("max_context_chars", 9000)), data=data)
+            sp.set(
+                **{
+                    "kb.llm_called": ans.llm_called,
+                    "kb.grounded": ans.grounded,
+                    "kb.blocked_reason": ans.blocked_reason,
+                    "kb.invalid_citations": ans.invalid_citations,
+                }
+            )
         latency = int((time.monotonic() - t0) * 1000)
         return Computed(
             ans, route, route_method, data_question, notes, sql, retrieved_ids, describe(flt), latency, expansion
         )
 
-    def _audit(self, identity: Identity, question: str, c: Computed) -> AskResult:
+    def _audit(self, identity: Identity, question: str, c: Computed, trace_id: str | None = None) -> AskResult:
         ans, route, route_method, data_question, notes, sql, retrieved_ids, latency = (
             c.answer,
             c.route,
@@ -162,6 +213,7 @@ class AskService:
             "question_sha256": hashlib.sha256(question.encode()).hexdigest(),
             "answer_sha256": ans.sha256,
             "latency_ms": latency,
+            "trace_id": trace_id,  # Phoenix trace; its kb.ask span carries this audit_id
         }
         with self.registry.transaction(identity.user_id) as tx:
             tx.execute(

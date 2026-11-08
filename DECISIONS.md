@@ -390,3 +390,19 @@ context rendering. Expansion still improves e7 (0.875 -> 1.0 on hit@5; answer_co
 - Open (user decision): source precedence when a BU policy and a group policy disagree.
   Documents golden 1.0 on all metrics; structured citations_ok 1.0 (data cites are `[SQL1]`); expansion
   hit@5 1.0 on, answer_correct 0.875 both ways, e7 improved, e4 as above.
+
+## D-056 Tracing: OTel SDK to Phoenix, linked to the audit log, no text in spans (Phase 7)
+- `local.PhoenixTracer` uses opentelemetry-sdk 1.45.1 with a private TracerProvider (not the global
+  one) and a BatchSpanProcessor exporting OTLP/HTTP to `http://127.0.0.1:6006/v1/traces`, project `kb`
+  (resource attribute `openinference.project.name`). It refuses a non-loopback endpoint. `cml.OtelTracer`
+  is the same export to an in-cluster collector and requires https. `local.NullTracer` is used by offline
+  evaluation and unit tests.
+- The Tracer port now yields a span handle (`trace_id`, `set()`, `error()`) instead of a bare string,
+  because the audit id is only known after the span opens.
+- Spans per question: `kb.ask` (root) > `kb.route`, `kb.sql`, `kb.retrieve`, `kb.answer`. The QUERY audit
+  row stores `trace_id`; the root span stores `kb.audit_id` and `kb.query_id`.
+- Spans carry ids, counts, flags and the question's SHA-256, never question or answer text. The query log
+  stays the single access-controlled copy of what was asked. Test:
+  `test_spans_carry_no_question_or_answer_text`.
+- Verified live: audit 179 -> trace 78a132124328bf0d7f32e28a274743ea in Phoenix; that trace's `kb.ask`
+  span carries kb.audit_id 179.

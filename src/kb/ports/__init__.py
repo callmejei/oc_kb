@@ -124,9 +124,17 @@ class GraphStore(Protocol):
     def query(self, sparql: str, graph_iris: Sequence[str]) -> list[dict[str, Any]]: ...
 
 
+class TraceSpan(Protocol):
+    trace_id: str  # hex; empty when tracing is off
+
+    def set(self, **attributes: Any) -> None: ...
+    def error(self, message: str) -> None: ...
+
+
 @runtime_checkable
 class Tracer(Protocol):
-    def span(self, name: str, **attributes: Any) -> AbstractContextManager[str]: ...
+    def span(self, name: str, **attributes: Any) -> AbstractContextManager[TraceSpan]: ...
+    def flush(self, timeout_ms: int = 5000) -> bool: ...
 
 
 __all__ = [
@@ -142,6 +150,7 @@ __all__ = [
     "Registry",
     "Reranker",
     "SqlEngine",
+    "TraceSpan",
     "Tracer",
 ]
 

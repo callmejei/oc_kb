@@ -27,9 +27,9 @@ def test_local_adapter_builds_and_satisfies_protocol(settings, port):
 
 
 def test_stubs_fail_loudly_with_their_phase():
-    stub = adapter_class("local.PhoenixTracer")(endpoint="x")  # GraphStore was the example until Phase 5
+    stub = adapter_class("cml.StarburstSqlEngine")(endpoint="x")  # PhoenixTracer was the example until Phase 7
     with pytest.raises(NotImplementedYetError, match="Phase 7"):
-        stub.span("q")
+        stub.execute("SELECT 1", None, row_limit=1)
     assert adapter_class("local.OxigraphGraphStore").STATUS == "implemented"
 
 

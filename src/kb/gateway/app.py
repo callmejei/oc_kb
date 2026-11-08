@@ -137,4 +137,6 @@ def default_qa(settings: Settings, st: GatewayState) -> Any:
     )
     t2s = TextToSql(build(settings, "sql_engine"), llm, table_map=TableMap(ontology))
     scope = (lambda ident: graph_scope(ident, st.idp.readable_bus(ident))) if expander else None
-    return AskService(retriever, llm, st.registry, settings.retrieval, t2s, scope_fn=scope)
+    return AskService(
+        retriever, llm, st.registry, settings.retrieval, t2s, scope_fn=scope, tracer=build(settings, "tracer")
+    )

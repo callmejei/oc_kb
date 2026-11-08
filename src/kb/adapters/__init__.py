@@ -15,7 +15,6 @@ from kb.ports import (
     MalwareScanner,
     Reranker,
     SqlEngine,
-    Tracer,
 )
 
 # implemented adapters: "module:Class"
@@ -31,12 +30,14 @@ _IMPLEMENTED: dict[str, str] = {
     "local.ElasticsearchChunkIndex": "kb.adapters.local.es_index:ElasticsearchChunkIndex",
     "local.AllowListScanner": "kb.adapters.local.scanner:AllowListScanner",
     "local.LocalFolderSource": "kb.adapters.local.folder_source:LocalFolderSource",
+    "local.PhoenixTracer": "kb.adapters.local.tracer:PhoenixTracer",
+    "local.NullTracer": "kb.adapters.local.tracer:NullTracer",
+    "cml.OtelTracer": "kb.adapters.local.tracer:OtelTracer",
 }
 
 # stubs: name -> (protocol, phase that implements it)
 _STUBS: dict[str, tuple[type, int]] = {
     "local.UploadSource": (DocumentSourceFactory, 2),
-    "local.PhoenixTracer": (Tracer, 7),
     "cml.SharePointGraphSource": (DocumentSourceFactory, 7),
     "cml.BankAvScanner": (MalwareScanner, 7),
     "cml.RayServeEmbedder": (Embedder, 7),

@@ -31,4 +31,4 @@ ports:
   sql_engine:        {adapter: cml.StarburstSqlEngine, url: https://starburst.example.internal:8443, catalog: hive}
   identity_provider: {adapter: cml.LdapIdentityProvider, url: ldaps://ldap.example.internal}
   graph_store:       {adapter: local.OxigraphGraphStore, path: /home/cdsw/kb-data/graph}
-  tracer:            {adapter: local.PhoenixTracer, endpoint: https://phoenix.example.internal}
+  tracer:            {adapter: cml.OtelTracer, endpoint: https://phoenix.example.internal}
