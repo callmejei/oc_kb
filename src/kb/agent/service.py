@@ -67,6 +67,7 @@ class Computed:
     filter: dict[str, Any]
     latency_ms: int
     expansion: dict[str, Any] = field(default_factory=dict)
+    context: list[ScoredChunk] = field(default_factory=list)  # what the LLM saw (offline evaluation)
 
 
 class AskService:
@@ -170,7 +171,17 @@ class AskService:
             )
         latency = int((time.monotonic() - t0) * 1000)
         return Computed(
-            ans, route, route_method, data_question, notes, sql, retrieved_ids, describe(flt), latency, expansion
+            ans,
+            route,
+            route_method,
+            data_question,
+            notes,
+            sql,
+            retrieved_ids,
+            describe(flt),
+            latency,
+            expansion,
+            context,
         )
 
     def _audit(self, identity: Identity, question: str, c: Computed, trace_id: str | None = None) -> AskResult:

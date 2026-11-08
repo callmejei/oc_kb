@@ -2,10 +2,10 @@
 UV ?= uv
 PY := $(UV) run python
 
-.PHONY: help sync fetch up down status models seed migrate onboard ontology api ui e2e leak golden test lint typecheck unit integration
+.PHONY: help sync fetch up down status models seed migrate onboard ontology api ui e2e leak golden eval test lint typecheck unit integration
 
 help:
-	@echo "targets: sync fetch up down status models seed migrate onboard ontology api leak golden test lint typecheck unit integration"
+	@echo "targets: sync fetch up down status models seed migrate onboard ontology api leak golden eval test lint typecheck unit integration"
 
 sync:
 	$(UV) sync --all-groups --locked
@@ -52,6 +52,10 @@ leak:
 
 golden:
 	$(PY) -m kb.evaluation.golden --out docs/eval/golden-latest.json
+
+eval:
+	$(UV) sync --locked --project infra/local/ragas
+	$(PY) -m kb.evaluation.run
 
 lint:
 	$(UV) run ruff check .

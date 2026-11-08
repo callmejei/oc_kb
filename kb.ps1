@@ -30,6 +30,7 @@ switch ($Target) {
     "e2e"         { Push-Location ui; try { Invoke-Step npx @("playwright", "install", "chromium"); Invoke-Step npx @("playwright", "test") } finally { Pop-Location } }
     "leak"        { Invoke-Step uv @("run", "pytest", "-m", "leak_llm", "tests/integration/qa/test_leak_llm.py") }
     "golden"      { Invoke-Step uv @("run", "python", "-m", "kb.evaluation.golden", "--out", "docs/eval/golden-latest.json") }
+    "eval"        { Invoke-Step uv @("sync", "--locked", "--project", "infra/local/ragas"); Invoke-Step uv @("run", "python", "-m", "kb.evaluation.run") }
     "lint"        { Invoke-Step uv @("run", "ruff", "check", "."); Invoke-Step uv @("run", "ruff", "format", "--check", ".") }
     "typecheck"   { Invoke-Step uv @("run", "mypy") }
     "unit"        { Invoke-Step uv @("run", "pytest", "-m", "not integration") }
@@ -40,5 +41,5 @@ switch ($Target) {
         Invoke-Step uv @("run", "mypy")
         Invoke-Step uv @("run", "pytest")
     }
-    default       { Write-Output "targets: sync fetch up down status models seed migrate onboard ontology api ui e2e leak golden test lint typecheck unit integration" }
+    default       { Write-Output "targets: sync fetch up down status models seed migrate onboard ontology api ui e2e leak golden eval test lint typecheck unit integration" }
 }
