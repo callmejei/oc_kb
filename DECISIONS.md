@@ -374,3 +374,19 @@ data source, so the citation guard refuses the answer. Not caused by Phase 6 cod
 change when `spaces` is unset). Not "fixed" by remapping `[T<n>]` to a document, which would weaken the
 guard. Phase 7 candidates: a data-citation label that cannot collide with captions, or caption-aware
 context rendering. Expansion still improves e7 (0.875 -> 1.0 on hit@5; answer_correct net 0.875 both ways).
+
+## D-055 update (Phase 7, 2026-11-08): refusal fixed; the remaining e4 miss is a corpus conflict
+- Data citations are now `[SQL<n>]`, a prefix no caption uses. The prompt shows only the ref kinds actually
+  supplied, so a documents-only prompt never mentions a data ref. A rule says captions such as "Table 1"
+  are never refs. Any letter-prefixed ref the model invents (e.g. `[T1]`) is still parsed, recorded as
+  invalid and stripped; the guard is unchanged (tests: `test_caption_style_ref_is_not_a_data_citation_d055`,
+  `test_prompt_shows_only_supplied_ref_kinds_and_the_caption_rule`).
+- Live rerun: e4 with expansion is no longer refused; it answers "45% [1]", grounded and correctly cited.
+  The expected fact is 35%. Cause: two documents the corporate user may read disagree. The shared
+  *Group Credit Risk Appetite Statement* gives land for development, first facility, 45%; the corporate
+  *Commercial Property Lending Policy* gives 35%. Expansion lifts the group document to rank 1 (0.990 vs
+  0.984) and qwen3:8b answers from [1] only. A prompt rule asking the model to report each conflicting
+  value was tried and made no difference, so it was reverted rather than kept untested.
+- Open (user decision): source precedence when a BU policy and a group policy disagree.
+  Documents golden 1.0 on all metrics; structured citations_ok 1.0 (data cites are `[SQL1]`); expansion
+  hit@5 1.0 on, answer_correct 0.875 both ways, e7 improved, e4 as above.

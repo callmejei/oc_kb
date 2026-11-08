@@ -173,9 +173,32 @@ def test_data_sources_are_cited_as_tables_with_sql():
         rows=[(23,)],
     )
     a = answer(
-        "How many loans are 90 days in arrears?", [], FakeLLM("There are 23 loans 90 days in arrears [T1]."), data=[d]
+        "How many loans are 90 days in arrears?", [], FakeLLM("There are 23 loans 90 days in arrears [SQL1]."), data=[d]
     )
     (c,) = a.citations
-    assert (c.kind, c.n, c.tables, c.row_count) == ("data", "T1", ["mart_credit.loan"], 1) and "ARREARS_90" in c.sql
-    bad = answer("How many?", [], FakeLLM("There are 24 loans [T1]."), data=[d])
+    assert (c.kind, c.n, c.tables, c.row_count) == ("data", "SQL1", ["mart_credit.loan"], 1) and "ARREARS_90" in c.sql
+    bad = answer("How many?", [], FakeLLM("There are 24 loans [SQL1]."), data=[d])
     assert bad.blocked_reason == "unsupported_figure"
+
+
+def test_caption_style_ref_is_not_a_data_citation_d055():
+    """D-055: a document chunk captioned "Table 1" cited as [T1] (no data source) is an invalid ref, never a
+    data citation and never re-mapped to the document; with no other valid ref the answer is refused."""
+    ctx = [sc(1, "Table 1: Maximum loan-to-value. HDB flat: 75%.")]
+    bad = answer("What is the maximum LTV for an HDB flat?", ctx, FakeLLM("The maximum LTV is 75% [T1]."))
+    assert bad.blocked_reason == "ungrounded" and bad.invalid_citations == ["T1"] and not bad.citations
+    ok = answer("What is the maximum LTV for an HDB flat?", ctx, FakeLLM("The maximum LTV is 75% [1]."))
+    assert ok.grounded and [c.n for c in ok.citations] == [1]
+
+
+def test_prompt_shows_only_supplied_ref_kinds_and_the_caption_rule():
+    from kb.agent.answer import DataSource, build_prompt
+
+    ctx = [sc(1, "Table 1: Maximum loan-to-value.")]
+    docs_only = build_prompt("q", ctx, 9000)
+    system, user = docs_only.messages[0].content, docs_only.messages[1].content
+    assert "[SQL" not in system and "[SQL" not in user and "[T1]" not in system + user
+    assert "Never cite a caption or label inside a source" in system
+    d = DataSource(sql="SELECT 1", executed_sql="SELECT 1", tables=["t"], columns=["n"], rows=[(1,)])
+    both = build_prompt("q", ctx, 9000, data=[d])
+    assert '<source ref="[SQL1]"' in both.messages[1].content and "[SQL1]" in both.messages[0].content
