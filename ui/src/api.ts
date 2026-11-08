@@ -100,6 +100,7 @@ export interface Me {
   spaces: string[];
   maker_bus: string[];
   checker_bus: string[];
+  ops: boolean;
 }
 
 export interface Citation {

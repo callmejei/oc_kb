@@ -82,3 +82,29 @@ th { font-size: 12px; color: var(--muted); font-weight: 600; }
 .chunk { border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin-bottom: 8px; font-size: 13px; white-space: pre-wrap; }
 .tabs { display: flex; gap: 4px; margin-bottom: 8px; }
 .tabs button.active { background: var(--chip); color: var(--accent); font-weight: 600; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+.tile-label { font-size: 12px; color: var(--muted); }
+.tile-value { font-size: 24px; font-weight: 600; margin: 4px 0; font-variant-numeric: tabular-nums; }
+.tile-note { font-size: 12px; color: var(--muted); }
+.trend { position: relative; }
+.trend svg { width: 100%; max-width: 760px; height: auto; display: block; }
+.trend .grid { stroke: var(--line); stroke-width: 1; }
+.trend .crosshair { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; }
+.trend .axis { font-size: 11px; fill: var(--muted); }
+.trend .endlabel { font-size: 11px; fill: var(--ink); }
+.trend .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.trend .legend i, .trend .tip i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; vertical-align: -1px; }
+.trend .tip { position: absolute; top: 28px; right: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+.starmap { display: grid; grid-template-columns: 1fr 360px; gap: 12px; }
+.starmap .stage { height: 72vh; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; cursor: grab; }
+.starmap .drawer { max-height: 72vh; overflow: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.starmap .iri { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted); word-break: break-all; }
+.search-box { position: relative; min-width: 280px; }
+.search-box input { width: 100%; }
+.search-box .results { position: absolute; z-index: 5; top: 100%; left: 0; right: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; max-height: 320px; overflow: auto; }
+.search-box .results button { display: block; width: 100%; text-align: left; border: none; border-radius: 0; }
+.legend-inline { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+.legend-inline i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; vertical-align: 0; }
+.legend-inline i.big { width: 12px; height: 12px; vertical-align: -2px; }
+@media (max-width: 900px) { .starmap { grid-template-columns: 1fr; } .starmap .stage { height: 55vh; } }

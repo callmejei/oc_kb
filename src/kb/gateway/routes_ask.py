@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from kb.adapters.local.identity import UnknownUserError
 from kb.gateway.deps import GatewayState, current_identity, db_errors, state
+from kb.gateway.routes_ops import OPS_GROUP
 from kb.ports.types import Identity
 
 router = APIRouter()
@@ -52,6 +53,7 @@ def me(ident: Ident, st: St) -> Any:
         "spaces": sorted(st.idp.readable_bus(ident)),
         "maker_bus": sorted(bu for bu, r in gov if r == "MAKER"),
         "checker_bus": sorted(bu for bu, r in gov if r == "CHECKER"),
+        "ops": OPS_GROUP in ident.groups,
     }
 
 

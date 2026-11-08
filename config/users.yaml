@@ -26,6 +26,7 @@ groups:
   GRP_DATA_CUST_WEALTH:      {bu: wealth,    kind: data}
   GRP_DATA_WEALTH:           {bu: wealth,    kind: data}
   GRP_DATA_PII_UNMASKED:     {bu: shared,    kind: data}
+  GRP_KB_OPS:                {bu: shared,    kind: ops}   # operations dashboard only; grants no document access
 
 users:
   # --- retail ---------------------------------------------------------------
@@ -50,5 +51,7 @@ users:
   - {id: grp.reader,  name: Group Policy Reader,  bu: shared, groups: [GRP_KB_SHARED_READ]}
   # data steward with unmasked PII on marts (tests column masks are group-driven)
   - {id: data.steward, name: Data Steward, bu: shared, groups: [GRP_KB_SHARED_READ, GRP_DATA_CREDIT_RETAIL, GRP_DATA_CUST_RETAIL, GRP_DATA_PII_UNMASKED]}
+  # operations analyst: the ops dashboard (counts and metadata), no document or data access
+  - {id: ops.analyst, name: Operations Analyst, bu: shared, groups: [GRP_KB_OPS]}
   # --- no groups -------------------------------------------------------------
   - {id: nobody, name: No Groups User, bu: none, groups: []}

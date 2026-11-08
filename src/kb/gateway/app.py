@@ -21,6 +21,8 @@ from kb.gateway.deps import GatewayState
 from kb.gateway.routes_ask import router as ask_router
 from kb.gateway.routes_documents import router as documents_router
 from kb.gateway.routes_governance import router as governance_router
+from kb.gateway.routes_ontology import router as ontology_router
+from kb.gateway.routes_ops import router as ops_router
 from kb.gateway.routes_uploads import router as uploads_router
 
 
@@ -52,6 +54,7 @@ def create_app(
         users = Path(str(gw.get("local_users", ".infra/secrets/local_users.hash.json")))
         st.passwords = LocalPasswordStore(users if users.is_absolute() else REPO_ROOT / users)
     st.qa_factory = qa_factory or (lambda: default_qa(settings, st))
+    st.graph_factory = lambda: build(settings, "graph_store")
 
     @asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -64,6 +67,8 @@ def create_app(
     app.include_router(uploads_router, prefix="/api/v1/uploads", tags=["uploads"])
     app.include_router(ask_router, prefix="/api/v1", tags=["ask"])
     app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
+    app.include_router(ops_router, prefix="/api/v1/ops", tags=["ops"])
+    app.include_router(ontology_router, prefix="/api/v1/ontology", tags=["ontology"])
 
     @app.get("/healthz")
     def healthz() -> dict[str, bool]:

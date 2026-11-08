@@ -7,6 +7,8 @@ import Portal from "./pages/Portal";
 import Inbox from "./pages/Inbox";
 import Flags from "./pages/Flags";
 import Inspector from "./pages/Inspector";
+import Ops from "./pages/Ops";
+import StarMap from "./pages/StarMap";
 
 export default function App() {
   const { me, loading, logout } = useSession();
@@ -27,6 +29,8 @@ export default function App() {
           {maker && <NavLink to="/portal">Sources</NavLink>}
           {(maker || checker) && <NavLink to="/flags">Flags</NavLink>}
           {checker && <NavLink to="/inbox">Checker inbox</NavLink>}
+          <NavLink to="/ontology">Ontology</NavLink>
+          {me.ops && <NavLink to="/ops">Operations</NavLink>}
         </nav>
         <span className="who" data-testid="who">
           {me.display_name} <span className="muted">({me.user_id})</span>
@@ -43,6 +47,8 @@ export default function App() {
           <Route path="/inbox" element={<Inbox />} />
           <Route path="/flags" element={<Flags />} />
           <Route path="/documents/:docId" element={<Inspector />} />
+          <Route path="/ops" element={<Ops />} />
+          <Route path="/ontology" element={<StarMap />} />
           <Route path="*" element={<Navigate to="/chat" replace />} />
         </Routes>
       </main>

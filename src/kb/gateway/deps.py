@@ -33,7 +33,17 @@ class GatewayState:
     issuer: TokenIssuer | None = None
     passwords: LocalPasswordStore | None = None
     qa_factory: Callable[[], Any] | None = None
+    graph_factory: Callable[[], Any] | None = None
     _qa: Any = None
+    _graph: Any = None
+
+    def graph_store(self) -> Any:
+        """GraphStore, built on first use (read-only use: queries are scoped to the caller's BU graphs)."""
+        if self._graph is None:
+            if self.graph_factory is None:
+                raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "graph store is not configured")
+            self._graph = self.graph_factory()
+        return self._graph
 
     def qa(self) -> Any:
         """AskService, built on first use (loads the embedder, reranker and LLM client)."""
