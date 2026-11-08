@@ -406,3 +406,24 @@ context rendering. Expansion still improves e7 (0.875 -> 1.0 on hit@5; answer_co
   `test_spans_carry_no_question_or_answer_text`.
 - Verified live: audit 179 -> trace 78a132124328bf0d7f32e28a274743ea in Phoenix; that trace's `kb.ask`
   span carries kb.audit_id 179.
+
+## D-057 RAGAS in an isolated, network-guarded env with a second local judge (Phase 7)
+- RAGAS 0.4.3 (verified: `ragas.metrics.collections` Faithfulness / AnswerRelevancy / ContextPrecision /
+  ContextRecall with `ascore(...)`; `llm_factory(model, provider="openai", client=...)`) brings langchain,
+  langsmith, instructor and the openai client, and sends usage telemetry to t.explodinggradients.com unless
+  `RAGAS_DO_NOT_TRACK=true`. It therefore runs only in `infra/local/ragas/.venv` as a subprocess
+  (`kb.evaluation.ragas_runner` -> `infra/local/ragas/score.py`) with: the kb.envsafe sanitized environment
+  (which already strips every LANGCHAIN_/LANGSMITH_ variable, so LangSmith tracing cannot be switched on), the
+  telemetry opt-out, HF offline, and the existing network guard (sitecustomize) on PYTHONPATH. Any recorded
+  outbound attempt fails the run even though it was blocked. The scorer itself refuses to start without the
+  guard, the opt-out, a loopback judge or a local embedder directory.
+- ragas 0.4.3 imports `langchain_community.chat_models.vertexai`, removed in langchain-community 0.4, so the
+  env pins `langchain-community<0.4` (resolved 0.3.31).
+- Judge: `llama3.1:8b` (a second local model), so qwen3:8b does not grade its own answers. Embeddings for
+  answer relevancy: the same pinned bge-small, loaded from its local path.
+- Security trade-off, flagged to the user: `score.py` imports the openai client (pointed at Ollama on
+  loopback). `test_no_cloud_sdk_imports` allows exactly that one file, and a companion test fails if the file
+  imports anything else from the cloud-SDK list or loses any of its refusals.
+  `tests/security/test_ragas_isolation.py` proves an outbound call from the RAGAS env is blocked and logged.
+  Alternative if the user prefers: our own judge wrapper over httpx, no openai package anywhere.
+- Smoke test: a faithful answer scored faithfulness 1.0, a fabricated one 0.0; 0 outbound attempts.

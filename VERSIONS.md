@@ -28,6 +28,7 @@ Last verified: 2026-11-07 (Phase 4).
 | Port | Model | Pin | Status |
 |---|---|---|---|
 | LLM (local) | `qwen3:8b` (Q4_K_M, 5.23 GB) | Ollama digest `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41` | pulled, verified by integration test |
+| RAGAS judge (local) | `llama3.1:8b` (Q4_K_M, 4.92 GB) | Ollama digest `46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e` | pulled 2026-11-08; `evaluation.judge_model` (D-057) |
 | graphify extractor (local) | `qwen3-graphify` = `qwen3:8b` weights + `infra/local/ollama/qwen3-graphify.Modelfile` (thinking off, top_p 0.8, top_k 20, presence_penalty 1.5, seed 42) | same blobs as `qwen3:8b`; Modelfile in git | `kb.ps1 models` creates it (D-040) |
 | Embedder (local) | `BAAI/bge-small-en-v1.5` (384-d) | HF commit `5c38ec7c405ec4b44b94cc5a9bb96e735b38267a` (checked at load) | `kb.ps1 models`, offline at runtime |
 | Parsing (local) | Docling layout (heron), TableFormer, RapidOCR PP-OCRv6 small (torch) | versions pinned by docling 2.142.1's downloader | `kb.ps1 models` -> `.infra/models/docling` |
@@ -77,6 +78,7 @@ Last verified: 2026-11-07 (Phase 4).
 | pyshacl | 0.40.1 | main |
 | psutil | 7.2.2 | dev |
 | graphifyy[ollama,office] | 0.9.95 | isolated env `infra/local/graphify`, uv-locked, exclude-newer 2026-10-24 (D-039) |
+| ragas | 0.4.3 | isolated env `infra/local/ragas`, uv-locked, exclude-newer 2026-10-25; with langchain-community 0.3.31 (<0.4, D-057), sentence-transformers 6.2.0, torch 2.14.1+cpu, transformers 5.20.2 |
 | opentelemetry-sdk | 1.45.1 | main (Phase 7 tracer; matches opentelemetry-api 1.45.1) |
 | opentelemetry-exporter-otlp-proto-http | 1.45.1 | main (OTLP/HTTP to Phoenix `/v1/traces`) |
 
@@ -108,5 +110,4 @@ Transitive packages: see `uv.lock` (182 packages).
 
 ## Planned, not yet installed (pinned when their phase starts)
 
-RAGAS.
-elasticsearch-haystack: not used (D-028).
+Nothing pending. elasticsearch-haystack: not used (D-028).

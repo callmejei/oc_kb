@@ -57,6 +57,21 @@ graph:
   expansion: true               # graph expansion as a third retriever (Phase 5); false = Phase 3/4 behaviour
   expansion_terms: 10
 
+evaluation:                     # Phase 7: `kb.ps1 eval` / `make eval`
+  judge_model: llama3.1:8b      # RAGAS judge: a second local model, so qwen3 does not grade its own answers (D-057)
+  judge_base_url: http://127.0.0.1:11435/v1
+  ragas_timeout_s: 10800        # whole RAGAS subprocess (one 8 GB GPU; samples are scored one by one)
+  report_dir: docs/eval
+  thresholds:                   # a metric below its threshold fails the run (exit code 1); leaks must be 0
+    hit@5: 0.85
+    answer_correct: 0.8
+    citation_correct: 0.8
+    abstain_correct: 0.75
+    data_correct: 0.8
+    faithfulness: 0.7
+    context_recall: 0.7
+    leaks: 0
+
 processing:
   registry_dsn: "postgresql://kb_pipe:${KB_PG_PIPELINE_PASSWORD}@127.0.0.1:5433/kb"   # pipeline role, never kb_api
   docling_artifacts: .infra/models/docling

@@ -1,0 +1,12 @@
+[project]
+name = "kb-ragas-runner"
+version = "0.0.1"
+description = "Isolated environment for RAGAS metrics. Always run via kb.evaluation.ragas_runner (sanitized env, network guard, local judge)."
+requires-python = "==3.11.*"
+# langchain-community<0.4: ragas 0.4.3 imports chat_models.vertexai, removed in 0.4 (D-057)
+# sentence-transformers/torch/transformers: same pins as the main env; the bge-small weights load from a local path
+dependencies = ["ragas==0.4.3", "langchain-community<0.4", "sentence-transformers==6.2.0", "torch==2.14.1", "transformers==5.20.2"]
+
+[tool.uv]
+exclude-newer = "2026-10-25T00:00:00Z"
+package = false

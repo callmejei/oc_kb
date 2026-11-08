@@ -85,5 +85,32 @@ def test_no_cloud_sdk_imports():
         r"groq|boto3|langchain_openai)\b",
         re.M,
     )
-    hits = [str(p) for p in _source_files() if p.suffix == ".py" and pat.search(p.read_text(encoding="utf-8"))]
+    hits = [
+        str(p)
+        for p in _source_files()
+        if p.suffix == ".py" and p not in OPENAI_CLIENT_LOOPBACK_ONLY and pat.search(p.read_text(encoding="utf-8"))
+    ]
     assert not hits, hits
+
+
+# D-057: RAGAS's judge adapter needs an openai client object. This ONE file may import it, pointed at the
+# loopback Ollama endpoint, and only while it keeps its own refusals (asserted below); it runs in the isolated
+# RAGAS env under the network guard (tests/security/test_ragas_isolation.py proves outbound calls fail).
+OPENAI_CLIENT_LOOPBACK_ONLY = {REPO_ROOT / "infra" / "local" / "ragas" / "score.py"}
+
+
+def test_the_openai_client_exception_keeps_its_compensating_checks():
+    (p,) = OPENAI_CLIENT_LOOPBACK_ONLY
+    src = p.read_text(encoding="utf-8")
+    imports = re.findall(
+        r"^\s*(?:import|from)\s+(openai|anthropic|google|cohere|mistralai|groq|boto3|langchain_openai)\b", src, re.M
+    )
+    assert imports == ["openai"], imports  # only the openai client, nothing else
+    for check in (
+        'RAGAS_DO_NOT_TRACK") != "true"',
+        '"sitecustomize" not in sys.modules',
+        "not in LOOPBACK",
+        "os.path.isdir(args.emb_path)",
+        'api_key="local-ollama"',
+    ):
+        assert check in src, check
