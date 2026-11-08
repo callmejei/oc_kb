@@ -88,7 +88,23 @@ Last verified: 2026-11-07 (Phase 4).
 
 Transitive packages: see `uv.lock` (182 packages).
 
+## UI (Phase 6), npm, exact pins in `ui/package.json` + `ui/package-lock.json`
+
+| Package | Version | Note |
+|---|---|---|
+| react / react-dom | 18.3.1 | |
+| react-router-dom | 7.18.4 | 6.x has an open-redirect advisory fixed only in >= 7.18.0 (D-050) |
+| pdfjs-dist | 4.10.38 | rendered with `isEvalSupported: false`, `enableXfa: false` |
+| vite | 8.3.5 | vite <= 6.4.3 has dev-server path-traversal advisories (D-050) |
+| @vitejs/plugin-react | 6.1.2 | |
+| typescript | 5.6.3 | |
+| @types/react / @types/react-dom / @types/node | 18.3.12 / 18.3.1 / 22.20.5 | |
+| @playwright/test | 1.64.1 | < 1.55.1 downloads browsers without TLS verification (D-050) |
+| Chromium (Playwright headless shell) | 156.0.8078.4 (build v1248) | `npx playwright install chromium`; test-only |
+
+`npm audit`: 0 vulnerabilities at pin time (2026-11-08). Every pin is at least two weeks old.
+
 ## Planned, not yet installed (pinned when their phase starts)
 
-RAGAS, React, pdf.js.
+RAGAS.
 elasticsearch-haystack: not used (D-028).

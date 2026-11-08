@@ -299,3 +299,78 @@ wording, below `min_rerank_score` 0.05, so it was dropped; scored against the qu
 spotted in the question. Only ontology labels of concepts in the question are added (no related
 concepts, no BU graph content), so nothing outside the caller's scope reaches the query; candidates are
 still the pre-filtered ones. Unit test: `tests/unit/test_expansion_rerank.py`.
+
+## D-045 Phase 6 scope decisions (accepted, user decision 2026-11-08)
+Recommended options approved: (1) Office files in the inspector show Docling structure (blocks, chunks)
+without a page image (no LibreOffice); (2) makers re-parse; exclude is single-actor (restricts access);
+re-include is a four-eyes INCLUDE_DOCUMENT request; (3) answer flags go to makers/checkers of the BUs whose
+documents were cited, never with the question text (that stays auditor-only in `kb.query_log`);
+(4) the UI uses the existing local JWT login only; the X-KB-User header stays test-only.
+
+## D-046 Docling 2.142 parser options (API differs from older docs)
+`force_full_page_ocr` is deprecated; full-page OCR is `RapidOcrOptions(mode=OcrMode.FULL_PAGE)`.
+Table options are `TableStructureOptions(mode=TableFormerMode.ACCURATE|FAST, do_cell_matching=bool)`.
+Re-parse options are allow-listed twice: in `kb.request_reparse` (DB) and `DoclingParser.option_key`.
+One converter is cached per option set.
+
+## D-047 Re-parse = version n+1 with its own raw copy (accepted)
+A re-parse copies the current version's raw object to a new key (checksum verified) and indexes it as
+version n+1 through the normal path (`_flip_current`), so the old version is SUPERSEDED with retention and
+can be purged without touching the new one. cTag is copied (delta sync sees no change); a checker-approved
+PII override carries over (same sha256). If the new version fails, the old one stays current and the
+request is FAILED. Queued by the gateway, executed only by the pipeline (Dagster `reparse_sensor`).
+
+## D-048 Exclude / include mechanics (accepted)
+Exclude: the database decides first (`kb.exclude_document`, recorded as an EXECUTED EXCLUDE_DOCUMENT
+request), then the gateway hides the document in the index at once; the index-sync sensor closes the
+version. A trigger lets a document leave EXCLUDED only inside the governance functions, so not even the
+pipeline role can bring it back; syncs skip excluded documents and `process_version` refuses them before
+touching the index. Include: an approved INCLUDE_DOCUMENT sets `restore_pending`; index sync re-stamps the
+ACL to today's rule *before* making the latest hidden version visible, and clears the source's delta
+token so the next sync (a full, idempotent listing) picks up edits skipped while excluded (found by
+`test_inspector.py`).
+
+## D-049 Inspector access authority is the index ACL (accepted)
+A caller may open a version (metadata, blocks, chunks, raw file) only if at least one of its chunks passes
+their filter: the mandatory retrieval filter for everyone; for MAKER/CHECKER also `build_inspection_filter`
+(still their ACL groups, only BUs they govern, but non-current versions included). Otherwise 404, never 403
+(no existence leak). Private uploads stay visible only to the uploader.
+
+## D-050 UI dependency pins changed after npm audit (accepted)
+The plan's first picks had advisories: react-router-dom 6.x (open redirect; fixed only in >= 7.18.0),
+vite <= 6.4.3 (dev-server path traversal, esbuild), @playwright/test < 1.55.1 (browser download without
+TLS verification). Pinned react-router-dom 7.18.4, vite 8.3.5, @playwright/test 1.64.1 (all >= 2 weeks old,
+`npm audit` 0). React stays 18.3.1. The JWT is kept in sessionStorage (prototype; a strict CSP is set on
+every gateway response); for CML, prefer SSO cookies (Phase 7).
+
+## D-051 Migration 008 instead of editing 007
+007 reused `kb.tg_audit_append_only()`, whose message names audit_log for every table. 007 was already
+applied to the live DB and the runner refuses edited migrations, so 008 adds `kb.tg_append_only()` (same
+rule, honest message) instead of bypassing the checksum guard.
+
+## D-052 BU spaces in chat narrow documents and graph expansion only
+`/ask` accepts `spaces`; `build_access_filter` adds a BU term on top of the unchanged ACL clause, so a space
+can only narrow (naming a BU you cannot read returns nothing). Structured data stays governed by the
+PolicyEngine grants alone.
+
+## D-053 Browser acceptance runs on the live stack with run-unique fixtures
+Playwright drives the real gateway (serving `ui/dist`), Dagster sensors and Ollama. `synthetic/e2e.py`
+creates facts unique to each run (a SharePoint folder `retail/E2E/<run>/` outside every live source's
+`/KB` scope, and an upload PDF); `afterAll` excludes / deletes through the gateway and deletes the run's
+drive files, so nothing stays searchable. Each run leaves one ACTIVE source `ret-e2e-<run>` with no live
+documents in the registry (audit trail kept by design).
+
+## D-054 Line endings pinned to LF
+Patch scripts that used `Path.write_text` on Windows rewrote 26 tracked files with CRLF (content
+unchanged). Normalised in one commit and pinned with `.gitattributes` (`* text=auto eol=lf`).
+
+## D-055 Open: e4 flips to a refusal with expansion on (answer quality, Phase 7)
+Phase 6 regression runs: documents golden 1.0 on every metric; structured 0.929 once (d10: text-to-SQL
+joined a non-existent `loan.ltv_pct`), 1.0 on two reruns, so LLM variance. Expansion e4 failed with
+expansion on in 3 of 3 runs this session (it passed in the Phase 5 run): with expansion the reranker
+puts the shared "Table 1: Maximum loan-to-value" chunk first (scores 0.990 / 0.985 / 0.984, a near tie),
+and qwen3:8b cites it as `[T1]`, copying the table caption; `[T1]` is the data-citation form, there is no
+data source, so the citation guard refuses the answer. Not caused by Phase 6 code (no retrieval or answer
+change when `spaces` is unset). Not "fixed" by remapping `[T<n>]` to a document, which would weaken the
+guard. Phase 7 candidates: a data-citation label that cannot collide with captions, or caption-aware
+context rendering. Expansion still improves e7 (0.875 -> 1.0 on hit@5; answer_correct net 0.875 both ways).

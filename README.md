@@ -12,8 +12,11 @@ retrieval. Brief: `CLAUDE.md`. Decisions: `DECISIONS.md`. Versions: `VERSIONS.md
 .\kb.ps1 seed    # rebuild the synthetic world under data/
 .\kb.ps1 migrate # apply registry migrations to db `kb` and sync governance roles from users.yaml
 .\kb.ps1 onboard # onboard the synthetic sources (maker -> checker) and wait for the daemon's first loads
-.\kb.ps1 api     # gateway on http://127.0.0.1:8000 (OpenAPI at /docs); login: POST /api/v1/auth/login
-                 #   local passwords for the synthetic users: .infra/secrets/local_users.txt
+.\kb.ps1 ui      # build the React UI (npm ci + vite build) -> ui/dist, served by the gateway
+.\kb.ps1 api     # gateway + UI on http://127.0.0.1:8000 (OpenAPI at /docs)
+                 #   sign in as a synthetic user; passwords: .infra/secrets/local_users.txt
+.\kb.ps1 e2e     # browser acceptance (Playwright, headless Chromium) against the running stack;
+                 #   watch it: cd ui; npx playwright test --headed   (or --ui); report: docs/e2e-report/
 .\kb.ps1 test    # ruff + mypy + pytest (unit, security, integration, retrieval-level leak suite)
 .\kb.ps1 leak    # end-to-end leak matrix with real LLM answers (slow)
 .\kb.ps1 golden  # golden-set evaluation -> docs/eval/golden-latest.json
@@ -89,5 +92,11 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | `table_map` (concept -> mart columns, permitted tables only) | tested | `config/table_map.yaml` |
 | Tracer | stubbed (Phase 7) | Phoenix server runs |
 | All CML adapters | stubbed (Phase 7) | |
-| UI, RAGAS/dashboards | not started | Phases 6 to 7 |
+| Answer flags (thumbs up/down + problem + reason), split per cited BU | tested | migration 007; `POST /api/v1/feedback`, `/governance/feedback` |
+| Document inspector API (versions, Docling blocks with page boxes, chunks, raw file) | tested | `gateway/routes_documents.py`; access = index ACL (D-049) |
+| Inspector actions: labels, re-parse (new version), exclude (single actor), include (four eyes) | tested | DB rules in migration 007; engine `reparse`, `_restore_included`; Dagster `reparse_sensor` |
+| BU spaces in chat (narrow only) | tested | `build_access_filter(identity, spaces)` (D-052) |
+| React UI: chat + citations + feedback, My files (upload, progress, gate results, publish/unpublish/delete, new version), sources portal, checker inbox (ACL diff, dry-run report, concept reviews), flags, inspector (pdf.js + regions) | tested in the browser | `ui/`; Playwright `ui/e2e/loops.spec.ts` covers both acceptance loops and role/no-access cases |
+| Inspector for DOCX/PPTX/XLSX | partial by decision | structure (blocks, chunks) without page images (D-045) |
+| RAGAS/dashboards | not started | Phase 7 |
 | Graph build cost | note | ~25-30 min per BU on qwen3:8b; 23 parts hit the output cap across 4 BUs (partial results kept), 6 given up after retries |
