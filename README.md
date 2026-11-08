@@ -106,6 +106,10 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | Data citations `[SQL<n>]` (D-055 refusal fixed) | tested | e4 now answers from a conflicting group policy (open user decision, D-055 update) |
 | Operations dashboard (ingestion health, exception backlog, leak status, quality trend, flags) | tested in the browser | `/api/v1/ops/*`, `GRP_KB_OPS` only, counts and metadata only (D-058) |
 | Ontology star map (all FIBO modules + local concepts; BU entities by mapping status) | tested in the browser | `kb.graph.starmap`, `/api/v1/ontology/*`, overlay scoped to readable BUs (D-059) |
+| Explorer shell (9 groups after the user's concept; red palette, bundled font, no logo) | tested in the browser | `ui/src/nav.ts`, `ui/e2e/phase8.spec.ts`; every item real or labelled Not built (D-061) |
+| Explorer API: search (audited SEARCH), space inventory, marts, table-map (read-only), graph stats, my access, my activity, approvals | tested | `gateway/routes_explorer.py`; scoped per caller, search leak test 17 users x 4 canaries (D-061, D-062) |
+| Ops: failing golden questions of the latest run | tested | `/api/v1/ops/eval/{run_id}/failures`, reads `docs/eval` only (D-063) |
+| Not built (labelled in the UI) | not built | research agent, dashboards, agent apps, semantic products/metrics, MCP tools, data product registration, data quality rules |
 | CML deployment guide | written, coverage-tested | `docs/cml-deployment.md` (every port), `deploy/cml/Dockerfile` (not built: no Docker locally) |
 | Router misroutes 2 of 51 golden questions to SQL | open | e8, w5 (D-060) |
 | Graph build cost | note | ~25-30 min per BU on qwen3:8b; 23 parts hit the output cap across 4 BUs (partial results kept), 6 given up after retries |

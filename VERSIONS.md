@@ -101,6 +101,7 @@ Transitive packages: see `uv.lock` (182 packages).
 | pdfjs-dist | 4.10.38 | rendered with `isEvalSupported: false`, `enableXfa: false` |
 | three | 0.171.0 | ontology star map (WebGL); no CDN, bundled by vite |
 | @types/three | 0.171.0 | dev |
+| @fontsource/nunito-sans | 5.3.0 | explorer font, bundled (strict CSP: no Google Fonts); SIL OFL 1.1 (D-061) |
 | vite | 8.3.5 | vite <= 6.4.3 has dev-server path-traversal advisories (D-050) |
 | @vitejs/plugin-react | 6.1.2 | |
 | typescript | 5.6.3 | |

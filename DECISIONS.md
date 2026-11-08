@@ -467,3 +467,34 @@ context rendering. Expansion still improves e7 (0.875 -> 1.0 on hit@5; answer_co
   answers are grounded in a real query result, so no guard fired; they answer a different question.
   Not fixed in Phase 7: a router change needs its own golden runs. Recorded as open.
 - e4 remains the group-vs-BU policy conflict (D-055 update).
+
+## D-061 Explorer shell after the "Ontology Explorer" concept (accepted, user decision 2026-11-08, Phase 8)
+The user supplied a clickable concept mockup (9 nav groups, 34 screens, sample data). Decisions:
+- The concept's navigation becomes the frame of our React UI. Every item is either wired to a real
+  gateway-backed page or labelled **Not built** and shows no data, never sample numbers (user chose this over
+  hiding them or building stubs). Unbuilt: Research Agent, AI Dashboard, Agent App/Service, Semantic Products,
+  Agent Tools & APIs, Data Product Registration, Semantic Model & Metrics, the three MCP/agent-integration
+  screens, Data & Knowledge Quality. Each placeholder says what it would take.
+- Menu visibility by role is cosmetic; the gateway decides. Role-only items (maker, checker, ops) are hidden.
+- `table_map` is shown read-only (`editable: false`); changing it stays a reviewed code change. Editing it in the
+  UI would need a new maker-checker request type (not built).
+- Branding: the concept's red-on-white palette and Nunito Sans, bundled from `@fontsource/nunito-sans` (strict
+  CSP, no Google Fonts). The OCBC logo is left out: real branding does not belong in a synthetic prototype.
+- New read-only endpoints under `/api/v1/explorer` (search, space inventory, marts, table-map, graph stats,
+  my-access, my activity, approval history), each scoped to the caller with the existing authorities: the index
+  ACL for documents, `PolicyEngine` for tables, readable-BU graphs for the ontology, governance roles for
+  approvals. `ChunkIndex.visible_documents(flt)` added to the port (ES terms aggregation under the same
+  mandatory filter); it reduces ACL groups to a `private` flag so no group names leave the gateway.
+- Cross-user audit search is an auditor function (`kb_auditor`); the UI shows only the caller's own audit rows.
+
+## D-062 Search is retrieval without an LLM, audited as SEARCH (Phase 8)
+`POST /api/v1/explorer/search` runs `HybridRetriever.retrieve` (same pre-filter, graph scope, rerank) and
+returns passages. Like `/ask`, the text goes to `kb.query_log` (auditor-readable only) and the audit row holds
+the hash, filter and chunk ids (action `SEARCH`). Snippets are a 320-char window starting before the first query
+term; the leak test checks the full chunk text of every result, not the window (17 users x 4 canaries).
+
+## D-063 Failing golden questions on the ops page (Phase 8)
+`GET /api/v1/ops/eval/{run_id}/failures` reads the run's committed report (path from `kb.eval_run.report_uri`,
+must resolve inside `docs/eval`). It shows question text, which D-058 keeps off the ops dashboard; the exception
+is deliberate and narrow: these are the synthetic golden-set questions in `tests/eval/golden`, never user
+questions. User question text stays in `kb.query_log` only.
