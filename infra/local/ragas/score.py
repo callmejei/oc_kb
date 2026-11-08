@@ -68,8 +68,12 @@ async def _score(args: argparse.Namespace) -> int:
                 except Exception as e:  # noqa: BLE001 - one failed metric must not lose the run
                     scores[name] = None
                     errors[name] = f"{type(e).__name__}: {str(e)[:300]}"
-            out.write(json.dumps({"id": s["id"], "scores": scores, "errors": errors,
-                                  "seconds": round(time.monotonic() - t0, 1)}) + "\n")
+            out.write(
+                json.dumps(
+                    {"id": s["id"], "scores": scores, "errors": errors, "seconds": round(time.monotonic() - t0, 1)}
+                )
+                + "\n"
+            )
             out.flush()
             print(f"{s['id']}: {scores}", flush=True)
     return 0
