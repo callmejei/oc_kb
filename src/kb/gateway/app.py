@@ -20,6 +20,7 @@ from kb.gateway.auth import LocalPasswordStore, TokenIssuer
 from kb.gateway.deps import GatewayState
 from kb.gateway.routes_ask import router as ask_router
 from kb.gateway.routes_documents import router as documents_router
+from kb.gateway.routes_explorer import router as explorer_router
 from kb.gateway.routes_governance import router as governance_router
 from kb.gateway.routes_ontology import router as ontology_router
 from kb.gateway.routes_ops import router as ops_router
@@ -69,6 +70,7 @@ def create_app(
     app.include_router(documents_router, prefix="/api/v1/documents", tags=["documents"])
     app.include_router(ops_router, prefix="/api/v1/ops", tags=["ops"])
     app.include_router(ontology_router, prefix="/api/v1/ontology", tags=["ontology"])
+    app.include_router(explorer_router, prefix="/api/v1/explorer", tags=["explorer"])
 
     @app.get("/healthz")
     def healthz() -> dict[str, bool]:

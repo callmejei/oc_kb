@@ -290,6 +290,48 @@ class ElasticsearchChunkIndex:
         }
         return self._hits(body, "inspect")
 
+    def visible_documents(self, flt: AccessFilter, size: int = 500) -> list[dict[str, Any]]:
+        """One row per document with at least one chunk the filter lets through (space inventory). Metadata only:
+        no chunk text, no ACL groups."""
+        r = self.es.search(
+            index=self.alias,
+            size=0,
+            query={"bool": {"filter": render_filter(flt)}},
+            aggs={
+                "d": {
+                    "terms": {"field": "doc_id", "size": size},
+                    "aggs": {
+                        "top": {
+                            "top_hits": {
+                                "size": 1,
+                                "sort": [{"version_no": "desc"}],
+                                "_source": [
+                                    "doc_id",
+                                    "title",
+                                    "bu",
+                                    "source_id",
+                                    "origin",
+                                    "version_no",
+                                    "version_id",
+                                    "indexed_at",
+                                    "acl_groups",
+                                ],  # fmt: skip
+                            }
+                        },
+                        "pages": {"max": {"field": "page_end"}},
+                    },
+                }
+            },
+        )
+        out = []
+        for b in r["aggregations"]["d"]["buckets"]:
+            s = dict(b["top"]["hits"]["hits"][0]["_source"])
+            acl = s.pop("acl_groups", [])  # reduced to a flag: the caller learns no group names
+            s["private"] = bool(acl) and all(str(g).startswith("user:") for g in acl)
+            pages = b["pages"]["value"]
+            out.append({**s, "chunks": int(b["doc_count"]), "pages": int(pages) if pages else None})
+        return sorted(out, key=lambda d: (d.get("bu") or "", (d.get("title") or "").lower()))
+
     # ---------------------------------------------------------------- inspection (pipeline/tests)
     def count(self, query: dict[str, Any] | None = None) -> int:
         return int(self.es.count(index=self.alias, query=query or {"match_all": {}})["count"])
