@@ -1,0 +1,101 @@
+# Golden set for the wealth BU (Phase 7: one file per BU; asked as wlth.user1).
+# kind: documents | expansion (paraphrase; scored with and without graph expansion) | data | both | abstain.
+# facts: any of these strings in the answer (case-insensitive) counts as correct; every fact appears in an
+#   expected document and in the reference (tests/eval/test_golden_consistency.py).
+# reference: the ground-truth answer used by RAGAS context recall / answer correctness.
+# data / both: truth_sql computes the expected figure from the raw marts, scoped like the user's row filter.
+# abstain: nothing in the corpus answers it; correct = the fixed "not covered" / "could not find" reply.
+bu: wealth
+user: wlth.user1
+questions:
+- id: w1
+  kind: documents
+  q: What is the standard advance ratio for blue-chip equities?
+  facts:
+  - 60%
+  expected_docs:
+  - wlth-lombard-policy
+  reference: The standard advance ratio for blue-chip equities is 60%.
+- id: w2
+  kind: documents
+  q: What is the concentrated holding advance for investment-grade bonds?
+  facts:
+  - 65%
+  expected_docs:
+  - wlth-lombard-policy
+  reference: The concentrated holding advance for investment-grade bonds is 65%.
+- id: w3
+  kind: documents
+  q: What is the standard advance for structured notes?
+  facts:
+  - 40%
+  expected_docs:
+  - wlth-lombard-policy
+  reference: The standard advance for structured notes is 40%.
+- id: w4
+  kind: documents
+  q: What equity allocation does the Balanced risk profile have?
+  facts:
+  - 45%
+  expected_docs:
+  - wlth-model-portfolios
+  - wlth-mandate-guide
+  - wlth-ic-briefing
+  reference: The Balanced risk profile has an equity allocation of 45%.
+- id: w5
+  kind: documents
+  q: How much cash does the Growth model portfolio hold?
+  facts:
+  - 5%
+  expected_docs:
+  - wlth-model-portfolios
+  - wlth-mandate-guide
+  - wlth-ic-briefing
+  reference: The Growth model portfolio holds 5% cash.
+- id: w6
+  kind: documents
+  q: What is the annual platform fee?
+  facts:
+  - 0.40%
+  expected_docs:
+  - wlth-fees
+  - wlth-insurance-sheet
+  reference: The annual platform fee is 0.40%.
+- id: e3
+  kind: expansion
+  q: What advance can be given against blue chip shares?
+  facts:
+  - 60%
+  expected_docs:
+  - wlth-lombard-policy
+  reference: The standard advance ratio for blue-chip equities is 60%.
+- id: e5
+  kind: expansion
+  q: What share of a Balanced model portfolio goes into stocks?
+  facts:
+  - 45%
+  expected_docs:
+  - wlth-model-portfolios
+  - wlth-mandate-guide
+  - wlth-ic-briefing
+  reference: The Balanced model portfolio allocates 45% to equities.
+- id: d6
+  kind: data
+  q: How many portfolios have a Growth risk profile?
+  truth_sql: SELECT count(*) FROM mart_wealth.portfolio WHERE bu='wealth' AND risk_profile='Growth'
+- id: d7
+  kind: data
+  q: What is the total AUM of discretionary portfolios?
+  truth_sql: SELECT round(sum(aum), 2) FROM mart_wealth.portfolio WHERE bu='wealth' AND mandate='Discretionary'
+- id: d8
+  kind: data
+  q: How many customers are there?
+  truth_sql: SELECT count(*) FROM mart_cust.customer WHERE bu='wealth'
+- id: b3
+  kind: both
+  q: What equity allocation does the Balanced model portfolio have, and how many portfolios have a Balanced risk profile?
+  truth_sql: SELECT count(*) FROM mart_wealth.portfolio WHERE bu='wealth' AND risk_profile='Balanced'
+  doc_fact: 45%
+- id: wa1
+  kind: abstain
+  q: What is the minimum subscription for the fine art investment fund?

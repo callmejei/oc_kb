@@ -26,15 +26,39 @@ from kb.gateway.acl import build_access_filter
 from kb.retrieval.pipeline import HybridRetriever
 from synthetic.world import DOC_BY_KEY
 
-GOLDEN = REPO_ROOT / "tests" / "eval" / "golden" / "golden.yaml"
+GOLDEN_DIR = REPO_ROOT / "tests" / "eval" / "golden"
+BUS = ("retail", "corporate", "wealth", "shared")
+KINDS = ("documents", "expansion", "data", "both", "abstain")
+GOLDEN, EXPANSION = "documents", "expansion"  # kinds, kept as names for the Phase 3-5 suites
 
 
-EXPANSION = REPO_ROOT / "tests" / "eval" / "golden" / "expansion.yaml"
-
-
-def load_golden(path: Path = GOLDEN) -> dict[str, Any]:
-    data: dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
+def load_bu(bu: str) -> dict[str, Any]:
+    """One BU's golden file: {bu, user, questions: [{id, kind, q, ...}]}."""
+    data: dict[str, Any] = yaml.safe_load((GOLDEN_DIR / f"{bu}.yaml").read_text(encoding="utf-8"))
+    assert data["bu"] == bu and all(q["kind"] in KINDS for q in data["questions"]), bu
     return data
+
+
+def load_golden(kind: str = GOLDEN) -> dict[str, Any]:
+    """{bu: {user, questions}} for one question kind (documents / expansion / abstain)."""
+    out: dict[str, Any] = {}
+    for bu in BUS:
+        b = load_bu(bu)
+        qs = [q for q in b["questions"] if q["kind"] == kind]
+        if qs:
+            out[bu] = {"user": b["user"], "questions": qs}
+    return out
+
+
+def load_structured() -> list[dict[str, Any]]:
+    """data and both questions, each carrying its BU's user and its kind as the expected route."""
+    return [
+        q | {"user": b["user"], "route": q["kind"], "bu": bu}
+        for bu in BUS
+        for b in [load_bu(bu)]
+        for q in b["questions"]
+        if q["kind"] in ("data", "both")
+    ]
 
 
 def doc_title(key: str) -> str:
@@ -121,7 +145,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 # ================================================================================================= structured
-STRUCTURED = REPO_ROOT / "tests" / "eval" / "golden" / "structured.yaml"
 _NUMS = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
 
@@ -151,7 +174,7 @@ def evaluate_structured(settings: Settings, log: Any = print) -> dict[str, Any]:
     idp = YamlIdentityProvider("config/users.yaml")
     con = duckdb.connect(str(settings.path("data_dir") / "marts" / "marts.duckdb"), read_only=True)
     rows = []
-    for item in yaml.safe_load(STRUCTURED.read_text(encoding="utf-8")):
+    for item in load_structured():
         expected = float(con.execute(item["truth_sql"]).fetchone()[0])  # type: ignore[index]
         t0 = time.monotonic()
         c = svc.compute(idp.resolve(item["user"]), item["q"])
