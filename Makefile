@@ -2,7 +2,7 @@
 UV ?= uv
 PY := $(UV) run python
 
-.PHONY: help sync fetch up down status models seed migrate onboard ontology api leak golden test lint typecheck unit integration
+.PHONY: help sync fetch up down status models seed migrate onboard ontology api ui e2e leak golden test lint typecheck unit integration
 
 help:
 	@echo "targets: sync fetch up down status models seed migrate onboard ontology api leak golden test lint typecheck unit integration"
@@ -40,6 +40,12 @@ ontology:
 
 api:
 	$(UV) run uvicorn kb.gateway.app:create_app --factory --host 127.0.0.1 --port 8000
+
+ui:
+	cd ui && npm ci && npm run build
+
+e2e:
+	cd ui && npx playwright install chromium && npx playwright test
 
 leak:
 	$(UV) run pytest -m leak_llm tests/integration/qa/test_leak_llm.py

@@ -15,3 +15,6 @@ __pycache__/
 # node / ui
 node_modules/
 ui/dist/
+ui/e2e/.run.json
+ui/test-results/
+docs/e2e-report/
