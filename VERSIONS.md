@@ -99,6 +99,8 @@ Transitive packages: see `uv.lock` (182 packages).
 | react / react-dom | 18.3.1 | |
 | react-router-dom | 7.18.4 | 6.x has an open-redirect advisory fixed only in >= 7.18.0 (D-050) |
 | pdfjs-dist | 4.10.38 | rendered with `isEvalSupported: false`, `enableXfa: false` |
+| three | 0.171.0 | ontology star map (WebGL); no CDN, bundled by vite |
+| @types/three | 0.171.0 | dev |
 | vite | 8.3.5 | vite <= 6.4.3 has dev-server path-traversal advisories (D-050) |
 | @vitejs/plugin-react | 6.1.2 | |
 | typescript | 5.6.3 | |

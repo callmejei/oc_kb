@@ -427,3 +427,43 @@ context rendering. Expansion still improves e7 (0.875 -> 1.0 on hit@5; answer_co
   `tests/security/test_ragas_isolation.py` proves an outbound call from the RAGAS env is blocked and logged.
   Alternative if the user prefers: our own judge wrapper over httpx, no openai package anywhere.
 - Smoke test: a faithful answer scored faithfulness 1.0, a fabricated one 0.0; 0 outbound attempts.
+
+## D-058 Operations dashboard: a UI page behind GRP_KB_OPS, counts only (Phase 7)
+- User-approved recommendations: dashboards are a page in the existing UI (no Grafana), visible to a new
+  `GRP_KB_OPS` group with one synthetic user `ops.analyst`.
+- `/api/v1/ops/ingestion|exceptions|eval|feedback` return registry counts and metadata only: source names,
+  run states, exception reasons and ages, metric values, flag counts. No document text, question text or chunk
+  ids (test `test_ops_payloads_carry_no_question_text_or_chunk_ids`). `GRP_KB_OPS` is kind `ops`: it grants no
+  readable BU and no governance role, so the dashboard is not a side door to content.
+- The leak suite iterates every user in `config/users.yaml`, so `ops.analyst` is now covered by it (it must
+  see nothing).
+- Chart: one line per metric (answer correct, faithfulness, context recall) on a 0-1 axis, categorical slots
+  1-3 of the validated palette, direct end labels de-collided, legend, and the runs table as the table view.
+
+## D-059 Ontology star map: FIBO is public, the BU overlay is not (Phase 7)
+- `python -m kb.graph.starmap` builds `data/ontology/starmap/fibo-<release>.json` from the pinned FIBO release
+  (all 11 modules: 277 ontologies, 2,768 classes, 1,190 properties) plus our 25 local extension concepts linked
+  to their broader FIBO class. FIBO individuals (~11.5k code-list entries) are left out. The layout is
+  structural and deterministic (modules on a sphere, ontologies around modules, members around ontologies):
+  networkx's force layout took over 10 minutes on ~5k nodes and was replaced. The rebuild is byte-identical
+  (test).
+- `/api/v1/ontology/fibo` serves it to any signed-in user (no bank data). BU entities come only from
+  `/api/v1/ontology/overlay`, read from the named graphs of the caller's readable BUs (same scoping as graph
+  expansion) and re-checked row by row. `/entity` resolves source documents through the chunk index with the
+  caller's access filter, and mart hints through `SqlEngine.permitted_schema` (works with Starburst on CML).
+  Entity IRIs must match the `entity_iri()` form before they reach SPARQL.
+- Colour by job, not by module: FIBO is neutral context; local concepts and a picked module are highlighted;
+  BU entities wear status colours (mapped / pending review) with text labels. Twelve module hues would break
+  the categorical limit for a scatter-like view, so the module is a filter instead.
+- three.js 0.171.0 is bundled (the strict CSP forbids CDNs).
+
+## D-060 Evaluation findings from the first full `kb.ps1 eval` (Phase 7)
+- PASS: golden answer_correct 0.96, hit@5 0.96, abstain 1.0; structured data_correct 1.0; RAGAS faithfulness
+  0.90, context recall 1.0 (30 answers, judge llama3.1:8b, 0 outbound attempts); leak suite 40 tests, 0 leaks.
+- The run asks every question through `AskService.compute`, i.e. through the router, as users do. This found
+  something the Phase 3-5 suites (which call the retriever directly) could not: the router sends two
+  document questions to text-to-SQL. e8 "lending ratio for an office building on a third facility" ->
+  "0.56 [SQL1]"; w5 "how much cash does the Growth model portfolio hold" -> a sum over portfolios. Both
+  answers are grounded in a real query result, so no guard fired; they answer a different question.
+  Not fixed in Phase 7: a router change needs its own golden runs. Recorded as open.
+- e4 remains the group-vs-BU policy conflict (D-055 update).

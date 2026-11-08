@@ -21,6 +21,8 @@ retrieval. Brief: `CLAUDE.md`. Decisions: `DECISIONS.md`. Versions: `VERSIONS.md
 .\kb.ps1 leak    # end-to-end leak matrix with real LLM answers (slow)
 .\kb.ps1 golden  # golden-set evaluation -> docs/eval/golden-latest.json
                  #   structured suite: uv run python -m kb.evaluation.golden --suite structured --out <file>
+.\kb.ps1 eval    # Phase 7: golden sets per BU + RAGAS (local judge llama3.1:8b) + leak suite -> PASS/FAIL,
+                 #   docs/eval/report-<ts>.json/.html, recorded in kb.eval_run (shown on the Operations page)
 .\kb.ps1 down
 ```
 
@@ -91,12 +93,19 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | Expansion golden | recorded | `docs/eval/expansion-phase5.json`: answer_correct 0.875 -> 1.0 (e7), no regressions |
 | `table_map` (concept -> mart columns, permitted tables only) | tested | `config/table_map.yaml` |
 | Tracer (Phoenix via OTLP/HTTP; spans hold ids, counts, hashes only) | tested | `adapters/local/tracer.py`; QUERY audit row has `trace_id`, root span has `kb.audit_id` (D-056) |
-| All CML adapters | stubbed (Phase 7) | |
+| CML adapters: SharePoint, AV scanner, Ray Serve embedder/reranker, Starburst, LDAP | stubbed | each specified in `docs/cml-deployment.md` with the test that must pass; `cml.OtelTracer` implemented |
 | Answer flags (thumbs up/down + problem + reason), split per cited BU | tested | migration 007; `POST /api/v1/feedback`, `/governance/feedback` |
 | Document inspector API (versions, Docling blocks with page boxes, chunks, raw file) | tested | `gateway/routes_documents.py`; access = index ACL (D-049) |
 | Inspector actions: labels, re-parse (new version), exclude (single actor), include (four eyes) | tested | DB rules in migration 007; engine `reparse`, `_restore_included`; Dagster `reparse_sensor` |
 | BU spaces in chat (narrow only) | tested | `build_access_filter(identity, spaces)` (D-052) |
 | React UI: chat + citations + feedback, My files (upload, progress, gate results, publish/unpublish/delete, new version), sources portal, checker inbox (ACL diff, dry-run report, concept reviews), flags, inspector (pdf.js + regions) | tested in the browser | `ui/`; Playwright `ui/e2e/loops.spec.ts` covers both acceptance loops and role/no-access cases |
 | Inspector for DOCX/PPTX/XLSX | partial by decision | structure (blocks, chunks) without page images (D-045) |
-| RAGAS/dashboards | not started | Phase 7 |
+| Golden sets per BU (documents, expansion, data, both, abstain; references) | tested | `tests/eval/golden/<bu>.yaml`, 51 questions; consistency test |
+| RAGAS (faithfulness, answer relevancy, context precision/recall) | tested | isolated env `infra/local/ragas`, network guard, judge `llama3.1:8b` (D-057) |
+| `make eval` / `kb.ps1 eval` | tested | thresholds in `config/local.yaml`; report + `kb.eval_run` (migration 009) |
+| Data citations `[SQL<n>]` (D-055 refusal fixed) | tested | e4 now answers from a conflicting group policy (open user decision, D-055 update) |
+| Operations dashboard (ingestion health, exception backlog, leak status, quality trend, flags) | tested in the browser | `/api/v1/ops/*`, `GRP_KB_OPS` only, counts and metadata only (D-058) |
+| Ontology star map (all FIBO modules + local concepts; BU entities by mapping status) | tested in the browser | `kb.graph.starmap`, `/api/v1/ontology/*`, overlay scoped to readable BUs (D-059) |
+| CML deployment guide | written, coverage-tested | `docs/cml-deployment.md` (every port), `deploy/cml/Dockerfile` (not built: no Docker locally) |
+| Router misroutes 2 of 51 golden questions to SQL | open | e8, w5 (D-060) |
 | Graph build cost | note | ~25-30 min per BU on qwen3:8b; 23 parts hit the output cap across 4 BUs (partial results kept), 6 given up after retries |
