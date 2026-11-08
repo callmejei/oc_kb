@@ -5,7 +5,7 @@ import { as } from "./helpers";
 
 test("operations dashboard: ops analyst sees health, backlog, leak status and the quality trend", async ({ browser }) => {
   const ops = await as(browser, "ops.analyst");
-  await ops.getByRole("link", { name: "Operations" }).click();
+  await ops.getByRole("link", { name: "Pipeline & Agent Monitoring" }).click();
   await expect(ops.getByRole("heading", { name: "Operations" })).toBeVisible();
   await expect(ops.getByTestId("tile-leak")).toContainText("0 leaks"); // from the recorded `kb.ps1 eval` run
   await expect(ops.getByTestId("tile-eval")).toContainText(/PASS|FAIL/);
@@ -13,20 +13,20 @@ test("operations dashboard: ops analyst sees health, backlog, leak status and th
   await expect(ops.getByTestId("ops-runs").locator("tbody tr").first()).toBeVisible();
   await expect(ops.locator(".trend svg")).toBeVisible();
   // no content pages for an ops-only user: no readable BU, no governance role
-  await expect(ops.getByRole("link", { name: "Checker inbox" })).toHaveCount(0);
-  await expect(ops.getByRole("link", { name: "Sources" })).toHaveCount(0);
+  await expect(ops.getByRole("link", { name: "Approval Workflows" })).toHaveCount(0);
+  await expect(ops.getByRole("link", { name: "Data Source Registration" })).toHaveCount(0);
 });
 
 test("operations dashboard is refused to everyone else", async ({ browser }) => {
   const user = await as(browser, "ret.checker");
-  await expect(user.getByRole("link", { name: "Operations" })).toHaveCount(0);
+  await expect(user.getByRole("link", { name: "Pipeline & Agent Monitoring" })).toHaveCount(0);
   await user.goto("/ops");
   await expect(user.locator(".error")).toContainText("GRP_KB_OPS");
 });
 
 test("ontology star map: FIBO plus the caller's own BU entities, click-through to sources", async ({ browser }) => {
   const page = await as(browser, "ret.user1");
-  await page.getByRole("link", { name: "Ontology" }).click();
+  await page.getByRole("link", { name: "Explore graph" }).click();
   await expect(page.getByTestId("starmap-stats")).toContainText("Your BUs (retail, shared)");
   await expect(page.getByTestId("starmap-canvas").locator("canvas")).toBeVisible();
   await page.getByTestId("starmap-search").fill("loan-to-value");

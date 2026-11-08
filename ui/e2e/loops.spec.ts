@@ -37,7 +37,7 @@ test.afterAll(async ({ playwright }) => {
 test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({ browser }) => {
   // ---- maker registers a SharePoint source on the run's folder and submits it
   const maker = await as(browser, "ret.maker");
-  await maker.click("nav >> text=Sources");
+  await maker.click("nav >> text=Data Source Registration");
   const form = maker.getByTestId("register-form");
   await form.locator("input[name=source_id]").fill(run.source_id);
   await form.locator("input[name=display_name]").fill(`E2E ${run.run} library`);
@@ -49,7 +49,7 @@ test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({ brows
 
   // ---- checker reviews: ACL diff + dry-run report, approves
   const checker = await as(browser, "ret.checker");
-  await checker.click("nav >> text=Checker inbox");
+  await checker.click("nav >> text=Approval Workflows");
   const row = checker.locator("[data-testid^=req-]", { hasText: run.source_id });
   await row.getByRole("button", { name: "Review" }).click();
   await expect(checker.getByTestId("acl-diff")).toContainText("+ GRP_KB_RETAIL_READ");
@@ -81,7 +81,7 @@ test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({ brows
   await expect(answer.getByTestId("feedback-sent")).toBeVisible();
 
   // ---- maker sees the flag, opens the inspector: pdf.js page + Docling regions + blocks + chunks
-  await maker.click("nav >> text=Flags");
+  await maker.click("nav >> text=Knowledge Processing & Indexing");
   const flag = maker.getByTestId("flag").filter({ hasText: `E2E ${run.run}` });
   await expect(flag).toBeVisible();
   await flag.getByTestId("flag-doc").click();
@@ -122,7 +122,7 @@ test("upload -> private answer -> publish request -> checker approval -> BU-wide
   const colleague = await as(browser, "ret.user2"); // same BU, same groups
 
   // ---- upload to the retail space
-  await owner.click("nav >> text=My files");
+  await owner.click("nav >> text=Knowledge Upload & Ingestion");
   await owner.getByTestId("space").selectOption("retail-uploads");
   await owner.getByTestId("file-input").setInputFiles(run.upload_path);
   await expect(owner.getByTestId("upload-result")).toContainText("RECEIVED");
@@ -137,11 +137,11 @@ test("upload -> private answer -> publish request -> checker approval -> BU-wide
   await expect(theirs).not.toContainText(run.upload_answer);
 
   // ---- publish request -> checker sees the ACL change and approves
-  await owner.click("nav >> text=My files");
+  await owner.click("nav >> text=Knowledge Upload & Ingestion");
   await fileRow.getByTestId("publish").click();
   await expect(fileRow).toContainText("publish pending");
   const checker = await as(browser, "ret.checker");
-  await checker.click("nav >> text=Checker inbox");
+  await checker.click("nav >> text=Approval Workflows");
   const req = checker.locator("[data-testid^=req-]", { hasText: run.upload_title });
   await req.getByRole("button", { name: "Review" }).click();
   await expect(checker.getByTestId("acl-diff")).toContainText("− user:ret.user1");
@@ -157,7 +157,7 @@ test("upload -> private answer -> publish request -> checker approval -> BU-wide
   await expect(await ask(corp, run.upload_question)).not.toContainText(run.upload_answer);
 
   // ---- cleanup: the uploader deletes it (out of search immediately)
-  await owner.click("nav >> text=My files");
+  await owner.click("nav >> text=Knowledge Upload & Ingestion");
   await owner.getByTestId(`file-${run.upload_title}`).getByRole("button", { name: "Delete" }).click();
   await expect(owner.getByTestId(`file-${run.upload_title}`)).toHaveCount(0);
   await expect(await ask(colleague, run.upload_question)).not.toContainText(run.upload_answer);

@@ -45,7 +45,7 @@ export async function as(browser: Browser, user: string): Promise<Page> {
 
 /** Ask in the chat and return the newest answer card. */
 export async function ask(page: Page, question: string) {
-  if (!page.url().endsWith("/chat")) await page.click("nav >> text=Ask");
+  if (!page.url().endsWith("/chat")) await page.click("nav >> text=New chat");
   const before = await page.getByTestId("answer").count();
   await page.fill("textarea[name=question]", question);
   await page.click("form.ask button[type=submit]");
