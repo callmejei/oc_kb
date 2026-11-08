@@ -369,8 +369,8 @@ def main(argv: list[str] | None = None) -> int:
     for q in questions:
         q.pop("contexts", None)  # chunk text stays out of the committed report (ids/answers suffice)
     report = {"run": run, "results": results, "questions": questions, "leak": leak, "ragas": ragas_info}
-    report_json.write_text(json.dumps(report, indent=1, default=str) + "\n", encoding="utf-8")
-    report_json.with_suffix(".html").write_text(render_html(report), encoding="utf-8")
+    report_json.write_bytes((json.dumps(report, indent=1, default=str) + "\n").encode("utf-8"))  # LF on Windows
+    report_json.with_suffix(".html").write_bytes(render_html(report).encode("utf-8"))
     if not a.no_record:
         record(settings, run, results)
     print(json.dumps({"status": status, "failures": failures, "report": run["report_uri"]}, indent=1))
