@@ -111,6 +111,7 @@ class SqlEngine(Protocol):
 
     def permitted_schema(self, identity: Identity) -> Mapping[str, Sequence[str]]: ...
     def execute(self, sql: str, identity: Identity, *, row_limit: int) -> SqlResult: ...
+    def check_counts(self, sql: str) -> tuple[int, int]: ...  # pipeline DQ: one row (checked, failed) only
 
 
 @runtime_checkable

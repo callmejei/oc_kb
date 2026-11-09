@@ -22,6 +22,7 @@ import Access from "./pages/Access";
 import Activity from "./pages/Activity";
 import Approvals from "./pages/Approvals";
 import NotBuilt from "./pages/NotBuilt";
+import Quality from "./pages/Quality";
 
 const TOP_ICONS: Record<string, string> = { "New chat": "chat", Search: "search", "Explore graph": "graph" };
 
@@ -144,6 +145,7 @@ export default function App() {
             <Route path="/access" element={<Access />} />
             <Route path="/activity" element={<Activity />} />
             <Route path="/governance/approvals" element={<Approvals />} />
+            <Route path="/quality" element={<Quality />} />
             <Route path="/not-built/:slug" element={<NotBuilt />} />
             <Route path="*" element={<Navigate to="/chat" replace />} />
           </Routes>

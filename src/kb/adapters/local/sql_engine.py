@@ -72,6 +72,32 @@ class DuckDbPolicySqlEngine:
         finally:
             con.close()
 
+    # ---------------------------------------------------------------- pipeline
+    def check_counts(self, sql: str) -> tuple[int, int]:
+        """Data-quality measurement as the PIPELINE (no user policy: quality is measured on every row). Accepts
+        only one SELECT and returns only one row of two non-negative integers (checked, failed), so no value
+        or row id can come back through it. Callers: kb.quality.rules (rules compiled from config), never
+        user text. On CML this runs under the pipeline service account on Starburst."""
+        import sqlglot
+        from sqlglot import exp
+
+        parsed = sqlglot.parse(sql, read="duckdb")
+        if len(parsed) != 1 or not isinstance(parsed[0], exp.Select):
+            raise PolicyError("not_select", "quality checks must be one SELECT")
+        con = self._con.cursor()
+        timer = threading.Timer(float(self.policy.cfg.get("timeout_s", 10)), con.interrupt)
+        timer.start()
+        try:
+            rows = con.execute(sql).fetchall()
+        except duckdb.InterruptException:
+            raise SqlTimeoutError("quality check exceeded the time limit") from None
+        finally:
+            timer.cancel()
+            con.close()
+        if len(rows) != 1 or len(rows[0]) != 2 or not all(isinstance(v, int) and v >= 0 for v in rows[0]):
+            raise PolicyError("bad_shape", "a quality check must return one row of two counts")
+        return int(rows[0][0]), int(rows[0][1])
+
     # ---------------------------------------------------------------- port
     def permitted_schema(self, identity: Identity) -> Mapping[str, Sequence[str]]:
         return {t: list(self.policy.catalog[t].columns) for t in self.policy.granted_tables(identity)}

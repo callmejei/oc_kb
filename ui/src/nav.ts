@@ -107,7 +107,7 @@ export const GROUPS: NavGroup[] = [
     title: "Quality & Observability",
     icon: "pulse",
     items: [
-      { label: "Data & Knowledge Quality", notBuilt: "rule-based data quality checks on marts; today only ingestion exceptions and document flags exist" },
+      { label: "Data & Knowledge Quality", to: "/quality" },
       { label: "Retrieval / RAG Evaluation", to: "/ops#quality", need: "ops" },
       { label: "Pipeline & Agent Monitoring", to: "/ops", need: "ops" },
     ],

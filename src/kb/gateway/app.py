@@ -24,6 +24,7 @@ from kb.gateway.routes_explorer import router as explorer_router
 from kb.gateway.routes_governance import router as governance_router
 from kb.gateway.routes_ontology import router as ontology_router
 from kb.gateway.routes_ops import router as ops_router
+from kb.gateway.routes_quality import router as quality_router
 from kb.gateway.routes_uploads import router as uploads_router
 
 
@@ -71,6 +72,7 @@ def create_app(
     app.include_router(ops_router, prefix="/api/v1/ops", tags=["ops"])
     app.include_router(ontology_router, prefix="/api/v1/ontology", tags=["ontology"])
     app.include_router(explorer_router, prefix="/api/v1/explorer", tags=["explorer"])
+    app.include_router(quality_router, prefix="/api/v1/quality", tags=["quality"])
 
     @app.get("/healthz")
     def healthz() -> dict[str, bool]:

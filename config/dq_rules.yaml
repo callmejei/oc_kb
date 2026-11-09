@@ -1,0 +1,28 @@
+# Data-quality rules on the marts (Phase 9a, D-065). Structured only: no SQL text here. Each rule compiles to one
+# aggregate SELECT returning (rows checked, rows failing); only those two counts are stored.
+#
+# kinds:
+#   not_null        column has no NULLs
+#   range           min <= column <= max (either bound optional)
+#   unique          column values are distinct
+#   allowed_values  column IN values
+#   max_age         column (a date) is no older than max_age_days before the run's as_of date
+#   reference       every non-NULL column value exists in ref_table.ref_column
+# tolerance: share of failing rows still accepted (0 = none). Results are shown, never used to block (Q4).
+
+rules:
+  - {id: loan_id_unique,          table: mart_credit.loan,       column: loan_id,        kind: unique}
+  - {id: loan_customer_ref,       table: mart_credit.loan,       column: customer_id,    kind: reference, ref_table: mart_cust.customer, ref_column: customer_id}
+  - {id: loan_outstanding_range,  table: mart_credit.loan,       column: outstanding,    kind: range, min: 0}
+  - {id: loan_rate_range,         table: mart_credit.loan,       column: interest_rate,  kind: range, min: 0, max: 30}
+  - {id: loan_status_values,      table: mart_credit.loan,       column: status,         kind: allowed_values, values: [CURRENT, ARREARS_30, ARREARS_90, CLOSED]}
+  - {id: loan_bu_values,          table: mart_credit.loan,       column: bu,             kind: allowed_values, values: [retail, corporate]}
+  - {id: collateral_loan_ref,     table: mart_credit.collateral, column: loan_id,        kind: reference, ref_table: mart_credit.loan, ref_column: loan_id}
+  - {id: collateral_ltv_range,    table: mart_credit.collateral, column: ltv_pct,        kind: range, min: 0, max: 150}
+  - {id: collateral_ltv_not_null, table: mart_credit.collateral, column: ltv_pct,        kind: not_null}
+  - {id: collateral_revalued_24m, table: mart_credit.collateral, column: valuation_date, kind: max_age, max_age_days: 730, tolerance: 0.02}
+  - {id: customer_id_unique,      table: mart_cust.customer,     column: customer_id,    kind: unique}
+  - {id: customer_bu_values,      table: mart_cust.customer,     column: bu,             kind: allowed_values, values: [retail, corporate, wealth]}
+  - {id: portfolio_aum_range,     table: mart_wealth.portfolio,  column: aum,            kind: range, min: 0}
+  - {id: portfolio_customer_ref,  table: mart_wealth.portfolio,  column: customer_id,    kind: reference, ref_table: mart_cust.customer, ref_column: customer_id}
+  - {id: portfolio_risk_values,   table: mart_wealth.portfolio,  column: risk_profile,   kind: allowed_values, values: [Conservative, Balanced, Growth, Aggressive]}

@@ -7,7 +7,7 @@ import { as } from "./helpers";
 test("explorer shell: nine groups, role items hidden, unbuilt screens say so", async ({ browser }) => {
   const page = await as(browser, "ret.user1");
   await expect(page.locator(".xgroup")).toHaveCount(9);
-  await expect(page.getByTestId("group-quality-observability")).toContainText("Not built"); // only the unbuilt item
+  await expect(page.getByTestId("group-agent-integration-tools")).toContainText("Not built");
   await expect(page.getByRole("link", { name: "Approval Workflows" })).toHaveCount(0); // not a checker
   await expect(page.getByRole("link", { name: "Pipeline & Agent Monitoring" })).toHaveCount(0); // not ops
   await page.getByRole("link", { name: /MCP Server & Tool Registry/ }).click();

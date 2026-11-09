@@ -514,3 +514,21 @@ by Group Risk / policy owners before CML.
 - Golden `must_cite` (c1, e4): the fact counts only if the BU policy is cited.
 - Known limit: the model's own sentence may still lead with the group value; the note follows it. Item-matching
   is exact by design (no fuzzy matching), so differently worded rows are not compared.
+
+## D-065 Data & knowledge quality (Phase 9a)
+- Rules live in `config/dq_rules.yaml` as structured entries (no SQL text): not_null, range, unique,
+  allowed_values, max_age, reference, each with a tolerance. Identifiers are checked against the mart catalogue
+  and a strict pattern; values are rendered as sqlglot literals; each rule compiles to exactly one SELECT of
+  (checked, failed). An invalid rule fails the whole load.
+- Rules run as the PIPELINE (`SqlEngine.check_counts`, a new port method): quality is measured on every row, not on
+  one user's slice. The method accepts one SELECT and returns only one row of two non-negative integers, so no
+  value or row id can come back through it. On CML: the pipeline service account on Starburst.
+- Results (`kb.dq_run`, `kb.dq_result`, migration 010) hold counts only; append-only; recorded only through
+  `kb.record_dq_run` by the pipeline role. Dagster `dq_job`, scheduled daily 06:30 SGT; `kb.ps1 dq` runs it once.
+- `GET /api/v1/quality`: rules only for tables the caller is granted (GRP_KB_OPS: all); knowledge health (current,
+  stale, open exceptions by reason, labelled documents, ontology review backlog) only for readable BUs (ops: all).
+  Counts are whole-table, the same disclosure as the catalogue's row count (D-061); a BU-sliced count was not
+  built.
+- Results are shown, never used to block answers (user decision Q4, 2026-11-09).
+- First live run 2026-11-09: 14/15 pass; `collateral_revalued_24m` fails (41 of 664 valuations older than 24
+  months, 6.2% > 2% tolerance), a genuine property of the synthetic data.

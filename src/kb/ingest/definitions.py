@@ -137,6 +137,21 @@ def ontology_build_job() -> None:
     ontology_build_op()
 
 
+@dg.op
+def dq_op(context: dg.OpExecutionContext, kb: KbIngest) -> dict[str, Any]:
+    """Data-quality rules on the marts as the pipeline; counts recorded through kb.record_dq_run (D-065)."""
+    from kb.quality.rules import run_and_record
+
+    out = run_and_record(load_settings(kb.env, strict=True))
+    context.log.info(f"data quality: {out['passed']} passed, failed: {out['failed']}")
+    return out
+
+
+@dg.job(tags={"kb/run_kind": "DATA_QUALITY", "kb/source": "_marts"})
+def dq_job() -> None:
+    dq_op()
+
+
 @dg.job(tags={"kb/run_kind": "DRY_RUN"})
 def dry_run_job() -> None:
     dry_run_op()
@@ -305,6 +320,13 @@ weekly_ontology = dg.ScheduleDefinition(
     default_status=dg.DefaultScheduleStatus.RUNNING,
 )
 
+daily_dq = dg.ScheduleDefinition(
+    job=dq_job,
+    cron_schedule="30 6 * * *",
+    execution_timezone="Asia/Singapore",
+    default_status=dg.DefaultScheduleStatus.RUNNING,
+)
+
 daily_purge = dg.ScheduleDefinition(
     job=purge_job,
     cron_schedule="0 3 * * *",
@@ -313,7 +335,17 @@ daily_purge = dg.ScheduleDefinition(
 )
 
 defs = dg.Definitions(
-    jobs=[dry_run_job, sync_job, upload_job, reprocess_job, reparse_job, index_sync_job, purge_job, ontology_build_job],
+    jobs=[
+        dry_run_job,
+        sync_job,
+        upload_job,
+        reprocess_job,
+        reparse_job,
+        index_sync_job,
+        purge_job,
+        ontology_build_job,
+        dq_job,
+    ],
     sensors=[
         dry_run_sensor,
         first_load_sensor,
@@ -322,6 +354,6 @@ defs = dg.Definitions(
         reparse_sensor,
         index_sync_sensor,
     ],
-    schedules=[daily_delta, weekly_reconcile, daily_purge, weekly_ontology],
+    schedules=[daily_delta, weekly_reconcile, daily_purge, weekly_ontology, daily_dq],
     resources={"kb": KbIngest()},
 )
