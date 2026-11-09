@@ -1,0 +1,1782 @@
+{
+ "run": {
+  "run_id": "fe393191-518b-40d8-af7d-e5b02ef0ff97",
+  "started_at": "2026-11-09T02:10:22+00:00",
+  "finished_at": "2026-11-09T03:11:00+00:00",
+  "git_commit": "1229a27",
+  "status": "PASS",
+  "config": {
+   "llm": "qwen3:8b",
+   "judge": "llama3.1:8b",
+   "embedder": "BAAI/bge-small-en-v1.5",
+   "reranker": "BAAI/bge-reranker-base",
+   "expansion": true,
+   "thresholds": {
+    "hit@5": 0.85,
+    "answer_correct": 0.8,
+    "citation_correct": 0.8,
+    "abstain_correct": 0.75,
+    "data_correct": 0.8,
+    "faithfulness": 0.7,
+    "context_recall": 0.7,
+    "leaks": 0
+   },
+   "bus": [
+    "retail",
+    "corporate",
+    "wealth",
+    "shared"
+   ]
+  },
+  "summary": {
+   "failures": [],
+   "questions": 51,
+   "leaks": 0,
+   "ragas": {
+    "samples": 31,
+    "blocked_attempts": 0,
+    "seconds": 845
+   }
+  },
+  "report_uri": "docs/eval/report-20261109T021022Z.json"
+ },
+ "results": [
+  {
+   "bu": "retail",
+   "suite": "golden",
+   "metric": "hit@5",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "retail",
+   "suite": "expansion",
+   "metric": "hit@5",
+   "value": 1.0,
+   "n": 3
+  },
+  {
+   "bu": "retail",
+   "suite": "golden",
+   "metric": "answer_correct",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "retail",
+   "suite": "expansion",
+   "metric": "answer_correct",
+   "value": 1.0,
+   "n": 3
+  },
+  {
+   "bu": "retail",
+   "suite": "golden",
+   "metric": "citation_correct",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "retail",
+   "suite": "expansion",
+   "metric": "citation_correct",
+   "value": 1.0,
+   "n": 3
+  },
+  {
+   "bu": "retail",
+   "suite": "golden",
+   "metric": "abstain_correct",
+   "value": 1.0,
+   "n": 1
+  },
+  {
+   "bu": "retail",
+   "suite": "structured",
+   "metric": "data_correct",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "retail",
+   "suite": "structured",
+   "metric": "route_correct",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "retail",
+   "suite": "structured",
+   "metric": "citations_ok",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "retail",
+   "suite": "structured",
+   "metric": "doc_correct_on_combined",
+   "value": 1.0,
+   "n": 2
+  },
+  {
+   "bu": "retail",
+   "suite": "ragas",
+   "metric": "faithfulness",
+   "value": 0.844,
+   "n": 9
+  },
+  {
+   "bu": "retail",
+   "suite": "ragas",
+   "metric": "answer_relevancy",
+   "value": 0.986,
+   "n": 9
+  },
+  {
+   "bu": "retail",
+   "suite": "ragas",
+   "metric": "context_precision",
+   "value": 0.968,
+   "n": 9
+  },
+  {
+   "bu": "retail",
+   "suite": "ragas",
+   "metric": "context_recall",
+   "value": 1.0,
+   "n": 9
+  },
+  {
+   "bu": "retail",
+   "suite": "golden",
+   "metric": "median_latency_ms",
+   "value": 8125,
+   "n": 16
+  },
+  {
+   "bu": "corporate",
+   "suite": "golden",
+   "metric": "hit@5",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "corporate",
+   "suite": "expansion",
+   "metric": "hit@5",
+   "value": 1.0,
+   "n": 2
+  },
+  {
+   "bu": "corporate",
+   "suite": "golden",
+   "metric": "answer_correct",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "corporate",
+   "suite": "expansion",
+   "metric": "answer_correct",
+   "value": 1.0,
+   "n": 2
+  },
+  {
+   "bu": "corporate",
+   "suite": "golden",
+   "metric": "citation_correct",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "corporate",
+   "suite": "expansion",
+   "metric": "citation_correct",
+   "value": 1.0,
+   "n": 2
+  },
+  {
+   "bu": "corporate",
+   "suite": "golden",
+   "metric": "abstain_correct",
+   "value": 1.0,
+   "n": 1
+  },
+  {
+   "bu": "corporate",
+   "suite": "structured",
+   "metric": "data_correct",
+   "value": 1.0,
+   "n": 4
+  },
+  {
+   "bu": "corporate",
+   "suite": "structured",
+   "metric": "route_correct",
+   "value": 1.0,
+   "n": 4
+  },
+  {
+   "bu": "corporate",
+   "suite": "structured",
+   "metric": "citations_ok",
+   "value": 1.0,
+   "n": 4
+  },
+  {
+   "bu": "corporate",
+   "suite": "structured",
+   "metric": "doc_correct_on_combined",
+   "value": 1.0,
+   "n": 1
+  },
+  {
+   "bu": "corporate",
+   "suite": "ragas",
+   "metric": "faithfulness",
+   "value": 0.762,
+   "n": 8
+  },
+  {
+   "bu": "corporate",
+   "suite": "ragas",
+   "metric": "answer_relevancy",
+   "value": 0.987,
+   "n": 8
+  },
+  {
+   "bu": "corporate",
+   "suite": "ragas",
+   "metric": "context_precision",
+   "value": 0.83,
+   "n": 8
+  },
+  {
+   "bu": "corporate",
+   "suite": "ragas",
+   "metric": "context_recall",
+   "value": 1.0,
+   "n": 8
+  },
+  {
+   "bu": "corporate",
+   "suite": "golden",
+   "metric": "median_latency_ms",
+   "value": 9202,
+   "n": 13
+  },
+  {
+   "bu": "wealth",
+   "suite": "golden",
+   "metric": "hit@5",
+   "value": 0.833,
+   "n": 6
+  },
+  {
+   "bu": "wealth",
+   "suite": "expansion",
+   "metric": "hit@5",
+   "value": 0.5,
+   "n": 2
+  },
+  {
+   "bu": "wealth",
+   "suite": "golden",
+   "metric": "answer_correct",
+   "value": 0.833,
+   "n": 6
+  },
+  {
+   "bu": "wealth",
+   "suite": "expansion",
+   "metric": "answer_correct",
+   "value": 1.0,
+   "n": 2
+  },
+  {
+   "bu": "wealth",
+   "suite": "golden",
+   "metric": "citation_correct",
+   "value": 0.833,
+   "n": 6
+  },
+  {
+   "bu": "wealth",
+   "suite": "expansion",
+   "metric": "citation_correct",
+   "value": 0.5,
+   "n": 2
+  },
+  {
+   "bu": "wealth",
+   "suite": "golden",
+   "metric": "abstain_correct",
+   "value": 1.0,
+   "n": 1
+  },
+  {
+   "bu": "wealth",
+   "suite": "structured",
+   "metric": "data_correct",
+   "value": 1.0,
+   "n": 4
+  },
+  {
+   "bu": "wealth",
+   "suite": "structured",
+   "metric": "route_correct",
+   "value": 1.0,
+   "n": 4
+  },
+  {
+   "bu": "wealth",
+   "suite": "structured",
+   "metric": "citations_ok",
+   "value": 1.0,
+   "n": 4
+  },
+  {
+   "bu": "wealth",
+   "suite": "structured",
+   "metric": "doc_correct_on_combined",
+   "value": 1.0,
+   "n": 1
+  },
+  {
+   "bu": "wealth",
+   "suite": "ragas",
+   "metric": "faithfulness",
+   "value": 0.792,
+   "n": 6
+  },
+  {
+   "bu": "wealth",
+   "suite": "ragas",
+   "metric": "answer_relevancy",
+   "value": 0.958,
+   "n": 6
+  },
+  {
+   "bu": "wealth",
+   "suite": "ragas",
+   "metric": "context_precision",
+   "value": 0.667,
+   "n": 6
+  },
+  {
+   "bu": "wealth",
+   "suite": "ragas",
+   "metric": "context_recall",
+   "value": 1.0,
+   "n": 6
+  },
+  {
+   "bu": "wealth",
+   "suite": "golden",
+   "metric": "median_latency_ms",
+   "value": 4813,
+   "n": 13
+  },
+  {
+   "bu": "shared",
+   "suite": "golden",
+   "metric": "hit@5",
+   "value": 1.0,
+   "n": 7
+  },
+  {
+   "bu": "shared",
+   "suite": "expansion",
+   "metric": "hit@5",
+   "value": 1.0,
+   "n": 1
+  },
+  {
+   "bu": "shared",
+   "suite": "golden",
+   "metric": "answer_correct",
+   "value": 1.0,
+   "n": 7
+  },
+  {
+   "bu": "shared",
+   "suite": "expansion",
+   "metric": "answer_correct",
+   "value": 1.0,
+   "n": 1
+  },
+  {
+   "bu": "shared",
+   "suite": "golden",
+   "metric": "citation_correct",
+   "value": 1.0,
+   "n": 7
+  },
+  {
+   "bu": "shared",
+   "suite": "expansion",
+   "metric": "citation_correct",
+   "value": 1.0,
+   "n": 1
+  },
+  {
+   "bu": "shared",
+   "suite": "golden",
+   "metric": "abstain_correct",
+   "value": 1.0,
+   "n": 1
+  },
+  {
+   "bu": "shared",
+   "suite": "ragas",
+   "metric": "faithfulness",
+   "value": 0.938,
+   "n": 8
+  },
+  {
+   "bu": "shared",
+   "suite": "ragas",
+   "metric": "answer_relevancy",
+   "value": 0.947,
+   "n": 8
+  },
+  {
+   "bu": "shared",
+   "suite": "ragas",
+   "metric": "context_precision",
+   "value": 1.0,
+   "n": 8
+  },
+  {
+   "bu": "shared",
+   "suite": "ragas",
+   "metric": "context_recall",
+   "value": 1.0,
+   "n": 8
+  },
+  {
+   "bu": "shared",
+   "suite": "golden",
+   "metric": "median_latency_ms",
+   "value": 4203,
+   "n": 9
+  },
+  {
+   "bu": "all",
+   "suite": "golden",
+   "metric": "hit@5",
+   "value": 0.96,
+   "n": 25,
+   "threshold": 0.85,
+   "passed": true
+  },
+  {
+   "bu": "all",
+   "suite": "expansion",
+   "metric": "hit@5",
+   "value": 0.875,
+   "n": 8
+  },
+  {
+   "bu": "all",
+   "suite": "golden",
+   "metric": "answer_correct",
+   "value": 0.96,
+   "n": 25,
+   "threshold": 0.8,
+   "passed": true
+  },
+  {
+   "bu": "all",
+   "suite": "expansion",
+   "metric": "answer_correct",
+   "value": 1.0,
+   "n": 8
+  },
+  {
+   "bu": "all",
+   "suite": "golden",
+   "metric": "citation_correct",
+   "value": 0.96,
+   "n": 25,
+   "threshold": 0.8,
+   "passed": true
+  },
+  {
+   "bu": "all",
+   "suite": "expansion",
+   "metric": "citation_correct",
+   "value": 0.875,
+   "n": 8
+  },
+  {
+   "bu": "all",
+   "suite": "golden",
+   "metric": "abstain_correct",
+   "value": 1.0,
+   "n": 4,
+   "threshold": 0.75,
+   "passed": true
+  },
+  {
+   "bu": "all",
+   "suite": "structured",
+   "metric": "data_correct",
+   "value": 1.0,
+   "n": 14,
+   "threshold": 0.8,
+   "passed": true
+  },
+  {
+   "bu": "all",
+   "suite": "structured",
+   "metric": "route_correct",
+   "value": 1.0,
+   "n": 14
+  },
+  {
+   "bu": "all",
+   "suite": "structured",
+   "metric": "citations_ok",
+   "value": 1.0,
+   "n": 14
+  },
+  {
+   "bu": "all",
+   "suite": "structured",
+   "metric": "doc_correct_on_combined",
+   "value": 1.0,
+   "n": 4
+  },
+  {
+   "bu": "all",
+   "suite": "ragas",
+   "metric": "faithfulness",
+   "value": 0.837,
+   "n": 31,
+   "threshold": 0.7,
+   "passed": true
+  },
+  {
+   "bu": "all",
+   "suite": "ragas",
+   "metric": "answer_relevancy",
+   "value": 0.971,
+   "n": 31
+  },
+  {
+   "bu": "all",
+   "suite": "ragas",
+   "metric": "context_precision",
+   "value": 0.882,
+   "n": 31
+  },
+  {
+   "bu": "all",
+   "suite": "ragas",
+   "metric": "context_recall",
+   "value": 1.0,
+   "n": 31,
+   "threshold": 0.7,
+   "passed": true
+  },
+  {
+   "bu": "all",
+   "suite": "golden",
+   "metric": "median_latency_ms",
+   "value": 7016,
+   "n": 51
+  },
+  {
+   "bu": "all",
+   "suite": "leak",
+   "metric": "leaks",
+   "value": 0,
+   "n": 42,
+   "threshold": 0.0,
+   "passed": true
+  }
+ ],
+ "questions": [
+  {
+   "id": "r1",
+   "kind": "documents",
+   "question": "What is the maximum LTV for a first facility on an owner-occupied residential property?",
+   "route": "documents",
+   "answer": "The maximum LTV for a first facility on an owner-occupied residential property is 75% [2]. Note: policy levels differ for Owner-occupied residential, LTV - first facility: the retail business unit source sets 75% [2]; the group-wide source sets 70% [1]. The stricter limit, 70%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 21796,
+   "cited": [
+    "Home_Loan_Credit_Policy | pNone | v1",
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The maximum LTV for a first facility on owner-occupied residential property is 75%.",
+   "bu": "retail",
+   "ragas": {
+    "faithfulness": 0.2,
+    "answer_relevancy": 1.0,
+    "context_precision": 0.71,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "r2",
+   "kind": "documents",
+   "question": "What is the LTV limit for a third or subsequent facility on an investment residential property?",
+   "route": "documents",
+   "answer": "The LTV limit for a third or subsequent facility on an investment residential property is 40% [2]. Note: policy levels differ for Investment residential, LTV - third or more facilities: the retail business unit sources set 40% [2][3][4]; the group-wide source sets 35% [1]. The stricter limit, 35%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 10078,
+   "cited": [
+    "Home_Loan_Credit_Policy | pNone | v1",
+    "Home_Loan_Product_Sheet | p1 | v1",
+    "Mortgage_Valuation_Guidelines | p1 | v1",
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The LTV limit for a third or more facility on investment residential property is 40%.",
+   "bu": "retail",
+   "ragas": {
+    "faithfulness": 0.4,
+    "answer_relevancy": 1.0,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "r3",
+   "kind": "documents",
+   "question": "How much is the late payment fee?",
+   "route": "documents",
+   "answer": "The late payment fee is 75.00 [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 5109,
+   "cited": [
+    "Retail_Fees_and_Charges_Schedule | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The late payment fee is 75.00.",
+   "bu": "retail",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.9865,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "r4",
+   "kind": "documents",
+   "question": "What does document retrieval cost per copy?",
+   "route": "documents",
+   "answer": "Document retrieval costs 20.00 per copy [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 9000,
+   "cited": [
+    "Retail_Fees_and_Charges_Schedule | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "Document retrieval costs 20.00 per copy.",
+   "bu": "retail",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.9928,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "r5",
+   "kind": "documents",
+   "question": "What is the fee for a telegraphic transfer?",
+   "route": "documents",
+   "answer": "The fee for a telegraphic transfer is 25.00 [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 303140,
+   "cited": [
+    "Retail_Fees_and_Charges_Schedule | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "A telegraphic transfer costs 25.00.",
+   "bu": "retail",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 1.0,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "r6",
+   "kind": "documents",
+   "question": "For how long can a policy exception be granted at most?",
+   "route": "documents",
+   "answer": "A policy exception can be granted for a maximum of twelve months [1][2][3][4][5][6].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4687,
+   "cited": [
+    "Group_Complaints_Handling_Procedure | p1 | v1",
+    "Home_Loan_Credit_Policy | pNone | v1",
+    "Group_Outsourcing_Policy | pNone | v1",
+    "Group_Information_Security_Policy | p1 | v1",
+    "Retail_Product_Briefing_Q3 | p6 | v1",
+    "Retail_Product_Briefing_Q3 | p4 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "Policy exceptions are granted for a maximum of twelve months.",
+   "bu": "retail",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.9846,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "e1",
+   "kind": "expansion",
+   "question": "What is the maximum loan to valuation for a buy-to-let property on a first facility?",
+   "route": "documents",
+   "answer": "The maximum loan-to-value (LTV) for a buy-to-let property on a first facility is 70% [5]. Note: policy levels differ for Investment residential, LTV - first facility: the retail business unit sources set 70% [2][3][5]; the group-wide source sets 65% [1]. The stricter limit, 65%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8625,
+   "cited": [
+    "Home_Loan_Credit_Policy | pNone | v1",
+    "Home_Loan_Product_Sheet | p1 | v1",
+    "Mortgage_Valuation_Guidelines | p1 | v1",
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The maximum LTV for a first facility on investment residential (buy-to-let) property is 70%.",
+   "bu": "retail",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.9344,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "e2",
+   "kind": "expansion",
+   "question": "How much is the penalty for paying late?",
+   "route": "documents",
+   "answer": "The penalty for paying late is 75.00 [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 3765,
+   "cited": [
+    "Retail_Fees_and_Charges_Schedule | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The late payment fee is 75.00.",
+   "bu": "retail",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.9915,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "e7",
+   "kind": "expansion",
+   "question": "What does a wire transfer cost?",
+   "route": "documents",
+   "answer": "A wire transfer costs 25.00 per transfer [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7438,
+   "cited": [
+    "Retail_Fees_and_Charges_Schedule | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "A telegraphic (wire) transfer costs 25.00.",
+   "bu": "retail",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.9885,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "d1",
+   "kind": "data",
+   "question": "How many loans are 90 days in arrears?",
+   "route": "data",
+   "answer": "There are 35 loans that are 90 days in arrears [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 5764,
+   "cited": [
+    "SQL1 ['mart_credit.loan']"
+   ],
+   "expected": 35.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "retail",
+   "ragas": null
+  },
+  {
+   "id": "d2",
+   "kind": "data",
+   "question": "How many home loans are there?",
+   "route": "data",
+   "answer": "There are 143 home loans [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8172,
+   "cited": [
+    "SQL1 ['mart_credit.loan']"
+   ],
+   "expected": 143.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "retail",
+   "ragas": null
+  },
+  {
+   "id": "d3",
+   "kind": "data",
+   "question": "What is the total outstanding balance of car loans?",
+   "route": "data",
+   "answer": "The total outstanding balance of car loans is 38475268.57 [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 3827,
+   "cited": [
+    "SQL1 ['mart_credit.loan']"
+   ],
+   "expected": 38475268.57,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "retail",
+   "ragas": null
+  },
+  {
+   "id": "d9",
+   "kind": "data",
+   "question": "How many collateral records are residential property?",
+   "route": "data",
+   "answer": "There are 143 collateral records that are residential property [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8078,
+   "cited": [
+    "SQL1 ['mart_credit.collateral']"
+   ],
+   "expected": 143.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "retail",
+   "ragas": null
+  },
+  {
+   "id": "b1",
+   "kind": "both",
+   "question": "Under the home loan policy, what is the maximum first-facility LTV for investment residential property, and how many collateral records have an LTV above 70%?",
+   "route": "both",
+   "answer": "The maximum first-facility LTV for investment residential property is 70% [1]. There are 99 collateral records with an LTV above 70% [SQL1]. Note: policy levels differ for Investment residential, LTV - first facility: the retail business unit sources set 70% [1][3][4]; the group-wide source sets 65% [2]. The stricter limit, 65%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 14812,
+   "cited": [
+    "Home_Loan_Credit_Policy | pNone | v1",
+    "SQL1 ['mart_credit.collateral']",
+    "Home_Loan_Product_Sheet | p1 | v1",
+    "Mortgage_Valuation_Guidelines | p1 | v1",
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "expected": 99.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": true,
+   "citations_ok": true,
+   "bu": "retail",
+   "ragas": null
+  },
+  {
+   "id": "b4",
+   "kind": "both",
+   "question": "What is the late payment fee, and how many loans are 30 days in arrears?",
+   "route": "both",
+   "answer": "The late payment fee is 75.00 per occurrence [1]. There are 35 loans that are 30 days in arrears [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 18125,
+   "cited": [
+    "Retail_Fees_and_Charges_Schedule | p1 | v1",
+    "SQL1 ['mart_credit.loan']"
+   ],
+   "expected": 35.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": true,
+   "citations_ok": true,
+   "bu": "retail",
+   "ragas": null
+  },
+  {
+   "id": "ra1",
+   "kind": "abstain",
+   "question": "What is the bank's policy on cryptocurrency custody for retail customers?",
+   "route": "documents",
+   "answer": "I could not find this in the documents you have access to.",
+   "grounded": false,
+   "blocked_reason": null,
+   "latency_ms": 2608,
+   "cited": [],
+   "correct": true,
+   "bu": "retail",
+   "ragas": null
+  },
+  {
+   "id": "c1",
+   "kind": "documents",
+   "question": "What is the maximum first-facility LTV for land for development?",
+   "route": "documents",
+   "answer": "The maximum first-facility LTV for land for development is 35% [3]. Note: policy levels differ for Land for development, LTV - first facility: the corporate business unit sources set 35% [2][3]; the group-wide source sets 45% [1]. The stricter limit, 35%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8858,
+   "cited": [
+    "Commercial_Property_Lending_Policy | pNone | v1",
+    "Syndicated_Loan_Guidelines | p1 | v1",
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The maximum first-facility LTV for land for development is 35%.",
+   "bu": "corporate",
+   "ragas": {
+    "faithfulness": 0.6,
+    "answer_relevancy": 1.0,
+    "context_precision": 0.6389,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "c2",
+   "kind": "documents",
+   "question": "What is the first-facility LTV limit for industrial (B1/B2) property?",
+   "route": "documents",
+   "answer": "The first-facility LTV limit for industrial (B1/B2) property is 40% [3]. Note: policy levels differ for Industrial (B1/B2), LTV - first facility: the corporate business unit sources set 40% [2][3]; the group-wide source sets 50% [1]. The stricter limit, 40%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 10500,
+   "cited": [
+    "Commercial_Property_Lending_Policy | pNone | v1",
+    "Syndicated_Loan_Guidelines | p1 | v1",
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The first-facility LTV limit for industrial (B1/B2) property is 40%.",
+   "bu": "corporate",
+   "ragas": {
+    "faithfulness": 0.4,
+    "answer_relevancy": 0.9538,
+    "context_precision": 0.5833,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "c3",
+   "kind": "documents",
+   "question": "What is the LTV for a third or more facility on commercial office property?",
+   "route": "documents",
+   "answer": "The LTV for a third or more facility on commercial office property is 15% [2]. Note: policy levels differ for Commercial office, LTV - third or more facilities: the corporate business unit sources set 15% [2][3]; the group-wide source sets 25% [1]. The stricter limit, 15%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 12719,
+   "cited": [
+    "Commercial_Property_Lending_Policy | pNone | v1",
+    "Syndicated_Loan_Guidelines | p1 | v1",
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The LTV for a third or more facility on commercial office property is 15%.",
+   "bu": "corporate",
+   "ragas": {
+    "faithfulness": 0.8,
+    "answer_relevancy": 1.0,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "c4",
+   "kind": "documents",
+   "question": "What is the indicative rate for Tier B on the SME working capital product?",
+   "route": "documents",
+   "answer": "The indicative rate for Tier B on the SME working capital product is 3.00% p.a. [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8952,
+   "cited": [
+    "SME_Working_Capital_Product_Sheet | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The indicative rate for Tier B on the SME working capital product is 3.00%.",
+   "bu": "corporate",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 1.0,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "c5",
+   "kind": "documents",
+   "question": "What is the minimum amount for Tier D on the SME working capital product?",
+   "route": "documents",
+   "answer": "The minimum amount for Tier D on the SME working capital product is 40,000 [2].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 9577,
+   "cited": [
+    "SME_Working_Capital_Product_Sheet | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The minimum amount for Tier D on the SME working capital product is 40,000.",
+   "bu": "corporate",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 1.0,
+    "context_precision": 0.9167,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "c6",
+   "kind": "documents",
+   "question": "Within how many business days must a conflict with local regulation be raised?",
+   "route": "documents",
+   "answer": "A conflict with local regulation must be raised within five business days [1][2][3][4][5][6].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 6625,
+   "cited": [
+    "Syndicated_Loan_Guidelines | p1 | v1",
+    "SME_Working_Capital_Product_Sheet | p2 | v1",
+    "Group_Information_Security_Policy | p1 | v1",
+    "Group_Data_Classification_Standard | pNone | v1",
+    "Group_Code_of_Conduct | pNone | v1",
+    "Group_Complaints_Handling_Procedure | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "A conflict with local regulation must be raised within five business days.",
+   "bu": "corporate",
+   "ragas": {
+    "faithfulness": 0.5,
+    "answer_relevancy": 0.9447,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "e4",
+   "kind": "expansion",
+   "question": "What is the maximum lending ratio for a development site on a first facility?",
+   "route": "documents",
+   "answer": "The maximum lending ratio for a development site on a first facility is 45% [1]. Note: policy levels differ for Land for development, LTV - first facility: the group-wide source sets 45% [1]; the corporate business unit sources set 35% [2][3]. The stricter limit, 35%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 9516,
+   "cited": [
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1",
+    "Syndicated_Loan_Guidelines | p1 | v1",
+    "Commercial_Property_Lending_Policy | pNone | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The maximum first-facility LTV for land for development is 35% under the corporate policy; the group risk appetite allows up to 45%.",
+   "bu": "corporate",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 1.0,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "e8",
+   "kind": "expansion",
+   "question": "What is the lending ratio for an office building on a third facility?",
+   "route": "both",
+   "answer": "The lending ratio for an office building on a third facility is 15% [2]. Note: policy levels differ for Commercial office, LTV - third or more facilities: the corporate business unit sources set 15% [2][3]; the group-wide source sets 25% [1]. The stricter limit, 15%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 17328,
+   "cited": [
+    "Commercial_Property_Lending_Policy | pNone | v1",
+    "Syndicated_Loan_Guidelines | p1 | v1",
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The LTV for a third or more facility on commercial office property is 15%.",
+   "bu": "corporate",
+   "ragas": {
+    "faithfulness": 0.8,
+    "answer_relevancy": 1.0,
+    "context_precision": 0.5,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "d4",
+   "kind": "data",
+   "question": "How many loans are 30 days in arrears?",
+   "route": "data",
+   "answer": "There are 30 loans that are 30 days in arrears [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 9202,
+   "cited": [
+    "SQL1 ['mart_credit.loan']"
+   ],
+   "expected": 30.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "corporate",
+   "ragas": null
+  },
+  {
+   "id": "d5",
+   "kind": "data",
+   "question": "What is the average interest rate of term loans, rounded to 2 decimals?",
+   "route": "data",
+   "answer": "The average interest rate of term loans, rounded to 2 decimals, is 5.40 [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7016,
+   "cited": [
+    "SQL1 ['mart_credit.loan']"
+   ],
+   "expected": 5.4,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "corporate",
+   "ragas": null
+  },
+  {
+   "id": "d10",
+   "kind": "data",
+   "question": "What is the average loan-to-value of collateral, rounded to 2 decimals?",
+   "route": "data",
+   "answer": "The average loan-to-value of collateral is 58.66 [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7515,
+   "cited": [
+    "SQL1 ['mart_credit.collateral']"
+   ],
+   "expected": 58.66,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "corporate",
+   "ragas": null
+  },
+  {
+   "id": "b2",
+   "kind": "both",
+   "question": "What is the maximum first-facility LTV for commercial office property in the commercial property lending policy, and how many collateral records exceed an LTV of 45%?",
+   "route": "both",
+   "answer": "The maximum first-facility LTV for commercial office property in the commercial property lending policy is 45% [1]. The number of collateral records that exceed an LTV of 45% is 278 [SQL1]. Note: policy levels differ for Commercial office, LTV - first facility: the corporate business unit sources set 45% [1][3]; the group-wide source sets 55% [2]. The stricter limit, 45%, applies.",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 14827,
+   "cited": [
+    "Commercial_Property_Lending_Policy | pNone | v1",
+    "SQL1 ['mart_credit.collateral']",
+    "Syndicated_Loan_Guidelines | p1 | v1",
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "expected": 278.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": true,
+   "citations_ok": true,
+   "bu": "corporate",
+   "ragas": null
+  },
+  {
+   "id": "ca1",
+   "kind": "abstain",
+   "question": "What carbon emissions cap applies to shipping finance clients?",
+   "route": "documents",
+   "answer": "I could not find this in the documents you have access to.",
+   "grounded": false,
+   "blocked_reason": null,
+   "latency_ms": 3843,
+   "cited": [],
+   "correct": true,
+   "bu": "corporate",
+   "ragas": null
+  },
+  {
+   "id": "w1",
+   "kind": "documents",
+   "question": "What is the standard advance ratio for blue-chip equities?",
+   "route": "documents",
+   "answer": "The standard advance ratio for blue-chip equities is 60% [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7500,
+   "cited": [
+    "Portfolio_Lombard_Lending_Policy | pNone | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The standard advance ratio for blue-chip equities is 60%.",
+   "bu": "wealth",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 1.0,
+    "context_precision": 0.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "w2",
+   "kind": "documents",
+   "question": "What is the concentrated holding advance for investment-grade bonds?",
+   "route": "documents",
+   "answer": "The concentrated holding advance for investment-grade bonds is 65% [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 7687,
+   "cited": [
+    "Portfolio_Lombard_Lending_Policy | pNone | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The concentrated holding advance for investment-grade bonds is 65%.",
+   "bu": "wealth",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 1.0,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "w3",
+   "kind": "documents",
+   "question": "What is the standard advance for structured notes?",
+   "route": "documents",
+   "answer": "The standard advance for structured notes is 40% [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 8093,
+   "cited": [
+    "Portfolio_Lombard_Lending_Policy | pNone | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The standard advance for structured notes is 40%.",
+   "bu": "wealth",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 1.0,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "w4",
+   "kind": "documents",
+   "question": "What equity allocation does the Balanced risk profile have?",
+   "route": "documents",
+   "answer": "The Balanced risk profile has an equity allocation of 45% [1]. This is also confirmed in source [2] and [3].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 1317125,
+   "cited": [
+    "Investment_Committee_Briefing | p3 | v1",
+    "Model_Portfolio_Allocations | p1 | v1",
+    "Discretionary_Mandate_Guidelines | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The Balanced risk profile has an equity allocation of 45%.",
+   "bu": "wealth",
+   "ragas": {
+    "faithfulness": 0.25,
+    "answer_relevancy": 0.9884,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "w5",
+   "kind": "documents",
+   "question": "How much cash does the Growth model portfolio hold?",
+   "route": "data",
+   "answer": "The Growth model portfolio holds a total of 27,470,650.10 in cash [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4733,
+   "cited": [
+    "SQL1 ['mart_wealth.portfolio']"
+   ],
+   "hit_at_k": false,
+   "correct": false,
+   "citation_correct": false,
+   "reference": "The Growth model portfolio holds 5% cash.",
+   "bu": "wealth",
+   "ragas": null
+  },
+  {
+   "id": "w6",
+   "kind": "documents",
+   "question": "What is the annual platform fee?",
+   "route": "documents",
+   "answer": "The annual platform fee is 0.40% of AUM [1][2].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4813,
+   "cited": [
+    "Wealth_Fee_Schedule | p1 | v1",
+    "Insurance_Wrapper_Product_Sheet | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The annual platform fee is 0.40%.",
+   "bu": "wealth",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.904,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "e3",
+   "kind": "expansion",
+   "question": "What advance can be given against blue chip shares?",
+   "route": "documents",
+   "answer": "The maximum advance for blue-chip equities is **Standard advance** = 60% and **Concentrated holding advance** = 50% [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 5546,
+   "cited": [
+    "Portfolio_Lombard_Lending_Policy | pNone | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "The standard advance ratio for blue-chip equities is 60%.",
+   "bu": "wealth",
+   "ragas": {
+    "faithfulness": 0.5,
+    "answer_relevancy": 0.8529,
+    "context_precision": 0.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "e5",
+   "kind": "expansion",
+   "question": "What share of a Balanced model portfolio goes into stocks?",
+   "route": "data",
+   "answer": "The share of a Balanced model portfolio that goes into stocks is 45% [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4000,
+   "cited": [
+    "SQL1 ['mart_wealth.portfolio']"
+   ],
+   "hit_at_k": false,
+   "correct": true,
+   "citation_correct": false,
+   "reference": "The Balanced model portfolio allocates 45% to equities.",
+   "bu": "wealth",
+   "ragas": null
+  },
+  {
+   "id": "d6",
+   "kind": "data",
+   "question": "How many portfolios have a Growth risk profile?",
+   "route": "data",
+   "answer": "There are 40 portfolios with a Growth risk profile [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 3000,
+   "cited": [
+    "SQL1 ['mart_wealth.portfolio']"
+   ],
+   "expected": 40.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "wealth",
+   "ragas": null
+  },
+  {
+   "id": "d7",
+   "kind": "data",
+   "question": "What is the total AUM of discretionary portfolios?",
+   "route": "data",
+   "answer": "The total AUM of discretionary portfolios is 771199300.68 [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4140,
+   "cited": [
+    "SQL1 ['mart_wealth.portfolio']"
+   ],
+   "expected": 771199300.68,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "wealth",
+   "ragas": null
+  },
+  {
+   "id": "d8",
+   "kind": "data",
+   "question": "How many customers are there?",
+   "route": "data",
+   "answer": "There are 150 customers [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 2407,
+   "cited": [
+    "SQL1 ['mart_cust.customer']"
+   ],
+   "expected": 150.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "bu": "wealth",
+   "ragas": null
+  },
+  {
+   "id": "b3",
+   "kind": "both",
+   "question": "What equity allocation does the Balanced model portfolio have, and how many portfolios have a Balanced risk profile?",
+   "route": "both",
+   "answer": "The Balanced model portfolio has an equity allocation of 45% [1][2][3]. There are 32 portfolios with a Balanced risk profile [SQL1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 9061,
+   "cited": [
+    "Investment_Committee_Briefing | p3 | v1",
+    "Discretionary_Mandate_Guidelines | p1 | v1",
+    "Model_Portfolio_Allocations | p1 | v1",
+    "SQL1 ['mart_wealth.portfolio']"
+   ],
+   "expected": 32.0,
+   "data_correct": true,
+   "route_correct": true,
+   "doc_correct": true,
+   "citations_ok": true,
+   "bu": "wealth",
+   "ragas": null
+  },
+  {
+   "id": "wa1",
+   "kind": "abstain",
+   "question": "What is the minimum subscription for the fine art investment fund?",
+   "route": "documents",
+   "answer": "I could not find this in the documents you have access to.",
+   "grounded": false,
+   "blocked_reason": null,
+   "latency_ms": 4563,
+   "cited": [],
+   "correct": true,
+   "bu": "wealth",
+   "ragas": null
+  },
+  {
+   "id": "s1",
+   "kind": "documents",
+   "question": "How long must credit files be retained?",
+   "route": "documents",
+   "answer": "Credit files must be retained for 10 years after closure [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4077,
+   "cited": [
+    "Group_Records_Retention_Standard | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "Credit files must be retained for 10 years after closure.",
+   "bu": "shared",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.9595,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "s2",
+   "kind": "documents",
+   "question": "What is the retention period for board papers?",
+   "route": "documents",
+   "answer": "The retention period for board papers is permanent [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4203,
+   "cited": [
+    "Group_Records_Retention_Standard | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "Board papers are retained permanently (retention period: Permanent).",
+   "bu": "shared",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 1.0,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "s3",
+   "kind": "documents",
+   "question": "How long is marketing material retained?",
+   "route": "documents",
+   "answer": "Marketing material is retained for 2 years [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 3577,
+   "cited": [
+    "Group_Records_Retention_Standard | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "Marketing material is retained for 2 years.",
+   "bu": "shared",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.9978,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "s4",
+   "kind": "documents",
+   "question": "In the group credit risk appetite statement, what is the maximum first-facility LTV for owner-occupied residential property?",
+   "route": "documents",
+   "answer": "The maximum first-facility LTV for owner-occupied residential property is 70% [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 6108,
+   "cited": [
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "In the Group Credit Risk Appetite Statement, the maximum first-facility LTV for owner-occupied residential property is 70%.",
+   "bu": "shared",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.8997,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "s5",
+   "kind": "documents",
+   "question": "For how long can an exception be granted under group policies?",
+   "route": "documents",
+   "answer": "Exceptions can be granted for a maximum of twelve months [1][2][3][4][5][6].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 4875,
+   "cited": [
+    "Group_Outsourcing_Policy | pNone | v1",
+    "Group_Data_Classification_Standard | pNone | v1",
+    "Group_Information_Security_Policy | p1 | v1",
+    "Group_Complaints_Handling_Procedure | p1 | v1",
+    "Group_Code_of_Conduct | pNone | v1",
+    "Group_AML_and_CFT_Policy | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "Exceptions under group policies are granted for a maximum of twelve months.",
+   "bu": "shared",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.8875,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "s6",
+   "kind": "documents",
+   "question": "How long must customer correspondence be retained?",
+   "route": "documents",
+   "answer": "Customer correspondence must be retained for 7 years [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 3891,
+   "cited": [
+    "Group_Records_Retention_Standard | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "Customer correspondence must be retained for 7 years.",
+   "bu": "shared",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 1.0,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "s7",
+   "kind": "documents",
+   "question": "In the group credit risk appetite statement, what is the maximum first-facility LTV for industrial (B1/B2) property?",
+   "route": "documents",
+   "answer": "The maximum first-facility LTV for industrial (B1/B2) property is 50% [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 6016,
+   "cited": [
+    "Group_Credit_Risk_Appetite_Statement | p3 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "In the Group Credit Risk Appetite Statement, the maximum first-facility LTV for industrial (B1/B2) property is 50%.",
+   "bu": "shared",
+   "ragas": {
+    "faithfulness": 1.0,
+    "answer_relevancy": 0.8949,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "e6",
+   "kind": "expansion",
+   "question": "How long do we keep loan files?",
+   "route": "documents",
+   "answer": "Loan files, which are referred to as credit files in the sources, are kept for 10 years after closure [1].",
+   "grounded": true,
+   "blocked_reason": null,
+   "latency_ms": 6265,
+   "cited": [
+    "Group_Records_Retention_Standard | p1 | v1"
+   ],
+   "hit_at_k": true,
+   "correct": true,
+   "citation_correct": true,
+   "reference": "Credit files must be retained for 10 years after closure.",
+   "bu": "shared",
+   "ragas": {
+    "faithfulness": 0.5,
+    "answer_relevancy": 0.9379,
+    "context_precision": 1.0,
+    "context_recall": 1.0
+   }
+  },
+  {
+   "id": "sa1",
+   "kind": "abstain",
+   "question": "How many days of paternity leave does group policy give employees?",
+   "route": "documents",
+   "answer": "I could not find this in the documents you have access to.",
+   "grounded": false,
+   "blocked_reason": null,
+   "latency_ms": 2655,
+   "cited": [],
+   "correct": true,
+   "bu": "shared",
+   "ragas": null
+  }
+ ],
+ "leak": {
+  "tests": 42,
+  "failures": 0,
+  "errors": 0,
+  "leaks": 0,
+  "failed": [],
+  "exit_code": 0,
+  "seconds": 805,
+  "tail": "..........................................                               [100%]\n42 passed in 796.24s (0:13:16)\n"
+ },
+ "ragas": {
+  "samples": 31,
+  "errors": {},
+  "blocked_attempts": 0,
+  "seconds": 845
+ }
+}
