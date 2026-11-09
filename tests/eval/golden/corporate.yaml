@@ -115,3 +115,13 @@ questions:
 - id: ca1
   kind: abstain
   q: What carbon emissions cap applies to shipping finance clients?
+- id: m3
+  kind: data
+  q: What is the non-performing loan ratio?
+  metric: npl_ratio
+  truth_sql: SELECT round(CAST(sum(outstanding) FILTER (WHERE status='ARREARS_90') AS DOUBLE) / sum(outstanding) FILTER (WHERE status<>'CLOSED') * 100, 2) FROM mart_credit.loan WHERE bu='corporate'
+- id: m4
+  kind: data
+  q: What is the loan count?
+  metric: loan_count
+  truth_sql: SELECT count(loan_id) FROM mart_credit.loan WHERE bu='corporate'

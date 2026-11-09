@@ -80,8 +80,10 @@ class AskService:
         text_to_sql: TextToSql | None = None,
         scope_fn: Any = None,
         tracer: Tracer | None = None,
+        metrics: Any = None,
     ) -> None:
         self.retriever, self.llm, self.registry, self.cfg, self.t2s = retriever, llm, registry, cfg, text_to_sql
+        self.metrics = metrics  # D-067: MetricSource; an approved metric answers before text-to-SQL
         self.tracer: Tracer = tracer or NullTracer()
         self.scope_fn = scope_fn  # identity -> BUs whose graphs may be read for expansion (None: no expansion)
 
@@ -106,6 +108,47 @@ class AskService:
             )
             return res
 
+    def _metric(self, questions: list[str], identity: Identity) -> SqlAttempt | None:
+        """D-067: an approved metric that matches a whole question, compiled in code and run as the user."""
+        if self.metrics is None or self.t2s is None:
+            return None
+        from kb.semantic.model import match
+        from kb.semantic.store import run_metric
+
+        metrics = self.metrics.current()
+        m = next((x for q in dict.fromkeys(questions) if (x := match(q, metrics)) is not None), None)
+        if m is None:
+            return None
+        ran = run_metric(self.t2s.engine, m, identity, self.t2s.row_limit)
+        if ran is None:
+            return None
+        res, d, compiled = ran
+        meta = {
+            "id": m.metric.metric_id,
+            "label": m.metric.definition["label"],
+            "revision": m.metric.revision_no,
+            "group_by": list(m.group_by),
+        }
+        return SqlAttempt(
+            data=DataSource(
+                sql=compiled,
+                executed_sql=res.executed_sql,
+                tables=list(res.tables),
+                columns=list(res.columns),
+                rows=[tuple(r) for r in res.rows],
+                truncated=res.executed_sql.endswith("truncated"),
+                metric=meta,
+            ),
+            attempts=[{"sql": compiled, "error": None, "rows": len(res.rows), "metric": meta["id"]}],
+            decision={
+                "tables": d.tables,
+                "row_filters": d.row_filters,
+                "masked": d.masked,
+                "policy_version": d.policy_version,
+                "metric": meta,
+            },
+        )
+
     def compute(self, identity: Identity, question: str, spaces: list[str] | None = None) -> Computed:
         """Everything except the audit write (used by ask() and by offline evaluation).
         spaces: BUs the user picked; narrows documents and graph expansion (never widens)."""
@@ -123,7 +166,10 @@ class AskService:
         data: list[DataSource] = []
         if route in ("data", "both") and self.t2s:
             with self.tracer.span("kb.sql") as sp:
-                sql = self.t2s.run(data_question, identity)
+                sql = (
+                    self._metric([question, data_question], identity)  # the user's words first: the router may
+                    or self.t2s.run(data_question, identity)  # paraphrase, and a metric must match exactly
+                )
                 sp.set(
                     **{
                         "kb.ok": bool(sql.data),

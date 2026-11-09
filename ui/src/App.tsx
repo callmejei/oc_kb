@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Navigate, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  NavLink,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import { useSession } from "./session";
 import { GROUPS, TOP, allowed, crumbFor, slug, type NavItem } from "./nav";
 import { Icon } from "./icons";
@@ -23,13 +29,24 @@ import Activity from "./pages/Activity";
 import Approvals from "./pages/Approvals";
 import NotBuilt from "./pages/NotBuilt";
 import Quality from "./pages/Quality";
+import Products from "./pages/Products";
+import SemanticCatalog from "./pages/SemanticCatalog";
+import Metrics from "./pages/Metrics";
 
-const TOP_ICONS: Record<string, string> = { "New chat": "chat", Search: "search", "Explore graph": "graph" };
+const TOP_ICONS: Record<string, string> = {
+  "New chat": "chat",
+  Search: "search",
+  "Explore graph": "graph",
+};
 
 function itemLink(i: NavItem) {
   if (i.notBuilt)
     return (
-      <NavLink key={i.label} to={`/not-built/${slug(i.label)}`} className="nb-link">
+      <NavLink
+        key={i.label}
+        to={`/not-built/${slug(i.label)}`}
+        className="nb-link"
+      >
         {i.label} <span className="nb-tag">Not built</span>
       </NavLink>
     );
@@ -43,7 +60,9 @@ function itemLink(i: NavItem) {
 export default function App() {
   const { me, loading, logout } = useSession();
   const loc = useLocation();
-  const [navOpen, setNavOpen] = useState(() => !window.matchMedia("(max-width: 760px)").matches);
+  const [navOpen, setNavOpen] = useState(
+    () => !window.matchMedia("(max-width: 760px)").matches,
+  );
   const [closed, setClosed] = useState<Record<string, boolean>>({});
   if (loading) return <div className="center muted">Loading…</div>;
   if (!me && loc.pathname !== "/login") return <Navigate to="/login" replace />;
@@ -63,7 +82,11 @@ export default function App() {
           <span className="mark" aria-hidden="true" />
           <span>Knowledge Explorer</span>
           <span className="grow" />
-          <button className="iconbtn" aria-label="Hide navigation" onClick={() => setNavOpen(false)}>
+          <button
+            className="iconbtn"
+            aria-label="Hide navigation"
+            onClick={() => setNavOpen(false)}
+          >
             <Icon name="panel" />
           </button>
         </div>
@@ -82,7 +105,11 @@ export default function App() {
             if (!items.length) return null;
             const open = !closed[g.title];
             return (
-              <div key={g.title} className={`xgroup ${open ? "open" : ""}`} data-testid={`group-${slug(g.title)}`}>
+              <div
+                key={g.title}
+                className={`xgroup ${open ? "open" : ""}`}
+                data-testid={`group-${slug(g.title)}`}
+              >
                 <button
                   className="xghead"
                   aria-expanded={open}
@@ -112,7 +139,11 @@ export default function App() {
       <div className="xmain">
         <div className="xbar">
           {!navOpen && (
-            <button className="iconbtn" aria-label="Show navigation" onClick={() => setNavOpen(true)}>
+            <button
+              className="iconbtn"
+              aria-label="Show navigation"
+              onClick={() => setNavOpen(true)}
+            >
               <Icon name="panel" />
             </button>
           )}
@@ -146,6 +177,9 @@ export default function App() {
             <Route path="/activity" element={<Activity />} />
             <Route path="/governance/approvals" element={<Approvals />} />
             <Route path="/quality" element={<Quality />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/semantic" element={<SemanticCatalog />} />
+            <Route path="/semantic/model" element={<Metrics />} />
             <Route path="/not-built/:slug" element={<NotBuilt />} />
             <Route path="*" element={<Navigate to="/chat" replace />} />
           </Routes>

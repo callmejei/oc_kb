@@ -69,7 +69,17 @@ def build_service(settings: Settings) -> tuple[Any, YamlIdentityProvider]:
     )
     t2s = TextToSql(build(settings, "sql_engine"), llm, table_map=TableMap(ontology))
     scope = (lambda ident: graph_scope(ident, idp.readable_bus(ident))) if expander else None
-    svc = AskService(retriever, llm, build(settings, "registry"), settings.retrieval, t2s, scope_fn=scope)
+    from kb.semantic.store import MetricSource
+
+    svc = AskService(
+        retriever,
+        llm,
+        build(settings, "registry"),
+        settings.retrieval,
+        t2s,
+        scope_fn=scope,
+        metrics=MetricSource.from_settings(settings, t2s.engine),
+    )
     return svc, idp
 
 
@@ -112,6 +122,8 @@ def ask_one(svc: Any, ident: Any, q: dict[str, Any], truth: Any) -> dict[str, An
             "route_correct": c.route == q["kind"],
             "doc_correct": (q["doc_fact"] in a.text) if q.get("doc_fact") else None,
             "citations_ok": kinds == ({"document", "data"} if q["kind"] == "both" else {"data"}),
+            "metric": (c.sql.data.metric or {}).get("id") if c.sql and c.sql.data else None,  # D-067
+            "metric_expected": q.get("metric"),
         }
     return row
 

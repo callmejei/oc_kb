@@ -24,7 +24,9 @@ from kb.gateway.routes_explorer import router as explorer_router
 from kb.gateway.routes_governance import router as governance_router
 from kb.gateway.routes_ontology import router as ontology_router
 from kb.gateway.routes_ops import router as ops_router
+from kb.gateway.routes_products import router as products_router
 from kb.gateway.routes_quality import router as quality_router
+from kb.gateway.routes_semantic import router as semantic_router
 from kb.gateway.routes_uploads import router as uploads_router
 
 
@@ -73,6 +75,8 @@ def create_app(
     app.include_router(ontology_router, prefix="/api/v1/ontology", tags=["ontology"])
     app.include_router(explorer_router, prefix="/api/v1/explorer", tags=["explorer"])
     app.include_router(quality_router, prefix="/api/v1/quality", tags=["quality"])
+    app.include_router(products_router, prefix="/api/v1/products", tags=["products"])
+    app.include_router(semantic_router, prefix="/api/v1/semantic", tags=["semantic"])
 
     @app.get("/healthz")
     def healthz() -> dict[str, bool]:
@@ -146,6 +150,15 @@ def default_qa(settings: Settings, st: GatewayState) -> Any:
     )
     t2s = TextToSql(build(settings, "sql_engine"), llm, table_map=TableMap(ontology))
     scope = (lambda ident: graph_scope(ident, st.idp.readable_bus(ident))) if expander else None
+    from kb.semantic.store import MetricSource
+
     return AskService(
-        retriever, llm, st.registry, settings.retrieval, t2s, scope_fn=scope, tracer=build(settings, "tracer")
+        retriever,
+        llm,
+        st.registry,
+        settings.retrieval,
+        t2s,
+        scope_fn=scope,
+        tracer=build(settings, "tracer"),
+        metrics=MetricSource.from_settings(settings, t2s.engine),
     )

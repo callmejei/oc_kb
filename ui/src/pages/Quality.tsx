@@ -23,7 +23,11 @@ interface Know {
   concepts_accepted: number;
 }
 interface Q {
-  data: { run: { run_id: string; finished_at: string; as_of: string } | null; rules: Rule[]; tables_not_shown: number | null };
+  data: {
+    run: { run_id: string; finished_at: string; as_of: string } | null;
+    rules: Rule[];
+    tables_not_shown: number | null;
+  };
   knowledge: Know[];
   scope: "all" | "own";
   stale_days: number;
@@ -38,19 +42,24 @@ const KIND: Record<string, string> = {
   reference: "valid reference",
 };
 
-const pct = (n: number, d: number) => (d ? `${((100 * n) / d).toFixed(n && n / d < 0.001 ? 2 : 1)}%` : "—");
+const pct = (n: number, d: number) =>
+  d ? `${((100 * n) / d).toFixed(n && n / d < 0.001 ? 2 : 1)}%` : "—";
 
 export default function Quality() {
   const [q, err] = useGet<Q>("/quality");
   if (!q) return <Loading err={err} />;
   const failing = q.data.rules.filter((r) => !r.passed);
   const byTable = new Map<string, Rule[]>();
-  for (const r of q.data.rules) byTable.set(r.table_name, [...(byTable.get(r.table_name) ?? []), r]);
+  for (const r of q.data.rules)
+    byTable.set(r.table_name, [...(byTable.get(r.table_name) ?? []), r]);
   return (
     <>
       <Head eyebrow="Quality & Observability" title="Data & knowledge quality">
-        Rule checks on the marts (counts of rows checked and failing, never the rows themselves) and the health of the
-        document corpus. {q.scope === "all" ? "You see every table and BU (operations)." : "Scoped to the tables you are granted and the BUs you can read."}{" "}
+        Rule checks on the marts (counts of rows checked and failing, never the
+        rows themselves) and the health of the document corpus.{" "}
+        {q.scope === "all"
+          ? "You see every table and BU (operations)."
+          : "Scoped to the tables you are granted and the BUs you can read."}{" "}
         Results are shown for information; they do not block answers.
       </Head>
 
@@ -64,13 +73,21 @@ export default function Quality() {
           )}
           <span className="grow" />
           {q.data.rules.length > 0 && (
-            <span className={`chip ${failing.length ? "bad" : "ok"}`} data-testid="dq-summary">
-              {q.data.rules.length - failing.length} of {q.data.rules.length} passing
+            <span
+              className={`chip ${failing.length ? "bad" : "ok"}`}
+              data-testid="dq-summary"
+            >
+              {q.data.rules.length - failing.length} of {q.data.rules.length}{" "}
+              passing
             </span>
           )}
         </div>
         {!q.data.run || q.data.rules.length === 0 ? (
-          <p className="muted">{q.data.tables_not_shown === null ? "No data-quality run recorded yet." : "No rules on tables you are granted."}</p>
+          <p className="muted">
+            {q.data.tables_not_shown === null
+              ? "No data-quality run recorded yet."
+              : "No rules on tables you are granted."}
+          </p>
         ) : (
           [...byTable.entries()].map(([t, rs]) => (
             <div key={t} data-testid={`dq-table-${t}`}>
@@ -93,11 +110,18 @@ export default function Quality() {
                       <td className="mono">{r.rule_id}</td>
                       <td className="mono">{r.column_name}</td>
                       <td>{KIND[r.rule_kind] ?? r.rule_kind}</td>
-                      <td style={{ textAlign: "right" }}>{r.checked.toLocaleString()}</td>
                       <td style={{ textAlign: "right" }}>
-                        {r.failed.toLocaleString()} <span className="muted">({pct(r.failed, r.checked)})</span>
+                        {r.checked.toLocaleString()}
                       </td>
-                      <td style={{ textAlign: "right" }}>{pct(Number(r.tolerance), 1)}</td>
+                      <td style={{ textAlign: "right" }}>
+                        {r.failed.toLocaleString()}{" "}
+                        <span className="muted">
+                          ({pct(r.failed, r.checked)})
+                        </span>
+                      </td>
+                      <td style={{ textAlign: "right" }}>
+                        {pct(Number(r.tolerance), 1)}
+                      </td>
                       <td>
                         {r.error ? (
                           <span className="chip bad" title={r.error}>
@@ -118,8 +142,10 @@ export default function Quality() {
         )}
         {!!q.data.tables_not_shown && (
           <p className="muted">
-            {q.data.tables_not_shown} other table{q.data.tables_not_shown > 1 ? "s are" : " is"} checked but not shown: you are
-            not granted {q.data.tables_not_shown > 1 ? "them" : "it"}.
+            {q.data.tables_not_shown} other table
+            {q.data.tables_not_shown > 1 ? "s are" : " is"} checked but not
+            shown: you are not granted{" "}
+            {q.data.tables_not_shown > 1 ? "them" : "it"}.
           </p>
         )}
       </div>
@@ -134,10 +160,16 @@ export default function Quality() {
               <tr>
                 <th>BU</th>
                 <th style={{ textAlign: "right" }}>Current documents</th>
-                <th style={{ textAlign: "right" }}>Stale (&gt; {q.stale_days} days)</th>
+                <th style={{ textAlign: "right" }}>
+                  Stale (&gt; {q.stale_days} days)
+                </th>
                 <th>Open exceptions</th>
-                <th style={{ textAlign: "right" }}>Documents with labelled problems</th>
-                <th style={{ textAlign: "right" }}>Ontology: accepted / awaiting review</th>
+                <th style={{ textAlign: "right" }}>
+                  Documents with labelled problems
+                </th>
+                <th style={{ textAlign: "right" }}>
+                  Ontology: accepted / awaiting review
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -148,20 +180,28 @@ export default function Quality() {
                     <td>
                       <span className="chip">{k.bu}</span>
                     </td>
-                    <td style={{ textAlign: "right" }}>{k.current_documents}</td>
+                    <td style={{ textAlign: "right" }}>
+                      {k.current_documents}
+                    </td>
                     <td style={{ textAlign: "right" }}>{k.stale_documents}</td>
                     <td>
                       {ex.length === 0 ? (
                         <span className="muted">none</span>
                       ) : (
                         ex.map(([reason, n]) => (
-                          <span key={reason} className="chip warn" style={{ marginRight: 4 }}>
+                          <span
+                            key={reason}
+                            className="chip warn"
+                            style={{ marginRight: 4 }}
+                          >
                             {reason.toLowerCase().replace(/_/g, " ")}: {n}
                           </span>
                         ))
                       )}
                     </td>
-                    <td style={{ textAlign: "right" }}>{k.labelled_documents}</td>
+                    <td style={{ textAlign: "right" }}>
+                      {k.labelled_documents}
+                    </td>
                     <td style={{ textAlign: "right" }}>
                       {k.concepts_accepted} / {k.concepts_pending}
                     </td>

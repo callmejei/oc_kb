@@ -99,3 +99,8 @@ questions:
 - id: wa1
   kind: abstain
   q: What is the minimum subscription for the fine art investment fund?
+- id: m5
+  kind: data
+  q: What is the total AUM?
+  metric: aum
+  truth_sql: SELECT round(sum(aum), 2) FROM mart_wealth.portfolio WHERE bu='wealth'
