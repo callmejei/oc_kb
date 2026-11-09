@@ -1,0 +1,11 @@
+[project]
+name = "kb-graphify-runner"
+version = "0.0.1"
+description = "Isolated environment for graphify (entity/relation extraction). Always run via kb.graph.graphify_runner."
+requires-python = "==3.11.*"
+# ollama extra = OpenAI-compatible client pointed at the LOCAL endpoint; office = docx/xlsx readers
+dependencies = ["graphifyy[ollama,office]==0.9.95"]
+
+[tool.uv]
+exclude-newer = "2026-10-24T00:00:00Z"
+package = false

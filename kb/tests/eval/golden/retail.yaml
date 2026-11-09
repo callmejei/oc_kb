@@ -1,0 +1,131 @@
+# Golden set for the retail BU (Phase 7: one file per BU; asked as ret.user1).
+# kind: documents | expansion (paraphrase; scored with and without graph expansion) | data | both | abstain.
+# facts: any of these strings in the answer (case-insensitive) counts as correct; every fact appears in an
+#   expected document and in the reference (tests/eval/test_golden_consistency.py).
+# reference: the ground-truth answer used by RAGAS context recall / answer correctness.
+# data / both: truth_sql computes the expected figure from the raw marts, scoped like the user's row filter.
+# abstain: nothing in the corpus answers it; correct = the fixed "not covered" / "could not find" reply.
+bu: retail
+user: ret.user1
+questions:
+- id: r1
+  kind: documents
+  q: What is the maximum LTV for a first facility on an owner-occupied residential property?
+  facts:
+  - 75%
+  expected_docs:
+  - ret-home-loan-policy
+  - ret-home-loan-sheet
+  - ret-valuation-guide
+  - ret-car-loan-sheet
+  reference: The maximum LTV for a first facility on owner-occupied residential property is 75%.
+- id: r2
+  kind: documents
+  q: What is the LTV limit for a third or subsequent facility on an investment residential property?
+  facts:
+  - 40%
+  expected_docs:
+  - ret-home-loan-policy
+  - ret-home-loan-sheet
+  - ret-valuation-guide
+  - ret-car-loan-sheet
+  reference: The LTV limit for a third or more facility on investment residential property is 40%.
+- id: r3
+  kind: documents
+  q: How much is the late payment fee?
+  facts:
+  - '75.00'
+  expected_docs:
+  - ret-fees
+  reference: The late payment fee is 75.00.
+- id: r4
+  kind: documents
+  q: What does document retrieval cost per copy?
+  facts:
+  - '20.00'
+  expected_docs:
+  - ret-fees
+  reference: Document retrieval costs 20.00 per copy.
+- id: r5
+  kind: documents
+  q: What is the fee for a telegraphic transfer?
+  facts:
+  - '25.00'
+  expected_docs:
+  - ret-fees
+  reference: A telegraphic transfer costs 25.00.
+- id: r6
+  kind: documents
+  q: For how long can a policy exception be granted at most?
+  facts:
+  - twelve months
+  - 12 months
+  expected_docs:
+  - ret-home-loan-policy
+  - ret-home-loan-sheet
+  - ret-personal-loan-proc
+  - ret-credit-card-sheet
+  - ret-collections-proc
+  - ret-valuation-guide
+  - ret-fees
+  - ret-branch-onboarding
+  - ret-q3-briefing
+  - ret-car-loan-sheet
+  reference: Policy exceptions are granted for a maximum of twelve months.
+- id: e1
+  kind: expansion
+  q: What is the maximum loan to valuation for a buy-to-let property on a first facility?
+  facts:
+  - 70%
+  expected_docs:
+  - ret-home-loan-policy
+  - ret-home-loan-sheet
+  - ret-valuation-guide
+  - ret-car-loan-sheet
+  reference: The maximum LTV for a first facility on investment residential (buy-to-let) property is 70%.
+- id: e2
+  kind: expansion
+  q: How much is the penalty for paying late?
+  facts:
+  - '75.00'
+  expected_docs:
+  - ret-fees
+  reference: The late payment fee is 75.00.
+- id: e7
+  kind: expansion
+  q: What does a wire transfer cost?
+  facts:
+  - '25.00'
+  expected_docs:
+  - ret-fees
+  reference: A telegraphic (wire) transfer costs 25.00.
+- id: d1
+  kind: data
+  q: How many loans are 90 days in arrears?
+  truth_sql: SELECT count(*) FROM mart_credit.loan WHERE bu='retail' AND status='ARREARS_90'
+- id: d2
+  kind: data
+  q: How many home loans are there?
+  truth_sql: SELECT count(*) FROM mart_credit.loan WHERE bu='retail' AND product='Home Loan'
+- id: d3
+  kind: data
+  q: What is the total outstanding balance of car loans?
+  truth_sql: SELECT round(sum(outstanding), 2) FROM mart_credit.loan WHERE bu='retail' AND product='Car Loan'
+- id: d9
+  kind: data
+  q: How many collateral records are residential property?
+  truth_sql: SELECT count(*) FROM mart_credit.collateral WHERE bu='retail' AND collateral_type='Residential property'
+- id: b1
+  kind: both
+  q: Under the home loan policy, what is the maximum first-facility LTV for investment residential property, and how
+    many collateral records have an LTV above 70%?
+  truth_sql: SELECT count(*) FROM mart_credit.collateral WHERE bu='retail' AND ltv_pct > 70
+  doc_fact: 70%
+- id: b4
+  kind: both
+  q: What is the late payment fee, and how many loans are 30 days in arrears?
+  truth_sql: SELECT count(*) FROM mart_credit.loan WHERE bu='retail' AND status='ARREARS_30'
+  doc_fact: '75.00'
+- id: ra1
+  kind: abstain
+  q: What is the bank's policy on cryptocurrency custody for retail customers?

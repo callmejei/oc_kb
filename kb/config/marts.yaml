@@ -1,0 +1,61 @@
+# Semantic layer for text-to-SQL: what each mart table and column means. Only tables a user may query
+# are ever shown to the LLM (SqlEngine.permitted_schema). Values are synthetic and obviously fake.
+engine:
+  max_rows: 200                 # hard cap on rows returned per query
+  timeout_s: 10                 # interrupt queries running longer
+  large_table_rows: 300         # tables with at least this many rows may not be cartesian-joined
+  max_joins: 4
+  memory_limit: 1GB
+  threads: 2
+
+tables:
+  mart_cust.customer:
+    description: One row per customer of a business unit. Personal columns are masked unless you hold the PII group.
+    columns:
+      customer_id: Customer identifier, e.g. CUST-R-00042 (R retail, C corporate, W wealth)
+      bu: Business unit owning the customer (retail, corporate, wealth)
+      full_name: Customer name (personal data)
+      email: Email address (personal data)
+      phone: Phone number (personal data)
+      national_id: National identifier (personal data)
+      date_of_birth: Date of birth (personal data)
+      segment: Customer segment (Mass, Affluent, SME, Mid-market, Large corporate, Private, Premier)
+      country: Country of residence
+      onboarded_date: Date the customer was onboarded
+  mart_credit.loan:
+    description: One row per loan facility (retail and corporate).
+    columns:
+      loan_id: Loan identifier
+      customer_id: Borrower, joins to mart_cust.customer.customer_id
+      bu: Business unit (retail or corporate)
+      product: Product name (Home Loan, Car Loan, Personal Loan, Credit Card, Term Loan, Trade Finance, Working Capital, Commercial Property Loan)
+      principal: Original loan amount (EXB$)
+      outstanding: Outstanding balance (EXB$)
+      interest_rate: Interest rate in percent per annum
+      origination_date: Date the loan started
+      maturity_date: Contractual maturity date
+      status: CURRENT, ARREARS_30, ARREARS_90 or CLOSED
+  mart_credit.collateral:
+    description: Collateral pledged against a loan, with its valuation and loan-to-value ratio.
+    columns:
+      collateral_id: Collateral identifier
+      loan_id: Secured loan, joins to mart_credit.loan.loan_id
+      bu: Business unit (retail or corporate)
+      collateral_type: Residential property, Vehicle, Commercial property, Fixed charge, Receivables, Inventory
+      valuation: Latest valuation (EXB$)
+      ltv_pct: Loan-to-value ratio in percent (principal / valuation x 100)
+      valuation_date: Date of the latest valuation
+  mart_wealth.portfolio:
+    description: One row per wealth client portfolio.
+    columns:
+      portfolio_id: Portfolio identifier
+      client_ref: Client reference (always masked)
+      customer_id: Client, joins to mart_cust.customer.customer_id
+      bu: Business unit (wealth)
+      mandate: Discretionary, Advisory or Execution only
+      aum: Assets under management (EXB$)
+      equity_pct: Equity allocation in percent
+      bond_pct: Bond allocation in percent
+      cash_pct: Cash allocation in percent
+      risk_profile: Conservative, Balanced, Growth or Aggressive
+      as_of_date: Valuation date

@@ -1,0 +1,57 @@
+# Local IdentityProvider: synthetic users -> AD-style groups.
+# Names are obviously fictional. No real staff identities.
+#
+# Group naming:  GRP_KB_<BU>_<READ|MAKER|CHECKER>   document access + governance roles
+#                GRP_DATA_<AREA>_<BU>              mart access (see policies.yaml)
+# A MAKER/CHECKER group is a nested member of its BU's READ group (AD-style `member_of`): they must
+# see what they govern. The IdentityProvider expands nesting transitively, as an LDAP lookup would.
+
+groups:
+  GRP_KB_RETAIL_READ:       {bu: retail,    kind: read}
+  GRP_KB_RETAIL_MAKER:      {bu: retail,    kind: maker, member_of: [GRP_KB_RETAIL_READ]}
+  GRP_KB_RETAIL_CHECKER:    {bu: retail,    kind: checker, member_of: [GRP_KB_RETAIL_READ]}
+  GRP_KB_CORPORATE_READ:    {bu: corporate, kind: read}
+  GRP_KB_CORPORATE_MAKER:   {bu: corporate, kind: maker, member_of: [GRP_KB_CORPORATE_READ]}
+  GRP_KB_CORPORATE_CHECKER: {bu: corporate, kind: checker, member_of: [GRP_KB_CORPORATE_READ]}
+  GRP_KB_WEALTH_READ:       {bu: wealth,    kind: read}
+  GRP_KB_WEALTH_MAKER:      {bu: wealth,    kind: maker, member_of: [GRP_KB_WEALTH_READ]}
+  GRP_KB_WEALTH_CHECKER:    {bu: wealth,    kind: checker, member_of: [GRP_KB_WEALTH_READ]}
+  GRP_KB_SHARED_READ:       {bu: shared,    kind: read}
+  GRP_KB_SHARED_MAKER:      {bu: shared,    kind: maker, member_of: [GRP_KB_SHARED_READ]}
+  GRP_KB_SHARED_CHECKER:    {bu: shared,    kind: checker, member_of: [GRP_KB_SHARED_READ]}
+  GRP_DATA_CREDIT_RETAIL:    {bu: retail,    kind: data}
+  GRP_DATA_CREDIT_CORPORATE: {bu: corporate, kind: data}
+  GRP_DATA_CUST_RETAIL:      {bu: retail,    kind: data}
+  GRP_DATA_CUST_CORPORATE:   {bu: corporate, kind: data}
+  GRP_DATA_CUST_WEALTH:      {bu: wealth,    kind: data}
+  GRP_DATA_WEALTH:           {bu: wealth,    kind: data}
+  GRP_DATA_PII_UNMASKED:     {bu: shared,    kind: data}
+  GRP_KB_OPS:                {bu: shared,    kind: ops}   # operations dashboard only; grants no document access
+
+users:
+  # --- retail ---------------------------------------------------------------
+  - {id: ret.maker,   name: Retail Maker,     bu: retail,    groups: [GRP_KB_RETAIL_MAKER, GRP_KB_SHARED_READ]}
+  - {id: ret.checker, name: Retail Checker,   bu: retail,    groups: [GRP_KB_RETAIL_CHECKER, GRP_KB_SHARED_READ]}
+  - {id: ret.user1,   name: Retail User One,  bu: retail,    groups: [GRP_KB_RETAIL_READ, GRP_KB_SHARED_READ, GRP_DATA_CREDIT_RETAIL, GRP_DATA_CUST_RETAIL]}
+  - {id: ret.user2,   name: Retail User Two,  bu: retail,    groups: [GRP_KB_RETAIL_READ, GRP_KB_SHARED_READ]}
+  # --- corporate ------------------------------------------------------------
+  - {id: corp.maker,   name: Corporate Maker,    bu: corporate, groups: [GRP_KB_CORPORATE_MAKER, GRP_KB_SHARED_READ]}
+  - {id: corp.checker, name: Corporate Checker,  bu: corporate, groups: [GRP_KB_CORPORATE_CHECKER, GRP_KB_SHARED_READ]}
+  - {id: corp.user1,   name: Corporate User One, bu: corporate, groups: [GRP_KB_CORPORATE_READ, GRP_KB_SHARED_READ, GRP_DATA_CREDIT_CORPORATE, GRP_DATA_CUST_CORPORATE]}
+  - {id: corp.user2,   name: Corporate User Two, bu: corporate, groups: [GRP_KB_CORPORATE_READ, GRP_KB_SHARED_READ]}
+  # --- wealth ---------------------------------------------------------------
+  - {id: wlth.maker,   name: Wealth Maker,    bu: wealth, groups: [GRP_KB_WEALTH_MAKER, GRP_KB_SHARED_READ]}
+  - {id: wlth.checker, name: Wealth Checker,  bu: wealth, groups: [GRP_KB_WEALTH_CHECKER, GRP_KB_SHARED_READ]}
+  - {id: wlth.user1,   name: Wealth User One, bu: wealth, groups: [GRP_KB_WEALTH_READ, GRP_KB_SHARED_READ, GRP_DATA_WEALTH, GRP_DATA_CUST_WEALTH]}
+  - {id: wlth.user2,   name: Wealth User Two, bu: wealth, groups: [GRP_KB_WEALTH_READ, GRP_KB_SHARED_READ]}
+  # --- shared (group-wide policies) -----------------------------------------
+  - {id: shr.maker,   name: Group Policy Maker,   bu: shared, groups: [GRP_KB_SHARED_MAKER]}
+  - {id: shr.checker, name: Group Policy Checker, bu: shared, groups: [GRP_KB_SHARED_CHECKER]}
+  # cross-BU group-policy reader: reads group-wide policies, no BU content
+  - {id: grp.reader,  name: Group Policy Reader,  bu: shared, groups: [GRP_KB_SHARED_READ]}
+  # data steward with unmasked PII on marts (tests column masks are group-driven)
+  - {id: data.steward, name: Data Steward, bu: shared, groups: [GRP_KB_SHARED_READ, GRP_DATA_CREDIT_RETAIL, GRP_DATA_CUST_RETAIL, GRP_DATA_PII_UNMASKED]}
+  # operations analyst: the ops dashboard (counts and metadata), no document or data access
+  - {id: ops.analyst, name: Operations Analyst, bu: shared, groups: [GRP_KB_OPS]}
+  # --- no groups -------------------------------------------------------------
+  - {id: nobody, name: No Groups User, bu: none, groups: []}

@@ -1,0 +1,39 @@
+# Ranger-style policies emulated by the local PolicyEngine (Phase 4) over DuckDB.
+# On CML the same intent is configured in Ranger; this file is the local source of truth.
+#
+# Semantics (deny by default):
+#   table_grants:  group -> tables it may SELECT
+#   row_filters:   table -> list of {groups, filter}; a user gets the OR of the filters of the
+#                  groups they hold for that table. No matching filter entry -> no rows.
+#   column_masks:  table.column -> {mask, unless_groups}; masked unless the user holds one of
+#                  unless_groups.  mask: redact | hash | year_only | null
+
+table_grants:
+  GRP_DATA_CREDIT_RETAIL:    [mart_credit.loan, mart_credit.collateral, mart_cust.customer]
+  GRP_DATA_CREDIT_CORPORATE: [mart_credit.loan, mart_credit.collateral, mart_cust.customer]
+  GRP_DATA_CUST_RETAIL:      [mart_cust.customer]
+  GRP_DATA_CUST_CORPORATE:   [mart_cust.customer]
+  GRP_DATA_CUST_WEALTH:      [mart_cust.customer]
+  GRP_DATA_WEALTH:           [mart_wealth.portfolio, mart_cust.customer]
+
+row_filters:
+  mart_credit.loan:
+    - {groups: [GRP_DATA_CREDIT_RETAIL],    filter: "bu = 'retail'"}
+    - {groups: [GRP_DATA_CREDIT_CORPORATE], filter: "bu = 'corporate'"}
+  mart_credit.collateral:
+    - {groups: [GRP_DATA_CREDIT_RETAIL],    filter: "bu = 'retail'"}
+    - {groups: [GRP_DATA_CREDIT_CORPORATE], filter: "bu = 'corporate'"}
+  mart_cust.customer:
+    - {groups: [GRP_DATA_CREDIT_RETAIL, GRP_DATA_CUST_RETAIL],       filter: "bu = 'retail'"}
+    - {groups: [GRP_DATA_CREDIT_CORPORATE, GRP_DATA_CUST_CORPORATE], filter: "bu = 'corporate'"}
+    - {groups: [GRP_DATA_WEALTH, GRP_DATA_CUST_WEALTH],              filter: "bu = 'wealth'"}
+  mart_wealth.portfolio:
+    - {groups: [GRP_DATA_WEALTH], filter: "bu = 'wealth'"}
+
+column_masks:
+  mart_cust.customer.full_name:     {mask: redact,    unless_groups: [GRP_DATA_PII_UNMASKED]}
+  mart_cust.customer.email:         {mask: redact,    unless_groups: [GRP_DATA_PII_UNMASKED]}
+  mart_cust.customer.phone:         {mask: redact,    unless_groups: [GRP_DATA_PII_UNMASKED]}
+  mart_cust.customer.national_id:   {mask: hash,      unless_groups: [GRP_DATA_PII_UNMASKED]}
+  mart_cust.customer.date_of_birth: {mask: year_only, unless_groups: [GRP_DATA_PII_UNMASKED]}
+  mart_wealth.portfolio.client_ref: {mask: hash,      unless_groups: []}

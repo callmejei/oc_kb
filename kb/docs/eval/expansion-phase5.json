@@ -1,0 +1,326 @@
+{
+ "generated_at": "2026-11-07T15:18:19+00:00",
+ "overall": {
+  "n": 8,
+  "off": {
+   "hit@5": 0.875,
+   "answer_correct": 0.875
+  },
+  "on": {
+   "hit@5": 1.0,
+   "answer_correct": 1.0
+  },
+  "improved": [
+   "e7"
+  ],
+  "regressed": []
+ },
+ "questions": [
+  {
+   "bu": "retail",
+   "id": "e1",
+   "question": "What is the maximum loan to valuation for a buy-to-let property on a first facility?",
+   "off": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The maximum loan-to-value (LTV) for a buy-to-let property on a first facility is 70% [5].",
+    "expansion": null
+   },
+   "on": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The maximum loan-to-value (LTV) for a buy-to-let property on a first facility is 70% [5].",
+    "expansion": {
+     "concepts": [
+      "https://spec.edmcouncil.org/fibo/ontology/LOAN/LoansGeneral/Loans/LoanToValueRatio",
+      "https://kb.local/ontology/InvestmentResidentialProperty"
+     ],
+     "related": [
+      "https://kb.local/ontology/ShophouseProperty",
+      "https://kb.local/ontology/CommercialOfficeProperty",
+      "https://kb.local/ontology/GovernanceCommittee"
+     ],
+     "terms": [
+      "loan to value ratio",
+      "ltv",
+      "loan to value",
+      "ltv ratio",
+      "advance ratio",
+      "lending ratio",
+      "standard advance",
+      "investment residential",
+      "investment property",
+      "rental property"
+     ]
+    }
+   },
+   "improved": false,
+   "regressed": false
+  },
+  {
+   "bu": "retail",
+   "id": "e2",
+   "question": "How much is the penalty for paying late?",
+   "off": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The penalty for paying late is 75.00 [1].",
+    "expansion": null
+   },
+   "on": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The penalty for paying late is 75.00 [1].",
+    "expansion": {
+     "concepts": [
+      "https://kb.local/ontology/LatePaymentFee"
+     ],
+     "related": [
+      "https://spec.edmcouncil.org/fibo/ontology/FND/DatesAndTimes/FinancialDates/Schedule",
+      "https://kb.local/ontology/PlatformFee",
+      "https://kb.local/ontology/AssetsUnderManagement"
+     ],
+     "terms": [
+      "late payment fee",
+      "late payment",
+      "late fee",
+      "overdue charge",
+      "schedule",
+      "annual platform fee",
+      "assets under management"
+     ]
+    }
+   },
+   "improved": false,
+   "regressed": false
+  },
+  {
+   "bu": "retail",
+   "id": "e7",
+   "question": "What does a wire transfer cost?",
+   "off": {
+    "hit_at_k": false,
+    "correct": false,
+    "answer": "I could not find this in the documents you have access to.",
+    "expansion": null
+   },
+   "on": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "A wire transfer costs 25.00 per transfer [1].",
+    "expansion": {
+     "concepts": [
+      "https://kb.local/ontology/TelegraphicTransferFee"
+     ],
+     "related": [
+      "https://spec.edmcouncil.org/fibo/ontology/FND/DatesAndTimes/FinancialDates/Schedule",
+      "https://kb.local/ontology/ControlRole",
+      "https://kb.local/ontology/LatePaymentFee"
+     ],
+     "terms": [
+      "telegraphic transfer fee",
+      "telegraphic transfer",
+      "wire transfer fee",
+      "schedule",
+      "checker",
+      "late payment fee"
+     ]
+    }
+   },
+   "improved": true,
+   "regressed": false
+  },
+  {
+   "bu": "corporate",
+   "id": "e4",
+   "question": "What is the maximum lending ratio for a development site on a first facility?",
+   "off": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The maximum lending ratio for a development site on a first facility is 35% [1].",
+    "expansion": null
+   },
+   "on": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The maximum lending ratio for a development site on a first facility is 35% [2].",
+    "expansion": {
+     "concepts": [
+      "https://spec.edmcouncil.org/fibo/ontology/LOAN/LoansGeneral/Loans/LoanToValueRatio",
+      "https://kb.local/ontology/LandForDevelopment"
+     ],
+     "related": [
+      "https://kb.local/ontology/InvestmentResidentialProperty",
+      "https://kb.local/ontology/ShophouseProperty",
+      "https://kb.local/ontology/CommercialOfficeProperty"
+     ],
+     "terms": [
+      "loan to value ratio",
+      "ltv",
+      "loan to value",
+      "loan to valuation",
+      "ltv ratio",
+      "advance ratio",
+      "standard advance",
+      "land for development",
+      "development land",
+      "investment residential"
+     ]
+    }
+   },
+   "improved": false,
+   "regressed": false
+  },
+  {
+   "bu": "corporate",
+   "id": "e8",
+   "question": "What is the lending ratio for an office building on a third facility?",
+   "off": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The lending ratio for an office building on a third facility is 15% [1].",
+    "expansion": null
+   },
+   "on": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The lending ratio for an office building on a third facility is 15% [2].",
+    "expansion": {
+     "concepts": [
+      "https://spec.edmcouncil.org/fibo/ontology/LOAN/LoansGeneral/Loans/LoanToValueRatio",
+      "https://kb.local/ontology/CommercialOfficeProperty"
+     ],
+     "related": [
+      "https://kb.local/ontology/LandForDevelopment",
+      "https://kb.local/ontology/InvestmentResidentialProperty",
+      "https://kb.local/ontology/ShophouseProperty"
+     ],
+     "terms": [
+      "loan to value ratio",
+      "ltv",
+      "loan to value",
+      "loan to valuation",
+      "ltv ratio",
+      "advance ratio",
+      "standard advance",
+      "commercial office",
+      "office property",
+      "land for development"
+     ]
+    }
+   },
+   "improved": false,
+   "regressed": false
+  },
+  {
+   "bu": "wealth",
+   "id": "e3",
+   "question": "What advance can be given against blue chip shares?",
+   "off": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The maximum advance for blue-chip equities is **Standard advance** = 60% and **Concentrated holding advance** = 50% [1].",
+    "expansion": null
+   },
+   "on": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The maximum advance for blue-chip equities is **Standard advance** = 60% and **Concentrated holding advance** = 50% [1].",
+    "expansion": {
+     "concepts": [
+      "https://spec.edmcouncil.org/fibo/ontology/FBC/FinancialInstruments/FinancialInstruments/EquityInstrument"
+     ],
+     "related": [
+      "https://spec.edmcouncil.org/fibo/ontology/SEC/Debt/Bonds/Bond",
+      "https://kb.local/ontology/ModelPortfolioAllocation",
+      "https://spec.edmcouncil.org/fibo/ontology/FND/Law/LegalCapacity/Regulation"
+     ],
+     "terms": [
+      "equity instrument",
+      "equities",
+      "equity",
+      "stocks",
+      "blue chip equities",
+      "bond",
+      "model portfolio",
+      "regulation"
+     ]
+    }
+   },
+   "improved": false,
+   "regressed": false
+  },
+  {
+   "bu": "wealth",
+   "id": "e5",
+   "question": "What share of a Balanced model portfolio goes into stocks?",
+   "off": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The share of a Balanced model portfolio that goes into stocks is 45% [1]. This figure is also confirmed in [2].",
+    "expansion": null
+   },
+   "on": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "The Balanced model portfolio allocates 45% to Equities [1].",
+    "expansion": {
+     "concepts": [
+      "https://kb.local/ontology/ModelPortfolioAllocation",
+      "https://spec.edmcouncil.org/fibo/ontology/FBC/FinancialInstruments/FinancialInstruments/EquityInstrument"
+     ],
+     "related": [
+      "https://spec.edmcouncil.org/fibo/ontology/SEC/Debt/Bonds/Bond",
+      "https://kb.local/ontology/ApprovalThreshold",
+      "https://kb.local/ontology/GovernanceCommittee"
+     ],
+     "terms": [
+      "asset allocation",
+      "risk profile allocation",
+      "mandate allocation",
+      "equity instrument",
+      "equities",
+      "equity",
+      "shares",
+      "blue chip equities",
+      "blue chip shares",
+      "bond"
+     ]
+    }
+   },
+   "improved": false,
+   "regressed": false
+  },
+  {
+   "bu": "shared",
+   "id": "e6",
+   "question": "How long do we keep loan files?",
+   "off": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "Loan files, which are referred to as credit files in the sources, are kept for 10 years after closure [1].",
+    "expansion": null
+   },
+   "on": {
+    "hit_at_k": true,
+    "correct": true,
+    "answer": "Loan files, which are referred to as credit files in the sources, are kept for 10 years after closure [1].",
+    "expansion": {
+     "concepts": [
+      "https://kb.local/ontology/CreditFile"
+     ],
+     "related": [
+      "https://kb.local/ontology/PolicyException"
+     ],
+     "terms": [
+      "credit file",
+      "credit files",
+      "policy exception"
+     ]
+    }
+   },
+   "improved": false,
+   "regressed": false
+  }
+ ]
+}

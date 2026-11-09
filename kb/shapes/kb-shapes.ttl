@@ -1,0 +1,51 @@
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix v:    <https://kb.local/vocab#> .
+
+# SHACL for one BU graph (graphify-fibo skill, step 4). The data graph carries a marker
+#   <urn:kb:marker> v:graphBu "<bu>" ; v:allowedModule "FND", "LOAN", ...
+# and the ontology graph supplies v:module for every concept. Any violation blocks the load.
+
+v:EntityShape a sh:NodeShape ;
+  sh:targetClass v:Entity ;
+  sh:property [ sh:path rdfs:label ; sh:minCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path v:bu ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path v:fromChunk ; sh:minCount 1 ] ;
+  sh:property [ sh:path v:fromVersion ; sh:minCount 1 ] ;
+  sh:sparql [
+    sh:message "entity v:bu differs from the graph's BU" ;
+    sh:select """SELECT $this WHERE { $this <https://kb.local/vocab#bu> ?b .
+                 <urn:kb:marker> <https://kb.local/vocab#graphBu> ?g . FILTER (?b != ?g) }""" ] ;
+  sh:sparql [
+    sh:message "entity mapped to a concept outside the BU's allowed FIBO modules" ;
+    sh:select """SELECT $this ?value WHERE { $this <https://kb.local/vocab#concept> ?value .
+                 ?value <https://kb.local/vocab#module> ?m .
+                 FILTER NOT EXISTS { <urn:kb:marker> <https://kb.local/vocab#allowedModule> ?m } }""" ] ;
+  sh:sparql [
+    sh:message "entity mapped to a concept with no module (unknown concept)" ;
+    sh:select """SELECT $this ?value WHERE { $this <https://kb.local/vocab#concept> ?value .
+                 FILTER NOT EXISTS { ?value <https://kb.local/vocab#module> ?m } }""" ] .
+
+v:RelationShape a sh:NodeShape ;
+  sh:targetClass v:Relation ;
+  sh:property [ sh:path v:source ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path v:target ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path v:relation ; sh:minCount 1 ] ;
+  sh:property [ sh:path v:edgeTag ; sh:minCount 1 ; sh:in ( "EXTRACTED" "INFERRED" "AMBIGUOUS" ) ] ;
+  sh:sparql [
+    sh:message "edge endpoints belong to different BUs (or to another BU than the graph)" ;
+    sh:select """SELECT $this WHERE {
+                 $this <https://kb.local/vocab#source> ?s ; <https://kb.local/vocab#target> ?t .
+                 ?s <https://kb.local/vocab#bu> ?bs . ?t <https://kb.local/vocab#bu> ?bt .
+                 <urn:kb:marker> <https://kb.local/vocab#graphBu> ?g .
+                 FILTER (?bs != ?bt || ?bs != ?g) }""" ] .
+
+v:ChunkShape a sh:NodeShape ;
+  sh:targetClass v:Chunk ;
+  sh:property [ sh:path v:bu ; sh:minCount 1 ; sh:maxCount 1 ] ;
+  sh:property [ sh:path v:fromVersion ; sh:minCount 1 ] ;
+  sh:sparql [
+    sh:message "chunk v:bu differs from the graph's BU" ;
+    sh:select """SELECT $this WHERE { $this <https://kb.local/vocab#bu> ?b .
+                 <urn:kb:marker> <https://kb.local/vocab#graphBu> ?g . FILTER (?b != ?g) }""" ] .

@@ -1,0 +1,10 @@
+[project]
+name = "kb-phoenix-server"
+version = "0.0.1"
+description = "Isolated environment for the local Phoenix tracing server (infrastructure, not app code)"
+requires-python = "==3.11.*"
+dependencies = ["arize-phoenix==20.26.0"]
+
+[tool.uv]
+exclude-newer = "2026-10-24T00:00:00Z"
+package = false

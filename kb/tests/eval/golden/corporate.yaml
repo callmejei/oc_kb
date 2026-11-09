@@ -1,0 +1,117 @@
+# Golden set for the corporate BU (Phase 7: one file per BU; asked as corp.user1).
+# kind: documents | expansion (paraphrase; scored with and without graph expansion) | data | both | abstain.
+# facts: any of these strings in the answer (case-insensitive) counts as correct; every fact appears in an
+#   expected document and in the reference (tests/eval/test_golden_consistency.py).
+# reference: the ground-truth answer used by RAGAS context recall / answer correctness.
+# data / both: truth_sql computes the expected figure from the raw marts, scoped like the user's row filter.
+# abstain: nothing in the corpus answers it; correct = the fixed "not covered" / "could not find" reply.
+bu: corporate
+user: corp.user1
+questions:
+- id: c1
+  kind: documents
+  q: What is the maximum first-facility LTV for land for development?
+  facts:
+  - 35%
+  must_cite:
+  - corp-cre-policy
+  expected_docs:
+  - corp-cre-policy
+  - corp-syndication-guide
+  reference: The maximum first-facility LTV for land for development is 35%.
+- id: c2
+  kind: documents
+  q: What is the first-facility LTV limit for industrial (B1/B2) property?
+  facts:
+  - 40%
+  expected_docs:
+  - corp-cre-policy
+  - corp-syndication-guide
+  reference: The first-facility LTV limit for industrial (B1/B2) property is 40%.
+- id: c3
+  kind: documents
+  q: What is the LTV for a third or more facility on commercial office property?
+  facts:
+  - 15%
+  expected_docs:
+  - corp-cre-policy
+  - corp-syndication-guide
+  reference: The LTV for a third or more facility on commercial office property is 15%.
+- id: c4
+  kind: documents
+  q: What is the indicative rate for Tier B on the SME working capital product?
+  facts:
+  - 3.00%
+  expected_docs:
+  - corp-sme-wc-sheet
+  reference: The indicative rate for Tier B on the SME working capital product is 3.00%.
+- id: c5
+  kind: documents
+  q: What is the minimum amount for Tier D on the SME working capital product?
+  facts:
+  - 40,000
+  - '40000'
+  expected_docs:
+  - corp-sme-wc-sheet
+  - corp-pricing-grid
+  reference: The minimum amount for Tier D on the SME working capital product is 40,000.
+- id: c6
+  kind: documents
+  q: Within how many business days must a conflict with local regulation be raised?
+  facts:
+  - five business days
+  - 5 business days
+  expected_docs:
+  - corp-cre-policy
+  - corp-trade-proc
+  - corp-sme-wc-sheet
+  - corp-syndication-guide
+  - corp-rating-method
+  - corp-covenant-proc
+  - corp-pricing-grid
+  - corp-strategy-briefing
+  - corp-green-framework
+  - corp-cash-mgmt-sheet
+  reference: A conflict with local regulation must be raised within five business days.
+- id: e4
+  kind: expansion
+  q: What is the maximum lending ratio for a development site on a first facility?
+  facts:
+  - 35%
+  must_cite:
+  - corp-cre-policy
+  expected_docs:
+  - corp-cre-policy
+  - corp-syndication-guide
+  reference: The maximum first-facility LTV for land for development is 35% under the corporate policy; the group
+    risk appetite allows up to 45%.
+- id: e8
+  kind: expansion
+  q: What is the lending ratio for an office building on a third facility?
+  facts:
+  - 15%
+  expected_docs:
+  - corp-cre-policy
+  - corp-syndication-guide
+  reference: The LTV for a third or more facility on commercial office property is 15%.
+- id: d4
+  kind: data
+  q: How many loans are 30 days in arrears?
+  truth_sql: SELECT count(*) FROM mart_credit.loan WHERE bu='corporate' AND status='ARREARS_30'
+- id: d5
+  kind: data
+  q: What is the average interest rate of term loans, rounded to 2 decimals?
+  truth_sql: SELECT round(avg(interest_rate), 2) FROM mart_credit.loan WHERE bu='corporate' AND product='Term Loan'
+- id: d10
+  kind: data
+  q: What is the average loan-to-value of collateral, rounded to 2 decimals?
+  truth_sql: SELECT round(avg(ltv_pct), 2) FROM mart_credit.collateral WHERE bu='corporate'
+- id: b2
+  kind: both
+  q: What is the maximum first-facility LTV for commercial office property in the commercial property lending policy,
+    and how many collateral records exceed an LTV of 45%?
+  truth_sql: SELECT count(*) FROM mart_credit.collateral WHERE bu='corporate' AND ltv_pct > 45
+  doc_fact: 45%
+- id: ca1
+  kind: abstain
+  q: What carbon emissions cap applies to shipping finance clients?

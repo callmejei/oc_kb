@@ -1,0 +1,93 @@
+# Golden set for the shared BU (Phase 7: one file per BU; asked as grp.reader).
+# kind: documents | expansion (paraphrase; scored with and without graph expansion) | data | both | abstain.
+# facts: any of these strings in the answer (case-insensitive) counts as correct; every fact appears in an
+#   expected document and in the reference (tests/eval/test_golden_consistency.py).
+# reference: the ground-truth answer used by RAGAS context recall / answer correctness.
+# data / both: truth_sql computes the expected figure from the raw marts, scoped like the user's row filter.
+# abstain: nothing in the corpus answers it; correct = the fixed "not covered" / "could not find" reply.
+bu: shared
+user: grp.reader
+questions:
+- id: s1
+  kind: documents
+  q: How long must credit files be retained?
+  facts:
+  - 10 years after closure
+  - ten years after closure
+  expected_docs:
+  - shr-retention-standard
+  reference: Credit files must be retained for 10 years after closure.
+- id: s2
+  kind: documents
+  q: What is the retention period for board papers?
+  facts:
+  - permanent
+  expected_docs:
+  - shr-retention-standard
+  reference: 'Board papers are retained permanently (retention period: Permanent).'
+- id: s3
+  kind: documents
+  q: How long is marketing material retained?
+  facts:
+  - 2 years
+  - two years
+  expected_docs:
+  - shr-retention-standard
+  reference: Marketing material is retained for 2 years.
+- id: s4
+  kind: documents
+  q: In the group credit risk appetite statement, what is the maximum first-facility LTV for owner-occupied residential
+    property?
+  facts:
+  - 70%
+  expected_docs:
+  - shr-risk-appetite
+  reference: In the Group Credit Risk Appetite Statement, the maximum first-facility LTV for owner-occupied residential
+    property is 70%.
+- id: s5
+  kind: documents
+  q: For how long can an exception be granted under group policies?
+  facts:
+  - twelve months
+  - 12 months
+  expected_docs:
+  - shr-code-of-conduct
+  - shr-aml-policy
+  - shr-data-classification
+  - shr-retention-standard
+  - shr-infosec-policy
+  - shr-complaints-proc
+  - shr-risk-appetite
+  - shr-outsourcing-policy
+  - shr-bcm-standard
+  reference: Exceptions under group policies are granted for a maximum of twelve months.
+- id: s6
+  kind: documents
+  q: How long must customer correspondence be retained?
+  facts:
+  - 7 years
+  - seven years
+  expected_docs:
+  - shr-retention-standard
+  reference: Customer correspondence must be retained for 7 years.
+- id: s7
+  kind: documents
+  q: In the group credit risk appetite statement, what is the maximum first-facility LTV for industrial (B1/B2) property?
+  facts:
+  - 50%
+  expected_docs:
+  - shr-risk-appetite
+  reference: In the Group Credit Risk Appetite Statement, the maximum first-facility LTV for industrial (B1/B2) property
+    is 50%.
+- id: e6
+  kind: expansion
+  q: How long do we keep loan files?
+  facts:
+  - 10 years after closure
+  - ten years after closure
+  expected_docs:
+  - shr-retention-standard
+  reference: Credit files must be retained for 10 years after closure.
+- id: sa1
+  kind: abstain
+  q: How many days of paternity leave does group policy give employees?

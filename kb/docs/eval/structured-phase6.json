@@ -1,0 +1,252 @@
+{
+ "generated_at": "2026-11-07T23:50:46+00:00",
+ "overall": {
+  "n": 14,
+  "route_correct": 1.0,
+  "data_correct": 0.929,
+  "doc_correct_on_combined": 1.0,
+  "citations_ok": 0.929,
+  "median_latency_ms": 3883
+ },
+ "questions": [
+  {
+   "id": "d1",
+   "question": "How many loans are 90 days in arrears?",
+   "expected": 35.0,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 4312,
+   "answer": "There are 35 loans that are 90 days in arrears [T1].",
+   "sql": [
+    "SELECT COUNT(*) AS arrears_90_count\nFROM mart_credit.loan\nWHERE status = 'ARREARS_90'"
+   ]
+  },
+  {
+   "id": "d2",
+   "question": "How many home loans are there?",
+   "expected": 143.0,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 2937,
+   "answer": "There are 143 home loans [T1].",
+   "sql": [
+    "SELECT COUNT(DISTINCT loan_id) AS home_loans_count\nFROM mart_credit.loan\nWHERE product = 'Home Loan'"
+   ]
+  },
+  {
+   "id": "d3",
+   "question": "What is the total outstanding balance of car loans?",
+   "expected": 38475268.57,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 3875,
+   "answer": "The total outstanding balance of car loans is 38,475,268.57 [T1].",
+   "sql": [
+    "SELECT \n    SUM(loan.outstanding) AS total_outstanding_balance\nFROM \n    mart_credit.loan\nWHERE \n    loan.product = 'Car Loan'"
+   ]
+  },
+  {
+   "id": "d4",
+   "question": "How many loans are 30 days in arrears?",
+   "expected": 30.0,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 3390,
+   "answer": "There are 30 loans that are 30 days in arrears [T1].",
+   "sql": [
+    "SELECT COUNT(*) AS arrears_30_count\nFROM mart_credit.loan\nWHERE status = 'ARREARS_30'"
+   ]
+  },
+  {
+   "id": "d5",
+   "question": "What is the average interest rate of term loans, rounded to 2 decimals?",
+   "expected": 5.4,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 3891,
+   "answer": "The average interest rate of term loans, rounded to 2 decimals, is 5.40 [T1].",
+   "sql": [
+    "SELECT \n  ROUND(AVG(interest_rate), 2) AS avg_interest_rate\nFROM \n  mart_credit.loan\nWHERE \n  product = 'Term Loan'"
+   ]
+  },
+  {
+   "id": "d6",
+   "question": "How many portfolios have a Growth risk profile?",
+   "expected": 40.0,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 3343,
+   "answer": "There are 40 portfolios with a Growth risk profile [T1].",
+   "sql": [
+    "SELECT \n  COUNT(*) AS growth_portfolio_count\nFROM \n  mart_wealth.portfolio\nWHERE \n  risk_profile = 'Growth'"
+   ]
+  },
+  {
+   "id": "d7",
+   "question": "What is the total AUM of discretionary portfolios?",
+   "expected": 771199300.68,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 3578,
+   "answer": "The total AUM of discretionary portfolios is 771199300.68 [T1].",
+   "sql": [
+    "SELECT \n  SUM(aum) AS total_discretionary_aum\nFROM \n  mart_wealth.portfolio\nWHERE \n  mandate = 'Discretionary'"
+   ]
+  },
+  {
+   "id": "d8",
+   "question": "How many customers are there?",
+   "expected": 150.0,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 2296,
+   "answer": "There are 150 customers [T1].",
+   "sql": [
+    "SELECT COUNT(*) AS total_customers\nFROM mart_cust.customer"
+   ]
+  },
+  {
+   "id": "d9",
+   "question": "How many collateral records are residential property?",
+   "expected": 143.0,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": null,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 2656,
+   "answer": "There are 143 collateral records that are residential property [T1].",
+   "sql": [
+    "SELECT COUNT(*) AS residential_property_collateral_count\nFROM mart_credit.collateral\nWHERE collateral_type = 'Residential property'"
+   ]
+  },
+  {
+   "id": "d10",
+   "question": "What is the average loan-to-value of collateral, rounded to 2 decimals?",
+   "expected": 58.66,
+   "route_expected": "data",
+   "route": "data",
+   "route_correct": true,
+   "data_correct": false,
+   "doc_correct": null,
+   "citations_ok": false,
+   "blocked_reason": null,
+   "latency_ms": 21562,
+   "answer": "I could not find this in the documents you have access to.",
+   "sql": [
+    "SELECT \n  ROUND(AVG(loan.ltv_pct), 2) AS avg_ltv_pct\nFROM \n  mart_credit.loan loan\nJOIN \n  mart_credit.collateral collateral \n  ON loan.loan_id = collateral.loan_id",
+    "SELECT \n  ROUND(AVG(mart_credit.collateral.ltv_pct), 2) AS avg_ltv_pct\nFROM \n  mart_credit.collateral\nJOIN \n  mart_credit.loan ON mart_credit.collateral.loan_id = mart_credit.loan.loan_id"
+   ]
+  },
+  {
+   "id": "b1",
+   "question": "Under the home loan policy, what is the maximum first-facility LTV for investment residential property, and how many collateral records have an LTV above 70%?",
+   "expected": 99.0,
+   "route_expected": "both",
+   "route": "both",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": true,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 12312,
+   "answer": "The maximum first-facility LTV for investment residential property is 70% [1]. There are 99 collateral records with an LTV above 70% [T1].",
+   "sql": [
+    "SELECT COUNT(*) AS high_ltv_collateral_count\nFROM mart_credit.collateral\nWHERE ltv_pct > 70"
+   ]
+  },
+  {
+   "id": "b2",
+   "question": "What is the maximum first-facility LTV for commercial office property in the commercial property lending policy, and how many collateral records exceed an LTV of 45%?",
+   "expected": 278.0,
+   "route_expected": "both",
+   "route": "both",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": true,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 13516,
+   "answer": "The maximum first-facility LTV for commercial office property is 45% according to the Commercial Property Lending Policy [1]. There are 278 collateral records that exceed an LTV of 45% [T1].",
+   "sql": [
+    "SELECT COUNT(*) AS collateral_records_exceeding_45_ltvpct\nFROM mart_credit.collateral\nWHERE ltv_pct > 45"
+   ]
+  },
+  {
+   "id": "b3",
+   "question": "What equity allocation does the Balanced model portfolio have, and how many portfolios have a Balanced risk profile?",
+   "expected": 32.0,
+   "route_expected": "both",
+   "route": "both",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": true,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 10952,
+   "answer": "The Balanced model portfolio has an equity allocation of 45% [1][2][3]. There are 32 portfolios with a Balanced risk profile [T1].",
+   "sql": [
+    "SELECT \n  COUNT(*) AS balanced_portfolio_count\nFROM \n  mart_wealth.portfolio\nWHERE \n  risk_profile = 'Balanced'"
+   ]
+  },
+  {
+   "id": "b4",
+   "question": "What is the late payment fee, and how many loans are 30 days in arrears?",
+   "expected": 35.0,
+   "route_expected": "both",
+   "route": "both",
+   "route_correct": true,
+   "data_correct": true,
+   "doc_correct": true,
+   "citations_ok": true,
+   "blocked_reason": null,
+   "latency_ms": 10234,
+   "answer": "The late payment fee is 75.00 per occurrence [1]. There are 35 loans that are 30 days in arrears [T1].",
+   "sql": [
+    "SELECT COUNT(*) AS arrears_30_count\nFROM mart_credit.loan\nWHERE status = 'ARREARS_30'"
+   ]
+  }
+ ]
+}

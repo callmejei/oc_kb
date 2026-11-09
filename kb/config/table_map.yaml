@@ -1,0 +1,25 @@
+# Concept -> mart columns (graphify-fibo skill step 8). Text-to-SQL receives these as hints only for
+# concepts spotted in the question AND only for tables the caller is granted. Every mart table is covered
+# (tests/integration/qa/test_graph.py).
+fibo-loan:Loan:                  {table: mart_credit.loan, hint: "one row per loan facility"}
+fibo-loan:Mortgage:              {table: mart_credit.loan, hint: "product = 'Home Loan'"}
+fibo-loan:MotorVehicleLoan:      {table: mart_credit.loan, hint: "product = 'Car Loan'"}
+fibo-loan:UnsecuredConsumerLoan: {table: mart_credit.loan, hint: "product = 'Personal Loan'"}
+fibo-loan:CreditCard:            {table: mart_credit.loan, hint: "product = 'Credit Card'"}
+kb:TermLoan:                     {table: mart_credit.loan, hint: "product = 'Term Loan'"}
+kb:WorkingCapitalFacility:       {table: mart_credit.loan, hint: "product = 'Working Capital'"}
+kb:Arrears:                      {table: mart_credit.loan, hint: "status IN ('ARREARS_30', 'ARREARS_90')"}
+fibo-fnd:InterestRate:           {table: mart_credit.loan, hint: "interest_rate (percent p.a.)"}
+fibo-fbc:Collateral:             {table: mart_credit.collateral, hint: "one row per collateral item"}
+fibo-loan:LoanToValueRatio:      {table: mart_credit.collateral, hint: "ltv_pct (percent)"}
+fibo-loan:CollateralValuation:   {table: mart_credit.collateral, hint: "valuation, valuation_date"}
+kb:InvestmentResidentialProperty: {table: mart_credit.collateral, hint: "collateral_type = 'Residential property'"}
+kb:OwnerOccupiedResidentialProperty: {table: mart_credit.collateral, hint: "collateral_type = 'Residential property'"}
+kb:CommercialOfficeProperty:     {table: mart_credit.collateral, hint: "collateral_type = 'Commercial property'"}
+fibo-fnd:Customer:               {table: mart_cust.customer, hint: "one row per customer"}
+fibo-fbc:Borrower:               {table: mart_cust.customer, hint: "join mart_credit.loan on customer_id"}
+fibo-fnd:Portfolio:              {table: mart_wealth.portfolio, hint: "one row per client portfolio"}
+kb:AssetsUnderManagement:        {table: mart_wealth.portfolio, hint: "aum"}
+kb:ModelPortfolioAllocation:     {table: mart_wealth.portfolio, hint: "risk_profile, equity_pct, bond_pct, cash_pct"}
+fibo-fbc:EquityInstrument:       {table: mart_wealth.portfolio, hint: "equity_pct"}
+fibo-sec:Bond:                   {table: mart_wealth.portfolio, hint: "bond_pct"}

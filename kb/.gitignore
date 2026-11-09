@@ -1,0 +1,20 @@
+# local infrastructure: binaries, service data, logs, pids
+.infra/
+# generated secrets (never commit)
+.env.local
+.env
+# generated synthetic world and pipeline data (rebuild with `make seed`)
+data/
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+# node / ui
+node_modules/
+ui/dist/
+ui/e2e/.run.json
+ui/test-results/
+docs/e2e-report/
