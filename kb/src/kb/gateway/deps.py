@@ -103,7 +103,7 @@ def db_errors() -> Iterator[None]:
         raise HTTPException(status.HTTP_403_FORBIDDEN, _msg(e)) from None
     except pg.NoDataFound as e:
         raise HTTPException(status.HTTP_404_NOT_FOUND, _msg(e)) from None
-    except (pg.UniqueViolation, pg.RaiseException) as e:
+    except (pg.UniqueViolation, pg.RaiseException, pg.SerializationFailure) as e:  # stale approval (D-066 P6)
         raise HTTPException(status.HTTP_409_CONFLICT, _msg(e)) from None
     except (pg.CheckViolation, pg.ForeignKeyViolation, pg.NotNullViolation, pg.InvalidTextRepresentation) as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, _msg(e)) from None

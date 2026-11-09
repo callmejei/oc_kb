@@ -4,7 +4,10 @@
 const TOKEN_KEY = "kb.token";
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
     super(message);
   }
 }
@@ -18,7 +21,12 @@ export function setToken(token: string | null): void {
   else sessionStorage.removeItem(TOKEN_KEY);
 }
 
-async function request<T>(method: string, path: string, body?: unknown, init: RequestInit = {}): Promise<T> {
+async function request<T>(
+  method: string,
+  path: string,
+  body?: unknown,
+  init: RequestInit = {},
+): Promise<T> {
   const headers: Record<string, string> = {};
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -28,7 +36,12 @@ async function request<T>(method: string, path: string, body?: unknown, init: Re
     headers["Content-Type"] = "application/json";
     payload = JSON.stringify(body);
   }
-  const res = await fetch(`/api/v1${path}`, { method, headers, body: payload, ...init });
+  const res = await fetch(`/api/v1${path}`, {
+    method,
+    headers,
+    body: payload,
+    ...init,
+  });
   if (res.status === 401 && token) {
     setToken(null);
     window.location.assign("/login");
@@ -37,7 +50,8 @@ async function request<T>(method: string, path: string, body?: unknown, init: Re
     let msg = res.statusText;
     try {
       const j = await res.json();
-      msg = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail ?? j);
+      msg =
+        typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail ?? j);
     } catch {
       /* not JSON */
     }
@@ -45,7 +59,9 @@ async function request<T>(method: string, path: string, body?: unknown, init: Re
   }
   if (res.status === 204) return undefined as T;
   const type = res.headers.get("content-type") ?? "";
-  return (type.includes("application/json") ? res.json() : res.arrayBuffer()) as Promise<T>;
+  return (
+    type.includes("application/json") ? res.json() : res.arrayBuffer()
+  ) as Promise<T>;
 }
 
 export const api = {
@@ -56,8 +72,10 @@ export const api = {
   bytes: (p: string) => request<ArrayBuffer>("GET", p),
   gov: {
     get: <T>(p: string) => request<T>("GET", `/governance${p}`),
-    post: <T>(p: string, b?: unknown) => request<T>("POST", `/governance${p}`, b ?? {}),
-    patch: <T>(p: string, b?: unknown) => request<T>("PATCH", `/governance${p}`, b ?? {}),
+    post: <T>(p: string, b?: unknown) =>
+      request<T>("POST", `/governance${p}`, b ?? {}),
+    patch: <T>(p: string, b?: unknown) =>
+      request<T>("PATCH", `/governance${p}`, b ?? {}),
   },
 };
 
@@ -70,11 +88,14 @@ export function uploadFile(
 ): Promise<UploadResult> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    const q = asNewVersionOf ? `?as_new_version_of=${encodeURIComponent(asNewVersionOf)}` : "";
+    const q = asNewVersionOf
+      ? `?as_new_version_of=${encodeURIComponent(asNewVersionOf)}`
+      : "";
     xhr.open("POST", `/api/v1/uploads/${encodeURIComponent(space)}${q}`);
     const token = getToken();
     if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(e.loaded / e.total);
+    xhr.upload.onprogress = (e) =>
+      e.lengthComputable && onProgress(e.loaded / e.total);
     xhr.onload = () => {
       let j: { detail?: unknown } = {};
       try {
@@ -83,7 +104,13 @@ export function uploadFile(
         /* empty */
       }
       if (xhr.status >= 200 && xhr.status < 300) resolve(j as UploadResult);
-      else reject(new ApiError(xhr.status, typeof j.detail === "string" ? j.detail : xhr.statusText));
+      else
+        reject(
+          new ApiError(
+            xhr.status,
+            typeof j.detail === "string" ? j.detail : xhr.statusText,
+          ),
+        );
     };
     xhr.onerror = () => reject(new ApiError(0, "network error"));
     const fd = new FormData();
@@ -117,6 +144,12 @@ export interface Citation {
   tables?: string[] | null;
   sql?: string | null;
   row_count?: number | null;
+  metric?: {
+    id: string;
+    label: string;
+    revision: number;
+    group_by: string[];
+  } | null;
 }
 
 export interface AskResponse {
@@ -154,5 +187,8 @@ export const PROBLEMS = [
 export type Problem = (typeof PROBLEMS)[number];
 
 export function label(s: string): string {
-  return s.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase());
+  return s
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/^./, (c) => c.toUpperCase());
 }

@@ -27,6 +27,10 @@ groups:
   GRP_DATA_WEALTH:           {bu: wealth,    kind: data}
   GRP_DATA_PII_UNMASKED:     {bu: shared,    kind: data}
   GRP_KB_OPS:                {bu: shared,    kind: ops}   # operations dashboard only; grants no document access
+  # Data-product governance (Phase 9b, D-066): maker/checker of the `data` domain. No document or mart access:
+  # governing a product's policy does not grant reading it.
+  GRP_DATA_PRODUCT_MAKER:    {bu: data,      kind: maker, domain: data}
+  GRP_DATA_PRODUCT_CHECKER:  {bu: data,      kind: checker, domain: data}
 
 users:
   # --- retail ---------------------------------------------------------------
@@ -53,5 +57,8 @@ users:
   - {id: data.steward, name: Data Steward, bu: shared, groups: [GRP_KB_SHARED_READ, GRP_DATA_CREDIT_RETAIL, GRP_DATA_CUST_RETAIL, GRP_DATA_PII_UNMASKED]}
   # operations analyst: the ops dashboard (counts and metadata), no document or data access
   - {id: ops.analyst, name: Operations Analyst, bu: shared, groups: [GRP_KB_OPS]}
+  # data-product governance (Phase 9b): proposes / approves mart access policies, cannot read the marts
+  - {id: data.maker,   name: Data Product Maker,   bu: data, groups: [GRP_DATA_PRODUCT_MAKER]}
+  - {id: data.checker, name: Data Product Checker, bu: data, groups: [GRP_DATA_PRODUCT_CHECKER]}
   # --- no groups -------------------------------------------------------------
   - {id: nobody, name: No Groups User, bu: none, groups: []}

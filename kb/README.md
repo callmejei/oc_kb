@@ -103,12 +103,17 @@ tests; **stubbed** = Protocol satisfied, every call raises `NotImplementedYetErr
 | Golden sets per BU (documents, expansion, data, both, abstain; references) | tested | `tests/eval/golden/<bu>.yaml`, 51 questions; consistency test |
 | RAGAS (faithfulness, answer relevancy, context precision/recall) | tested | isolated env `infra/local/ragas`, network guard, judge `llama3.1:8b` (D-057) |
 | `make eval` / `kb.ps1 eval` | tested | thresholds in `config/local.yaml`; report + `kb.eval_run` (migration 009) |
-| Data citations `[SQL<n>]` (D-055 refusal fixed) | tested | e4 now answers from a conflicting group policy (open user decision, D-055 update) |
+| Data citations `[SQL<n>]` (D-055 refusal fixed) | tested | e4: group-vs-BU conflict noted in code, stricter value applies (D-064) |
 | Operations dashboard (ingestion health, exception backlog, leak status, quality trend, flags) | tested in the browser | `/api/v1/ops/*`, `GRP_KB_OPS` only, counts and metadata only (D-058) |
 | Ontology star map (all FIBO modules + local concepts; BU entities by mapping status) | tested in the browser | `kb.graph.starmap`, `/api/v1/ontology/*`, overlay scoped to readable BUs (D-059) |
 | Explorer shell (9 groups after the user's concept; red palette, bundled font, no logo) | tested in the browser | `ui/src/nav.ts`, `ui/e2e/phase8.spec.ts`; every item real or labelled Not built (D-061) |
 | Explorer API: search (audited SEARCH), space inventory, marts, table-map (read-only), graph stats, my access, my activity, approvals | tested | `gateway/routes_explorer.py`; scoped per caller, search leak test 17 users x 4 canaries (D-061, D-062) |
 | Ops: failing golden questions of the latest run | tested | `/api/v1/ops/eval/{run_id}/failures`, reads `docs/eval` only (D-063) |
+| Data & knowledge quality (mart rules as counts, corpus health per BU) | tested in the browser | `config/dq_rules.yaml`, `kb.quality`, migration 010, Dagster `dq_job` daily; first run 14/15 (D-065) |
+| Data products: mart access policies governed in the DB (maker-checker; single-actor restrict; stale approval refused) | tested in the browser | migration 011, `kb.sql.policy_store`, engine `policy_source: registry`, `/api/v1/products` (D-066) |
+| Ranger policy sync for CML | stubbed (documented) | `docs/cml-deployment.md` section 5 |
+| Semantic metrics (structured definitions compiled in code, run as the user; no masked columns) | tested in the browser | migration 012, `kb.semantic`, `/api/v1/semantic`; 4 seed metrics; 6 golden metric questions (D-067) |
+| Semantic products catalogue (scoped to grants, lineage, data quality) | tested in the browser | `/semantic` page |
 | Not built (labelled in the UI) | not built | research agent, dashboards, agent apps, semantic products/metrics, MCP tools, data product registration, data quality rules |
 | CML deployment guide | written, coverage-tested | `docs/cml-deployment.md` (every port), `deploy/cml/Dockerfile` (not built: no Docker locally) |
 | Router misroutes 2 of 51 golden questions to SQL | open | e8, w5 (D-060) |

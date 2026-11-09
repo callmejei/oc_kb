@@ -532,3 +532,48 @@ by Group Risk / policy owners before CML.
 - Results are shown, never used to block answers (user decision Q4, 2026-11-09).
 - First live run 2026-11-09: 14/15 pass; `collateral_revalued_24m` fails (41 of 664 valuations older than 24
   months, 6.2% > 2% tolerance), a genuine property of the synthetic data.
+
+## D-066 Data products: mart access policies governed in the database (Phase 9b)
+User decision Q1(a)/Q2 (2026-11-09): access policies move from `config/policies.yaml` into approved data-product
+revisions; widening needs a checker; restricting is single-actor.
+- Migration 011: `kb.data_product`, `kb.product_revision` (locked on submit; reuses `kb.tg_revision_lock`),
+  `kb.product_request` (its own table with the same four-eyes constraints as `approval_request`, and the existing
+  `kb.tg_approval_guard`), `kb.policy_change` (append-only; its max seq is the policy version). The source
+  workflow tables and functions are untouched, which is why products do not share `approval_request`.
+- Governance domain `data` (users `data.maker`, `data.checker`; groups with `domain: data`). Governing a product
+  grants no mart access and no document space.
+- Restrictions are computed by the database from the current spec, so they can only narrow: REVOKE_GRANT (group
+  leaves grants, row filters and mask exemptions), ADD_MASK (masks an unmasked column; on a masked column only clears
+  exemptions, never changes the mask type), SUSPEND (deny all; reactivation needs a checker).
+- Stale approvals are refused: a revision records the current revision it was drafted against, and approval fails
+  (409 in the API) if the product changed since, so a pending widening can never undo a later restriction.
+- Row filters are maker-written, so they are sanitised (`safe_filter`): only this table's columns, literals,
+  comparisons, IN (list), IS NULL, BETWEEN, AND/OR/NOT; no functions, subqueries, casts or comments; the engine
+  uses the re-serialised AST. `TRUE` (all rows) is allowed as an explicit, checker-approved policy and is flagged.
+- The engine (`policy_source: registry`) checks `kb.policy_version()` on every use and reloads on change, so a
+  restriction applies to the next query; an unreadable registry fails closed; a spec failing validation at load
+  denies its table. Each data query's audit row records `policy_version`.
+- Seeded 2026-11-09 through the normal flow (`python -m kb.registry.products seed`); the loaded policy was checked
+  identical to `config/policies.yaml`.
+- A submitted revision must grant at least one group; deny-all is SUSPEND.
+- CML: Ranger remains the enforcer; a `RangerPolicySync` job (documented, not built) applies policy changes.
+
+## D-067 Semantic model & metrics (Phase 9c/9d)
+- Metrics are structured jsonb definitions (aggregate over one column with an optional sanitised condition, or a
+  ratio of two; allowed dimensions; unit), never SQL text. Compiled in code (`kb.semantic.model`) to one SELECT and
+  executed through `SqlEngine.execute_with_decision` AS THE USER, so row filters and masks apply exactly as for any
+  query. The LLM never writes metric SQL.
+- Governance (migration 012) mirrors data products: four-eyes publish, locked revisions, stale approval refused,
+  pipeline excluded, single-actor retire (it only removes an answer path). A metric may use only columns its
+  product masks for NOBODY: checked by the database at submit and again at approval; at run time a metric whose
+  columns are masked for the asking user is not used (fallback to text-to-SQL). Metrics on a suspended product
+  disappear (view requires ACTIVE).
+- Matching is exact and conservative: label or synonym as a phrase, optional "by/per <dimension>", and every other
+  word must be filler. A narrower question ("NPL ratio for home loans", "in 2025") goes to text-to-SQL, so a metric
+  never answers a different question than the one asked. The user's original question is matched first: the
+  router's LLM sometimes paraphrases the data question ("number of loans" -> "how many loans are there").
+- Citations and the QUERY audit row carry the metric id, label and revision. Seed metrics (user decision Q3): NPL
+  ratio, average LTV, AUM, loan count. Six golden questions (m1-m6) check them; before the fix m3 was answered
+  "100%" by text-to-SQL, with the metric 3.27% (correct).
+- Catalogue (`GET /api/v1/semantic/metrics`): any user, only metrics on tables they are granted (the rest counted,
+  not named), with lineage and the table's latest data-quality result.

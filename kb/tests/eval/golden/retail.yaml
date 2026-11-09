@@ -129,3 +129,18 @@ questions:
 - id: ra1
   kind: abstain
   q: What is the bank's policy on cryptocurrency custody for retail customers?
+- id: m1
+  kind: data
+  q: What is our NPL ratio?
+  metric: npl_ratio
+  truth_sql: SELECT round(CAST(sum(outstanding) FILTER (WHERE status='ARREARS_90') AS DOUBLE) / sum(outstanding) FILTER (WHERE status<>'CLOSED') * 100, 2) FROM mart_credit.loan WHERE bu='retail'
+- id: m2
+  kind: data
+  q: What is the average loan-to-value?
+  metric: average_ltv
+  truth_sql: SELECT round(avg(ltv_pct), 2) FROM mart_credit.collateral WHERE bu='retail'
+- id: m6
+  kind: data
+  q: What is the number of loans?
+  metric: loan_count
+  truth_sql: SELECT count(loan_id) FROM mart_credit.loan WHERE bu='retail'

@@ -13,9 +13,13 @@ const created: { policyDocId?: string } = {};
 
 // Cleanup even when a test fails, through the one door (the gateway), then the drive backstop.
 test.afterAll(async ({ playwright }) => {
-  const http = await playwright.request.newContext({ baseURL: "http://127.0.0.1:8000" });
+  const http = await playwright.request.newContext({
+    baseURL: "http://127.0.0.1:8000",
+  });
   const auth = async (user: string) => {
-    const r = await http.post("/api/v1/auth/login", { data: { username: user, password: PASSWORDS[user] } });
+    const r = await http.post("/api/v1/auth/login", {
+      data: { username: user, password: PASSWORDS[user] },
+    });
     return { Authorization: `Bearer ${(await r.json()).access_token}` };
   };
   if (created.policyDocId) {
@@ -28,13 +32,21 @@ test.afterAll(async ({ playwright }) => {
   const mine: { doc_id: string; title: string; status: string }[] = await (
     await http.get("/api/v1/uploads/mine", { headers: owner })
   ).json();
-  for (const f of mine.filter((x) => x.title === run.upload_title && x.status === "ACTIVE"))
+  for (const f of mine.filter(
+    (x) => x.title === run.upload_title && x.status === "ACTIVE",
+  ))
     await http.delete(`/api/v1/uploads/${f.doc_id}`, { headers: owner });
   await http.dispose();
-  execFileSync("uv", ["run", "python", "-m", "synthetic.e2e", "cleanup", "--run", run.run], { cwd: REPO });
+  execFileSync(
+    "uv",
+    ["run", "python", "-m", "synthetic.e2e", "cleanup", "--run", run.run],
+    { cwd: REPO },
+  );
 });
 
-test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({ browser }) => {
+test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({
+  browser,
+}) => {
   // ---- maker registers a SharePoint source on the run's folder and submits it
   const maker = await as(browser, "ret.maker");
   await maker.click("nav >> text=Data Source Registration");
@@ -43,16 +55,24 @@ test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({ brows
   await form.locator("input[name=display_name]").fill(`E2E ${run.run} library`);
   await form.locator("input[name=sp_folder_path]").fill(run.folder);
   await form.getByRole("button", { name: "Register and submit" }).click();
-  await expect(maker.locator(".notice")).toContainText(`Submitted ${run.source_id}`);
+  await expect(maker.locator(".notice")).toContainText(
+    `Submitted ${run.source_id}`,
+  );
   // the dry-run sensor reports within a minute; the maker sees it on the request
-  await expect(maker.getByTestId("dry-run")).toContainText("would_index: 1", { timeout: 180_000 });
+  await expect(maker.getByTestId("dry-run")).toContainText("would_index: 1", {
+    timeout: 180_000,
+  });
 
   // ---- checker reviews: ACL diff + dry-run report, approves
   const checker = await as(browser, "ret.checker");
   await checker.click("nav >> text=Approval Workflows");
-  const row = checker.locator("[data-testid^=req-]", { hasText: run.source_id });
+  const row = checker.locator("[data-testid^=req-]", {
+    hasText: run.source_id,
+  });
   await row.getByRole("button", { name: "Review" }).click();
-  await expect(checker.getByTestId("acl-diff")).toContainText("+ GRP_KB_RETAIL_READ");
+  await expect(checker.getByTestId("acl-diff")).toContainText(
+    "+ GRP_KB_RETAIL_READ",
+  );
   await expect(checker.getByTestId("dry-run")).toContainText("would_index: 1");
   await checker.getByTestId("approve").click();
   await expect(checker.locator(".notice")).toContainText("approved");
@@ -62,10 +82,21 @@ test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({ brows
 
   // ---- user asks; the first-load sensor indexes the new source within minutes
   const user = await as(browser, "ret.user1");
-  const answer = await askUntil(user, run.policy_question, run.policy_answer, 8 * 60_000);
-  const href = await answer.getByTestId("citation-doc").first().locator("a").getAttribute("href");
+  const answer = await askUntil(
+    user,
+    run.policy_question,
+    run.policy_answer,
+    8 * 60_000,
+  );
+  const href = await answer
+    .getByTestId("citation-doc")
+    .first()
+    .locator("a")
+    .getAttribute("href");
   created.policyDocId = href?.split("/documents/")[1]?.split("?")[0];
-  await expect(answer.getByTestId("citation-doc").first()).toContainText(run.policy_title);
+  await expect(answer.getByTestId("citation-doc").first()).toContainText(
+    run.policy_title,
+  );
   await expect(answer.getByTestId("citation-doc").first()).toContainText("v1");
 
   // another BU's user cannot open it, even with the exact link
@@ -76,7 +107,9 @@ test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({ brows
   // ---- user flags the answer
   await answer.getByTestId("thumbs-down").click();
   await answer.getByTestId("problem").selectOption("TABLE_BROKEN");
-  await answer.getByTestId("reason").fill(`E2E ${run.run}: rate table columns look shifted`);
+  await answer
+    .getByTestId("reason")
+    .fill(`E2E ${run.run}: rate table columns look shifted`);
   await answer.getByTestId("send-feedback").click();
   await expect(answer.getByTestId("feedback-sent")).toBeVisible();
 
@@ -98,14 +131,25 @@ test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({ brows
   // ---- re-parse with different options: the pipeline makes v2 current
   await maker.getByTestId("opt-ocr").selectOption("full_page");
   await maker.getByTestId("opt-cells").uncheck();
-  await maker.getByTestId("action-reason").fill("re-parse with full-page OCR (E2E)");
+  await maker
+    .getByTestId("action-reason")
+    .fill("re-parse with full-page OCR (E2E)");
   await maker.getByTestId("reparse").click();
-  await expect(maker.getByTestId("reparse-status").first()).toHaveText("QUEUED");
-  await expect(maker.getByTestId("reparse-status").first()).toHaveText("DONE", { timeout: 6 * 60_000 });
+  await expect(maker.getByTestId("reparse-status").first()).toHaveText(
+    "QUEUED",
+  );
+  await expect(maker.getByTestId("reparse-status").first()).toHaveText("DONE", {
+    timeout: 6 * 60_000,
+  });
   await expect(maker.getByTestId("version")).toContainText("v2 (current)");
 
   // ---- the user's answer now cites v2
-  const again = await askUntil(user, run.policy_question, run.policy_answer, 2 * 60_000);
+  const again = await askUntil(
+    user,
+    run.policy_question,
+    run.policy_answer,
+    2 * 60_000,
+  );
   await expect(again.getByTestId("citation-doc").first()).toContainText("v2");
 
   // ---- cleanup: exclude (single actor) -> out of search at once
@@ -117,7 +161,9 @@ test("maker -> checker -> user -> flag -> inspector -> re-parse", async ({ brows
   await expect(gone).not.toContainText(run.policy_answer);
 });
 
-test("upload -> private answer -> publish request -> checker approval -> BU-wide answer", async ({ browser }) => {
+test("upload -> private answer -> publish request -> checker approval -> BU-wide answer", async ({
+  browser,
+}) => {
   const owner = await as(browser, "ret.user1");
   const colleague = await as(browser, "ret.user2"); // same BU, same groups
 
@@ -131,8 +177,15 @@ test("upload -> private answer -> publish request -> checker approval -> BU-wide
   await expect(fileRow.getByTestId("visibility")).toHaveText("PRIVATE");
 
   // ---- private: the uploader gets the answer, a colleague in the same BU does not
-  const mine = await askUntil(owner, run.upload_question, run.upload_answer, 2 * 60_000);
-  await expect(mine.getByTestId("citation-doc").first()).toContainText(run.upload_title);
+  const mine = await askUntil(
+    owner,
+    run.upload_question,
+    run.upload_answer,
+    2 * 60_000,
+  );
+  await expect(mine.getByTestId("citation-doc").first()).toContainText(
+    run.upload_title,
+  );
   const theirs = await ask(colleague, run.upload_question);
   await expect(theirs).not.toContainText(run.upload_answer);
 
@@ -142,25 +195,45 @@ test("upload -> private answer -> publish request -> checker approval -> BU-wide
   await expect(fileRow).toContainText("publish pending");
   const checker = await as(browser, "ret.checker");
   await checker.click("nav >> text=Approval Workflows");
-  const req = checker.locator("[data-testid^=req-]", { hasText: run.upload_title });
+  const req = checker.locator("[data-testid^=req-]", {
+    hasText: run.upload_title,
+  });
   await req.getByRole("button", { name: "Review" }).click();
-  await expect(checker.getByTestId("acl-diff")).toContainText("− user:ret.user1");
-  await expect(checker.getByTestId("acl-diff")).toContainText("+ GRP_KB_RETAIL_READ");
+  await expect(checker.getByTestId("acl-diff")).toContainText(
+    "− user:ret.user1",
+  );
+  await expect(checker.getByTestId("acl-diff")).toContainText(
+    "+ GRP_KB_RETAIL_READ",
+  );
   await checker.getByTestId("approve").click();
   await expect(checker.locator(".notice")).toContainText("approved");
 
   // ---- BU-wide: the colleague now gets it (index-sync sensor re-stamps the ACL, no re-embedding)
-  const now = await askUntil(colleague, run.upload_question, run.upload_answer, 3 * 60_000);
-  await expect(now.getByTestId("citation-doc").first()).toContainText(run.upload_title);
+  const now = await askUntil(
+    colleague,
+    run.upload_question,
+    run.upload_answer,
+    3 * 60_000,
+  );
+  await expect(now.getByTestId("citation-doc").first()).toContainText(
+    run.upload_title,
+  );
   // ...and other BUs still do not
   const corp = await as(browser, "corp.user1");
-  await expect(await ask(corp, run.upload_question)).not.toContainText(run.upload_answer);
+  await expect(await ask(corp, run.upload_question)).not.toContainText(
+    run.upload_answer,
+  );
 
   // ---- cleanup: the uploader deletes it (out of search immediately)
   await owner.click("nav >> text=Knowledge Upload & Ingestion");
-  await owner.getByTestId(`file-${run.upload_title}`).getByRole("button", { name: "Delete" }).click();
+  await owner
+    .getByTestId(`file-${run.upload_title}`)
+    .getByRole("button", { name: "Delete" })
+    .click();
   await expect(owner.getByTestId(`file-${run.upload_title}`)).toHaveCount(0);
-  await expect(await ask(colleague, run.upload_question)).not.toContainText(run.upload_answer);
+  await expect(await ask(colleague, run.upload_question)).not.toContainText(
+    run.upload_answer,
+  );
 });
 
 test("roles and empty access in the browser", async ({ browser }) => {
@@ -171,7 +244,12 @@ test("roles and empty access in the browser", async ({ browser }) => {
   await expect(user.locator(".error")).toContainText("not a CHECKER");
 
   const nobody = await as(browser, "nobody");
-  await expect(nobody.locator("text=none (you have no document access)")).toBeVisible();
-  const a = await ask(nobody, "What is the maximum loan to value for an investment property?");
+  await expect(
+    nobody.locator("text=none (you have no document access)"),
+  ).toBeVisible();
+  const a = await ask(
+    nobody,
+    "What is the maximum loan to value for an investment property?",
+  );
   await expect(a.getByTestId("citation-doc")).toHaveCount(0);
 });

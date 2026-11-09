@@ -151,6 +151,7 @@ class DataSource:
     columns: list[str]
     rows: list[tuple[Any, ...]]
     truncated: bool = False
+    metric: dict[str, Any] | None = None  # D-067: {id, label, revision, group_by} when a governed metric produced it
 
     def row_lines(self, max_rows: int = 40) -> list[str]:
         return [
@@ -162,7 +163,8 @@ class DataSource:
         more = ""
         if len(self.rows) > 40 or self.truncated:
             more = f"\n(only the first {min(len(self.rows), 40)} rows shown)"
-        return f"Query: {self.sql}\nResult ({len(self.rows)} rows):\n" + "\n".join(self.row_lines()) + more
+        head = f"Metric: {self.metric['label']} (governed definition)\n" if self.metric else ""
+        return f"{head}Query: {self.sql}\nResult ({len(self.rows)} rows):\n" + "\n".join(self.row_lines()) + more
 
 
 @dataclass
@@ -244,6 +246,7 @@ class Citation:
     tables: list[str] | None = None
     sql: str | None = None
     row_count: int | None = None
+    metric: dict[str, Any] | None = None
 
     @classmethod
     def from_chunk(cls, n: int, sc: ScoredChunk) -> Citation:
@@ -264,7 +267,7 @@ class Citation:
 
     @classmethod
     def from_data(cls, ref: str, d: DataSource) -> Citation:
-        return cls(n=ref, kind="data", tables=list(d.tables), sql=d.sql, row_count=len(d.rows))
+        return cls(n=ref, kind="data", tables=list(d.tables), sql=d.sql, row_count=len(d.rows), metric=d.metric)
 
 
 @dataclass

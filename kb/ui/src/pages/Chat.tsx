@@ -1,6 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { api, label, PROBLEMS, type AskResponse, type Citation, type Problem } from "../api";
+import {
+  api,
+  label,
+  PROBLEMS,
+  type AskResponse,
+  type Citation,
+  type Problem,
+} from "../api";
 import { useSession } from "../session";
 
 interface Turn {
@@ -26,7 +33,10 @@ export default function Chat() {
     const turn: Turn = { question: q, spaces };
     setTurns((t) => [...t, turn]);
     try {
-      turn.res = await api.post<AskResponse>("/ask", { question: q, spaces: spaces.length ? spaces : null });
+      turn.res = await api.post<AskResponse>("/ask", {
+        question: q,
+        spaces: spaces.length ? spaces : null,
+      });
     } catch (err) {
       turn.error = err instanceof Error ? err.message : String(err);
     }
@@ -43,10 +53,17 @@ export default function Chat() {
       <div className="row" style={{ marginBottom: 12 }}>
         <h1 className="grow">Ask</h1>
         <span className="muted">Spaces:</span>
-        {me!.spaces.length === 0 && <span className="muted">none (you have no document access)</span>}
+        {me!.spaces.length === 0 && (
+          <span className="muted">none (you have no document access)</span>
+        )}
         {me!.spaces.map((bu) => (
           <label key={bu} className="row" style={{ gap: 4 }}>
-            <input type="checkbox" checked={spaces.includes(bu)} onChange={() => toggle(bu)} data-testid={`space-${bu}`} />
+            <input
+              type="checkbox"
+              checked={spaces.includes(bu)}
+              onChange={() => toggle(bu)}
+              data-testid={`space-${bu}`}
+            />
             {bu}
           </label>
         ))}
@@ -72,7 +89,11 @@ export default function Chat() {
             if (e.key === "Enter" && !e.shiftKey) ask(e);
           }}
         />
-        <button className="primary" type="submit" disabled={busy || question.trim().length < 2}>
+        <button
+          className="primary"
+          type="submit"
+          disabled={busy || question.trim().length < 2}
+        >
           Ask
         </button>
       </form>
@@ -111,14 +132,29 @@ function CitationLine({ c }: { c: Citation }) {
     return (
       <div data-testid="citation-data">
         [{c.n}] tables {c.tables?.join(", ")} ({c.row_count} rows)
+        {c.metric && (
+          <span
+            className="chip ok"
+            data-testid="citation-metric"
+            style={{ marginLeft: 6 }}
+          >
+            governed metric: {c.metric.label} (revision {c.metric.revision})
+          </span>
+        )}
         {c.sql && <pre>{c.sql}</pre>}
       </div>
     );
-  const page = c.page ? (c.page_end && c.page_end !== c.page ? `pp. ${c.page}-${c.page_end}` : `p. ${c.page}`) : "";
+  const page = c.page
+    ? c.page_end && c.page_end !== c.page
+      ? `pp. ${c.page}-${c.page_end}`
+      : `p. ${c.page}`
+    : "";
   return (
     <div data-testid="citation-doc">
       [{c.n}]{" "}
-      <Link to={`/documents/${c.doc_id}?v=${c.version_no ?? ""}&page=${c.page ?? ""}&chunk=${c.chunk_id ?? ""}`}>
+      <Link
+        to={`/documents/${c.doc_id}?v=${c.version_no ?? ""}&page=${c.page ?? ""}&chunk=${c.chunk_id ?? ""}`}
+      >
         {c.title ?? c.doc_id}
       </Link>{" "}
       <span className="muted">
@@ -150,21 +186,35 @@ function Feedback({ queryId }: { queryId: string }) {
     }
   }
 
-  if (state === "sent") return <span data-testid="feedback-sent">Thanks, feedback recorded.</span>;
+  if (state === "sent")
+    return <span data-testid="feedback-sent">Thanks, feedback recorded.</span>;
   if (state === "idle")
     return (
       <span className="row" style={{ gap: 6 }}>
-        <button onClick={() => send("UP")} title="Helpful" aria-label="thumbs up">
+        <button
+          onClick={() => send("UP")}
+          title="Helpful"
+          aria-label="thumbs up"
+        >
           👍
         </button>
-        <button onClick={() => setState("down")} title="Not helpful" aria-label="thumbs down" data-testid="thumbs-down">
+        <button
+          onClick={() => setState("down")}
+          title="Not helpful"
+          aria-label="thumbs down"
+          data-testid="thumbs-down"
+        >
           👎
         </button>
       </span>
     );
   return (
     <span className="row" style={{ gap: 6 }}>
-      <select value={problem} onChange={(e) => setProblem(e.target.value as Problem)} data-testid="problem">
+      <select
+        value={problem}
+        onChange={(e) => setProblem(e.target.value as Problem)}
+        data-testid="problem"
+      >
         {PROBLEMS.map((p) => (
           <option key={p} value={p}>
             {label(p)}
@@ -178,7 +228,12 @@ function Feedback({ queryId }: { queryId: string }) {
         data-testid="reason"
         style={{ minWidth: 260 }}
       />
-      <button className="primary" disabled={!reason.trim()} onClick={() => send("DOWN")} data-testid="send-feedback">
+      <button
+        className="primary"
+        disabled={!reason.trim()}
+        onClick={() => send("DOWN")}
+        data-testid="send-feedback"
+      >
         Send
       </button>
       {error && <span className="error">{error}</span>}

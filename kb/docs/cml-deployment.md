@@ -226,8 +226,20 @@ under the network guard.
   hints are filtered by those grants, so a concept never leaks the name of a table the user cannot see.
 - **Audit:** every statement is audited twice, in the KB audit log (QUERY row: generated SQL, tables, row count) and
   in Ranger's audit (end user, policy decision).
-- **Mirror the policies:** `config/policies.yaml` is the local mirror of the Ranger policies. Keep the two in step;
-  the structured golden questions (`kind: data` / `both`) are the regression check.
+- **Policies are governed as data products (D-066).** Locally, approved product revisions in the registry ARE the
+  policy (`policy_source: registry`; `config/policies.yaml` was only the first seed). On CML, Ranger stays the
+  enforcer and the registry stays the system of record for *who approved what*: a `RangerPolicySync` job (not
+  built; to be written against the bank's Ranger admin API) applies each `kb.policy_change` to Ranger as one
+  policy per product (resource = the table; allow items = grants; row-filter and masking items from the spec).
+  Rules for that job:
+  - apply in `policy_change.seq` order, idempotently (Ranger policy name = product id; the spec replaces it whole);
+  - restrictions (`REVOKE_GRANT`, `ADD_MASK`, `SUSPEND`) must reach Ranger within minutes: alert if the newest
+    `seq` is not applied after a set time;
+  - reconcile daily: read Ranger back and raise an exception item for any drift (a change made directly in
+    Ranger bypasses four-eyes);
+  - the sync's Ranger credential may edit only policies on the KB marts, nothing else.
+  Row filters are already sanitised to a small SQL subset (`kb.sql.policy_store.safe_filter`) that is valid in
+  both DuckDB and Trino. The structured golden questions (`kind: data` / `both`) are the regression check.
 
 ## 6. Network rules
 
