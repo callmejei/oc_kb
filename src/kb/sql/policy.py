@@ -12,6 +12,7 @@ values (like a Ranger-masked view): filtering on a masked column cannot reveal t
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -188,22 +189,36 @@ class Decision:
     row_filters: dict[str, str] = field(default_factory=dict)
     masked: dict[str, list[str]] = field(default_factory=dict)
     limit: int = 0
+    policy_version: int | None = None  # D-066: kb.policy_version() in force (None: config-file policies)
 
 
 class PolicyEngine:
-    def __init__(self, policies_path: str | Path, marts_path: str | Path, catalog: dict[str, TablePolicy]) -> None:
-        pp, mp = Path(policies_path), Path(marts_path)
-        pp = pp if pp.is_absolute() else REPO_ROOT / pp
+    def __init__(
+        self, policies: str | Path | Mapping[str, Any], marts_path: str | Path, catalog: dict[str, TablePolicy]
+    ) -> None:
+        """``policies`` is a config file (unit tests, first seed) or the merged dict loaded from the registry."""
+        mp = Path(marts_path)
         mp = mp if mp.is_absolute() else REPO_ROOT / mp
-        pol = yaml.safe_load(pp.read_text(encoding="utf-8"))
+        if isinstance(policies, Mapping):
+            pol: Mapping[str, Any] = policies
+        else:
+            pp = Path(policies)
+            pp = pp if pp.is_absolute() else REPO_ROOT / pp
+            pol = yaml.safe_load(pp.read_text(encoding="utf-8"))
         marts = yaml.safe_load(mp.read_text(encoding="utf-8"))
-        self.grants: dict[str, list[str]] = pol["table_grants"]
-        self.row_filters: dict[str, list[dict[str, Any]]] = pol["row_filters"]
-        self.masks: dict[str, dict[str, Any]] = pol["column_masks"]
+        self.version: int | None = None
+        self.set_policies(pol)
         self.cfg: dict[str, Any] = marts["engine"]
         self.descriptions: dict[str, Any] = marts["tables"]
         self.catalog = catalog
         self.short_names = self._short_names()
+
+    def set_policies(self, pol: Mapping[str, Any], version: int | None = None) -> None:
+        """Swap the whole policy at once (one assignment per attribute, read under the engine's lock)."""
+        self.grants: dict[str, list[str]] = dict(pol.get("table_grants", {}))
+        self.row_filters: dict[str, list[dict[str, Any]]] = dict(pol.get("row_filters", {}))
+        self.masks: dict[str, dict[str, Any]] = dict(pol.get("column_masks", {}))
+        self.version = version
 
     def _short_names(self) -> dict[str, str]:
         seen: dict[str, list[str]] = {}
@@ -232,7 +247,7 @@ class PolicyEngine:
         tree = self._parse(sql)
         cte_names = {c.alias_or_name.lower() for c in tree.find_all(exp.CTE)}
         tables = self._validate(tree, cte_names)
-        decision = Decision(tables=sorted(set(tables.values())))
+        decision = Decision(tables=sorted(set(tables.values())), policy_version=self.version)
         granted = set(self.granted_tables(ident))
         for full in decision.tables:
             if full not in granted:

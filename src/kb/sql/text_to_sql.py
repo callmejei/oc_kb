@@ -89,7 +89,12 @@ class TextToSql:
                     return out  # never coach the model towards tables the user may not see
                 feedback = f"\n\nYour previous query was refused ({code}: {e}). Write a corrected single SELECT."
                 continue
-            out.decision = {"tables": d.tables, "row_filters": d.row_filters, "masked": d.masked}
+            out.decision = {
+                "tables": d.tables,
+                "row_filters": d.row_filters,
+                "masked": d.masked,
+                "policy_version": d.policy_version,  # D-066: which approved policy was in force
+            }
             out.attempts.append({"sql": sql, "error": None, "rows": len(res.rows)})
             out.data = DataSource(
                 sql=sql,

@@ -70,4 +70,8 @@ class YamlIdentityProvider:
         return out
 
     def readable_bus(self, identity: Identity) -> set[str]:
-        return {self.groups[g]["bu"] for g in identity.groups if self.groups[g]["kind"] in ("read", "maker", "checker")}
+        return {
+            self.groups[g]["bu"]
+            for g in identity.groups
+            if self.groups[g]["kind"] in ("read", "maker", "checker") and self.groups[g].get("domain") != "data"
+        }  # data-product governance (domain: data) is not a document space

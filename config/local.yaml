@@ -96,7 +96,9 @@ ports:
   embedder:          {adapter: local.SentenceTransformerEmbedder, model: BAAI/bge-small-en-v1.5, revision: 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a, path: .infra/models/hf/BAAI--bge-small-en-v1.5, dims: 384, device: cpu}
   reranker:          {adapter: local.CrossEncoderReranker, model: BAAI/bge-reranker-base, revision: 2cfc18c9415c912f9d8155881c133215df768a70, path: .infra/models/hf/BAAI--bge-reranker-base, device: cpu}
   llm:               {adapter: local.OpenAICompatibleLLM, base_url: http://127.0.0.1:11435/v1, model: qwen3:8b, max_tokens: 700, extra_body: {reasoning_effort: none}}
-  sql_engine:        {adapter: local.DuckDbPolicySqlEngine, path: data/marts/marts.duckdb, policies: config/policies.yaml}
+  # D-066: access policies come from approved data products in the registry (config/policies.yaml is the first seed)
+  sql_engine:        {adapter: local.DuckDbPolicySqlEngine, path: data/marts/marts.duckdb, policy_source: registry,
+                      policy_dsn: "postgresql://kb_api:${KB_PG_API_PASSWORD}@127.0.0.1:5433/kb"}
   identity_provider: {adapter: local.YamlIdentityProvider, path: config/users.yaml}
   graph_store:       {adapter: local.OxigraphGraphStore, path: data/graph}
   tracer:            {adapter: local.PhoenixTracer, endpoint: http://127.0.0.1:6006}
