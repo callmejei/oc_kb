@@ -498,3 +498,19 @@ term; the leak test checks the full chunk text of every result, not the window (
 must resolve inside `docs/eval`). It shows question text, which D-058 keeps off the ops dashboard; the exception
 is deliberate and narrow: these are the synthetic golden-set questions in `tests/eval/golden`, never user
 questions. User question text stays in `kb.query_log` only.
+
+## D-064 Group vs business-unit policy conflicts (resolves the D-055 e4 item)
+User decision 2026-11-08: a group-wide limit is a ceiling; a BU policy may only tighten it. Where they differ, the
+stricter value applies and BOTH values are shown with citations, so a conflict is never hidden. To be confirmed
+by Group Risk / policy owners before CML.
+- Each document source in the prompt carries `scope` (group-wide for BU `shared`, else "<bu> business unit").
+- A prompt rule asking the model to resolve conflicts was tried and reverted: qwen3:8b kept the group value in
+  2/3 runs and once called 45% "stricter" than 35%.
+- `kb.agent.conflict` detects conflicts in code after the answer: a cited percentage, the source segment holding
+  it (exactly one percentage), and a source at the other level whose segment has the identical term set and a
+  different percentage. A note is appended citing every holder; "stricter" is named only when the direction is
+  known (maximum/LTV -> lower, minimum -> higher). Only already-supplied (ACL-filtered) sources are read.
+  Detected conflicts are recorded in the QUERY audit row (`conflicts`).
+- Golden `must_cite` (c1, e4): the fact counts only if the BU policy is cited.
+- Known limit: the model's own sentence may still lead with the group value; the note follows it. Item-matching
+  is exact by design (no fuzzy matching), so differently worded rows are not compared.

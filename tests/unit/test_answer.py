@@ -202,3 +202,13 @@ def test_prompt_shows_only_supplied_ref_kinds_and_the_caption_rule():
     d = DataSource(sql="SELECT 1", executed_sql="SELECT 1", tables=["t"], columns=["n"], rows=[(1,)])
     both = build_prompt("q", ctx, 9000, data=[d])
     assert '<source ref="[SQL1]"' in both.messages[1].content and "[SQL1]" in both.messages[0].content
+
+
+def test_sources_carry_their_policy_scope():
+    """D-064: the scope comes from the chunk's BU (shared = group-wide), never from model text."""
+    from dataclasses import replace
+
+    group = sc(1, "Land for development: up to 45%.")
+    group = ScoredChunk(replace(group.chunk, bu="shared"), group.score, group.retriever)
+    user = build_prompt("q", [group, sc(2, "Land for development: 35%.")], 9000).messages[1].content
+    assert 'scope="group-wide"' in user and 'scope="retail business unit"' in user

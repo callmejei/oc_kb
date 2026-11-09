@@ -34,7 +34,7 @@ from kb.adapters.local.identity import YamlIdentityProvider
 from kb.adapters.local.registry import PostgresRegistry
 from kb.agent.answer import NO_CONTEXT, NOT_COVERED, REFUSED
 from kb.config import REPO_ROOT, Settings, load_settings
-from kb.evaluation.golden import BUS, doc_title, figure_found, load_bu
+from kb.evaluation.golden import BUS, doc_title, fact_correct, figure_found, load_bu
 from kb.evaluation.ragas_runner import METRICS as RAGAS_METRICS
 from kb.evaluation.ragas_runner import score as ragas_score
 
@@ -96,7 +96,7 @@ def ask_one(svc: Any, ident: Any, q: dict[str, Any], truth: Any) -> dict[str, An
         titles = {doc_title(d) for d in q["expected_docs"]}
         row |= {
             "hit_at_k": any(s.chunk.metadata.get("title") in titles for s in c.context[:K]),
-            "correct": any(f.lower() in a.text.lower() for f in q["facts"]),
+            "correct": fact_correct(q, a),
             "citation_correct": any(x.title in titles for x in a.citations),
             "reference": q["reference"],
             "contexts": [s.chunk.text for s in c.context if s.chunk.chunk_id in set(a.context_ids)],

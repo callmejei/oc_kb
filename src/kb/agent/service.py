@@ -216,6 +216,7 @@ class AskService:
             },
             "invalid_citations": ans.invalid_citations,
             "remapped_citations": ans.remapped_citations,
+            "conflicts": ans.conflicts,  # D-064
             "context_redactions": ans.redactions,
             "blocked_reason": ans.blocked_reason,
             "llm_called": ans.llm_called,

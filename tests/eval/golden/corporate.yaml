@@ -13,6 +13,8 @@ questions:
   q: What is the maximum first-facility LTV for land for development?
   facts:
   - 35%
+  must_cite:
+  - corp-cre-policy
   expected_docs:
   - corp-cre-policy
   - corp-syndication-guide
@@ -76,10 +78,13 @@ questions:
   q: What is the maximum lending ratio for a development site on a first facility?
   facts:
   - 35%
+  must_cite:
+  - corp-cre-policy
   expected_docs:
   - corp-cre-policy
   - corp-syndication-guide
-  reference: The maximum first-facility LTV for land for development is 35%.
+  reference: The maximum first-facility LTV for land for development is 35% under the corporate policy; the group
+    risk appetite allows up to 45%.
 - id: e8
   kind: expansion
   q: What is the lending ratio for an office building on a third facility?

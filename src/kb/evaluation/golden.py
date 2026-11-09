@@ -65,6 +65,15 @@ def doc_title(key: str) -> str:
     return DOC_BY_KEY[key].filename.rsplit(".", 1)[0]
 
 
+def fact_correct(q: dict[str, Any], a: Any) -> bool:
+    """A fact must appear; with `must_cite` (D-064) the answer must also cite that document, so a figure taken
+    from the wrong policy level (e.g. a group ceiling instead of the stricter BU limit) does not count."""
+    if not any(f.lower() in a.text.lower() for f in q["facts"]):
+        return False
+    need = {doc_title(d) for d in q.get("must_cite", [])}
+    return not need or any(c.title in need for c in a.citations)
+
+
 def evaluate(settings: Settings, k: int = 5, log: Any = print) -> dict[str, Any]:
     idx = build(settings, "chunk_index")
     hr = HybridRetriever(idx, build(settings, "embedder"), build(settings, "reranker"), settings.retrieval)
@@ -85,7 +94,7 @@ def evaluate(settings: Settings, k: int = 5, log: Any = print) -> dict[str, Any]
                 "id": q["id"],
                 "question": q["q"],
                 "hit_at_k": any(t in titles for t in ctx_titles),
-                "correct": any(f.lower() in a.text.lower() for f in q["facts"]),
+                "correct": fact_correct(q, a),
                 "citation_correct": any(c.title in titles for c in a.citations),
                 "grounded": a.grounded,
                 "blocked_reason": a.blocked_reason,
@@ -242,7 +251,7 @@ def evaluate_expansion(settings: Settings, k: int = 5, log: Any = print) -> dict
                 a = answer(q["q"], r.context, llm, int(settings.retrieval.get("max_context_chars", 9000)))
                 row[mode] = {
                     "hit_at_k": any(c.chunk.metadata.get("title") in titles for c in r.context[:k]),
-                    "correct": any(f.lower() in a.text.lower() for f in q["facts"]),
+                    "correct": fact_correct(q, a),
                     "answer": a.text,
                     "expansion": None
                     if r.expansion is None
