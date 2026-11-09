@@ -141,7 +141,9 @@ def compile_metric(defn: Mapping[str, Any], group_by: Sequence[str] = ()) -> str
     m = defn["measure"]
     if m["agg"] == "ratio":
         value = (
-            f"round(CAST({_expr(m['numerator'])} AS DOUBLE) / NULLIF({_expr(m['denominator'])}, 0)"
+            # numerator: no matching rows is 0, not NULL (an NPL ratio with no arrears is 0%); a zero or empty
+            # denominator stays NULL (undefined)
+            f"round(CAST(coalesce({_expr(m['numerator'])}, 0) AS DOUBLE) / NULLIF({_expr(m['denominator'])}, 0)"
             f"{' * 100' if m.get('scale') == 100 else ''}, 2)"
         )
     elif m["agg"] in ("count", "count_distinct"):

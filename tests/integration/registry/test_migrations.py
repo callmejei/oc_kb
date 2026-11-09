@@ -23,7 +23,7 @@ def test_all_migrations_applied_in_order(regdb, as_admin):
     assert (
         [r["version"] for r in rows]
         == [m.version for m in migrate.discover()]
-        == ["000", "001", "002", "003", "004", "005", "006", "007", "008", "009"]
+        == ["000", "001", "002", "003", "004", "005", "006", "007", "008", "009", "010", "011", "012"]
     )
 
 
