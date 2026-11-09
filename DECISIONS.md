@@ -503,9 +503,9 @@ questions. User question text stays in `kb.query_log` only.
 User decision 2026-11-08: a group-wide limit is a ceiling; a BU policy may only tighten it. Where they differ, the
 stricter value applies and BOTH values are shown with citations, so a conflict is never hidden. To be confirmed
 by Group Risk / policy owners before CML.
-- Each document source in the prompt carries `scope` (group-wide for BU `shared`, else "<bu> business unit").
-- A prompt rule asking the model to resolve conflicts was tried and reverted: qwen3:8b kept the group value in
-  2/3 runs and once called 45% "stricter" than 35%.
+- Two prompt-side attempts were reverted. A conflict rule: qwen3:8b kept the group value in 2/3 runs and once
+  called 45% "stricter" than 35%. A `scope` attribute on each source block: it made the model refuse retail e1
+  ("buy-to-let" is not stated; 0/2 with the attribute, 2/2 without). The prompt is unchanged from Phase 7.
 - `kb.agent.conflict` detects conflicts in code after the answer: a cited percentage, the source segment holding
   it (exactly one percentage), and a source at the other level whose segment has the identical term set and a
   different percentage. A note is appended citing every holder; "stricter" is named only when the direction is

@@ -63,11 +63,9 @@ REMINDER_TEMPLATE = (
 )
 
 
-# D-064: each document source carries its policy scope (from the chunk's BU; shared = group-wide). A prompt rule
-# asking the model to resolve conflicts was tried and failed (qwen3:8b kept the group value, once calling 45%
-# "stricter" than 35%), so conflicts are detected and noted in code (kb.agent.conflict).
-def scope_label(bu: str) -> str:
-    return "group-wide" if bu == "shared" else f"{bu} business unit"
+# D-064: policy-level conflicts (group-wide vs business unit) are detected and noted in code (kb.agent.conflict).
+# Two prompt-side attempts were reverted: a conflict rule (qwen3:8b kept the group value, once calling 45%
+# "stricter" than 35%) and a scope attribute on each source (it made the model refuse retail e1: 0/2 vs 2/2).
 
 
 def _examples(docs: bool, data: bool) -> tuple[str, str]:
@@ -195,8 +193,7 @@ def build_prompt(
         redactions += r
         blocks.append(
             f'<source ref="[{n}]" title="{_attr(m.get("title", ""))}" section="{_attr(c.section_path or "")}" '
-            f'page="{_attr(c.page or "")}" version="{_attr(m.get("version_no", ""))}" '
-            f'scope="{_attr(scope_label(c.bu))}">\n{body}\n</source>'
+            f'page="{_attr(c.page or "")}" version="{_attr(m.get("version_no", ""))}">\n{body}\n</source>'
         )
     supplied = len(blocks)
     for t, d in enumerate(data or [], start=1):

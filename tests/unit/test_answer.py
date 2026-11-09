@@ -204,11 +204,8 @@ def test_prompt_shows_only_supplied_ref_kinds_and_the_caption_rule():
     assert '<source ref="[SQL1]"' in both.messages[1].content and "[SQL1]" in both.messages[0].content
 
 
-def test_sources_carry_their_policy_scope():
-    """D-064: the scope comes from the chunk's BU (shared = group-wide), never from model text."""
-    from dataclasses import replace
-
-    group = sc(1, "Land for development: up to 45%.")
-    group = ScoredChunk(replace(group.chunk, bu="shared"), group.score, group.retriever)
-    user = build_prompt("q", [group, sc(2, "Land for development: 35%.")], 9000).messages[1].content
-    assert 'scope="group-wide"' in user and 'scope="retail business unit"' in user
+def test_sources_carry_no_scope_attribute():
+    """D-064: a scope attribute on each source made qwen3:8b refuse retail e1 (0/2 vs 2/2 without it); policy-level
+    conflicts are handled in code (tests/unit/test_conflict.py), so the prompt stays as it was."""
+    user = build_prompt("q", [sc(1)], 9000).messages[1].content
+    assert "scope=" not in user
